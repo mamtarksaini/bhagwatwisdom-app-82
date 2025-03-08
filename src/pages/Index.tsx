@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,8 +9,11 @@ import { MoodMantra } from "@/components/features/MoodMantra";
 import { DailyVerse } from "@/components/features/DailyVerse";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { BookOpen, Moon, Sun, Heart } from "lucide-react";
+import { Language } from "@/types";
 
 const Index = () => {
+  const [language, setLanguage] = useState<Language>("english");
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Hero Section */}
@@ -73,7 +76,7 @@ const Index = () => {
                     <CardDescription>Wisdom from Bhagavad Gita for your daily inspiration</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <DailyVerse />
+                    <DailyVerse language={language} />
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -85,7 +88,7 @@ const Index = () => {
                     <CardDescription>Find solutions to your problems based on Bhagavad Gita teachings</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <ProblemSolver />
+                    <ProblemSolver language={language} />
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -97,7 +100,7 @@ const Index = () => {
                     <CardDescription>Understand the spiritual meaning behind your dreams</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <DreamInterpreter />
+                    <DreamInterpreter language={language} />
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -109,7 +112,7 @@ const Index = () => {
                     <CardDescription>Receive a personalized mantra based on your current mood</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <MoodMantra />
+                    <MoodMantra language={language} />
                   </CardContent>
                 </Card>
               </TabsContent>

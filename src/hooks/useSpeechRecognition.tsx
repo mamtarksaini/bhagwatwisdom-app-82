@@ -1,5 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
+import { Language } from '@/types';
 
 // Define our own type for SpeechRecognition as the browser types aren't always available
 interface SpeechRecognitionEvent extends Event {
@@ -42,18 +43,21 @@ interface SpeechRecognitionInstance extends EventTarget {
 }
 
 export interface SpeechRecognitionHook {
-  text: string;
+  transcript: string;
   isListening: boolean;
   startListening: () => void;
   stopListening: () => void;
+  resetTranscript: () => void;
   hasRecognitionSupport: boolean;
+  error: string | null;
 }
 
-const useSpeechRecognition = (): SpeechRecognitionHook => {
-  const [text, setText] = useState<string>('');
+export const useSpeechRecognition = (language: Language = "english"): SpeechRecognitionHook => {
+  const [transcript, setTranscript] = useState<string>('');
   const [isListening, setIsListening] = useState<boolean>(false);
   const [recognition, setRecognition] = useState<SpeechRecognitionInstance | null>(null);
   const [hasRecognitionSupport, setHasRecognitionSupport] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Check if the browser supports speech recognition
@@ -63,32 +67,83 @@ const useSpeechRecognition = (): SpeechRecognitionHook => {
       
       recognitionInstance.continuous = true;
       recognitionInstance.interimResults = true;
-      recognitionInstance.lang = 'en-US';
+      
+      // Set language based on the provided language prop
+      switch(language) {
+        case "hindi": 
+          recognitionInstance.lang = 'hi-IN'; 
+          break;
+        case "tamil": 
+          recognitionInstance.lang = 'ta-IN'; 
+          break;
+        case "telugu": 
+          recognitionInstance.lang = 'te-IN'; 
+          break;
+        case "gujarati": 
+          recognitionInstance.lang = 'gu-IN'; 
+          break;
+        case "marathi": 
+          recognitionInstance.lang = 'mr-IN'; 
+          break;
+        case "punjabi": 
+          recognitionInstance.lang = 'pa-IN'; 
+          break;
+        case "malayalam": 
+          recognitionInstance.lang = 'ml-IN'; 
+          break;
+        case "bengali": 
+          recognitionInstance.lang = 'bn-IN'; 
+          break;
+        case "sanskrit":
+        case "sindhi":
+        case "odia":
+        case "konkani":
+        default:
+          recognitionInstance.lang = 'en-US';
+          break;
+      }
       
       setRecognition(recognitionInstance);
       setHasRecognitionSupport(true);
     }
-  }, []);
+  }, [language]);
 
   const startListening = useCallback(() => {
     if (!recognition) return;
     
-    setText('');
+    setError(null);
+    setTranscript('');
     setIsListening(true);
     
     recognition.onresult = (event: SpeechRecognitionEvent) => {
-      const transcript = Array.from(event.results)
-        .map(result => result[0].transcript)
-        .join('');
+      let currentTranscript = '';
       
-      setText(transcript);
+      // Safely iterate through results
+      for (let i = 0; i < event.results.length; i++) {
+        const result = event.results[i];
+        if (result && result[0]) {
+          currentTranscript += result[0].transcript;
+        }
+      }
+      
+      setTranscript(currentTranscript);
+    };
+    
+    recognition.onerror = (event) => {
+      setError("Speech recognition error occurred. Please try again.");
+      setIsListening(false);
     };
     
     recognition.onend = () => {
       setIsListening(false);
     };
     
-    recognition.start();
+    try {
+      recognition.start();
+    } catch (error) {
+      setError("Could not start speech recognition. Please try again.");
+      setIsListening(false);
+    }
   }, [recognition]);
 
   const stopListening = useCallback(() => {
@@ -98,12 +153,18 @@ const useSpeechRecognition = (): SpeechRecognitionHook => {
     setIsListening(false);
   }, [recognition]);
 
+  const resetTranscript = useCallback(() => {
+    setTranscript('');
+  }, []);
+
   return {
-    text,
+    transcript,
     isListening,
     startListening,
     stopListening,
-    hasRecognitionSupport
+    resetTranscript,
+    hasRecognitionSupport,
+    error
   };
 };
 
