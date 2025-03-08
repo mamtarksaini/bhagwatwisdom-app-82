@@ -15,7 +15,7 @@ const Index = () => {
   const [language, setLanguage] = useState<Language>("english");
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background w-full">
       {/* Hero Section */}
       <section className="w-full py-12 md:py-24 lg:py-32 flex flex-col items-center justify-center text-center px-4">
         <div className="container px-4 md:px-6">
@@ -49,7 +49,7 @@ const Index = () => {
           </div>
           
           <Tabs defaultValue="daily-verse" className="w-full max-w-4xl mx-auto">
-            <TabsList className="grid grid-cols-4 w-full">
+            <TabsList className="grid grid-cols-4 w-full mb-6">
               <TabsTrigger value="daily-verse" className="flex items-center gap-2">
                 <BookOpen className="h-4 w-4" />
                 <span className="hidden sm:inline">Daily Verse</span>
@@ -68,9 +68,9 @@ const Index = () => {
               </TabsTrigger>
             </TabsList>
             
-            <ScrollArea className="h-[500px] mt-6 rounded-md border p-4">
+            <div className="mt-6 rounded-md border">
               <TabsContent value="daily-verse" className="mt-0">
-                <Card>
+                <Card className="border-0 shadow-none">
                   <CardHeader>
                     <CardTitle>Daily Verse</CardTitle>
                     <CardDescription>Wisdom from Bhagavad Gita for your daily inspiration</CardDescription>
@@ -82,7 +82,7 @@ const Index = () => {
               </TabsContent>
               
               <TabsContent value="problem-solver" className="mt-0">
-                <Card>
+                <Card className="border-0 shadow-none">
                   <CardHeader>
                     <CardTitle>Problem Solver</CardTitle>
                     <CardDescription>Find solutions to your problems based on Bhagavad Gita teachings</CardDescription>
@@ -94,7 +94,7 @@ const Index = () => {
               </TabsContent>
               
               <TabsContent value="dream" className="mt-0">
-                <Card>
+                <Card className="border-0 shadow-none">
                   <CardHeader>
                     <CardTitle>Dream Interpreter</CardTitle>
                     <CardDescription>Understand the spiritual meaning behind your dreams</CardDescription>
@@ -106,7 +106,7 @@ const Index = () => {
               </TabsContent>
               
               <TabsContent value="mantra" className="mt-0">
-                <Card>
+                <Card className="border-0 shadow-none">
                   <CardHeader>
                     <CardTitle>Mood Mantra</CardTitle>
                     <CardDescription>Receive a personalized mantra based on your current mood</CardDescription>
@@ -116,7 +116,7 @@ const Index = () => {
                   </CardContent>
                 </Card>
               </TabsContent>
-            </ScrollArea>
+            </div>
           </Tabs>
         </div>
       </section>
