@@ -25,7 +25,11 @@ const languageVoiceMap: Record<Language, string> = {
   sindhi: "ur", // Fallback to Urdu for Sindhi
   odia: "or",
   konkani: "hi", // Fallback to Hindi for Konkani
-  bengali: "bn"
+  bengali: "bn",
+  kannada: "kn",
+  kashmiri: "ks",
+  assamese: "as",
+  manipuri: "mni"
 };
 
 export function useSpeechSynthesis(language: Language = "english"): SpeechSynthesisHook {

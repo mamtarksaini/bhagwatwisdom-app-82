@@ -25,3 +25,8 @@ export interface Verse {
   text: Partial<Record<Language, string>>;
   meaning: Partial<Record<Language, string>>;
 }
+
+export interface ThemeState {
+  theme: string;
+  setTheme: (theme: string) => void;
+}
