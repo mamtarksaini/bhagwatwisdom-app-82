@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Check, ChevronsUpDown, Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,6 +9,8 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
+  CommandList,
+  CommandSeparator,
 } from "@/components/ui/command";
 import {
   Popover,
@@ -17,6 +19,7 @@ import {
 } from "@/components/ui/popover";
 import { LANGUAGES } from "@/utils/constants";
 import { Language } from "@/types";
+import { Badge } from "@/components/ui/badge";
 
 interface LanguagePickerProps {
   value: Language;
@@ -28,6 +31,18 @@ export function LanguagePicker({ value, onValueChange }: LanguagePickerProps) {
   
   const selectedLanguage = LANGUAGES.find((language) => language.id === value);
 
+  // Group languages by region
+  const groupedLanguages = LANGUAGES.reduce((acc, language) => {
+    if (!acc[language.region]) {
+      acc[language.region] = [];
+    }
+    acc[language.region].push(language);
+    return acc;
+  }, {} as Record<string, typeof LANGUAGES>);
+
+  // Order of regions to display
+  const regionOrder = ["Global", "Indo-Aryan", "Dravidian", "Other Indian"];
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -37,34 +52,57 @@ export function LanguagePicker({ value, onValueChange }: LanguagePickerProps) {
           aria-expanded={open}
           className="w-full justify-between"
         >
-          {selectedLanguage ? selectedLanguage.label : "Select language..."}
+          <div className="flex items-center gap-2 truncate">
+            <Globe className="h-4 w-4 text-muted-foreground" />
+            <span className="truncate">{selectedLanguage ? selectedLanguage.label : "Select language..."}</span>
+          </div>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0">
+      <PopoverContent className="w-[300px] p-0">
         <Command>
           <CommandInput placeholder="Search language..." />
           <CommandEmpty>No language found.</CommandEmpty>
-          <CommandGroup className="max-h-[200px] overflow-y-auto">
-            {LANGUAGES.map((language) => (
-              <CommandItem
-                key={language.id}
-                value={language.id}
-                onSelect={(currentValue) => {
-                  onValueChange(currentValue as Language);
-                  setOpen(false);
-                }}
-              >
-                <Check
-                  className={cn(
-                    "mr-2 h-4 w-4",
-                    value === language.id ? "opacity-100" : "opacity-0"
-                  )}
-                />
-                {language.label}
-              </CommandItem>
-            ))}
-          </CommandGroup>
+          <CommandList>
+            {regionOrder.map((region, index) => {
+              const languagesInRegion = groupedLanguages[region] || [];
+              
+              if (languagesInRegion.length === 0) return null;
+              
+              return (
+                <React.Fragment key={region}>
+                  {index > 0 && <CommandSeparator />}
+                  <CommandGroup heading={region}>
+                    {languagesInRegion.map((language) => (
+                      <CommandItem
+                        key={language.id}
+                        value={language.id}
+                        onSelect={(currentValue) => {
+                          onValueChange(currentValue as Language);
+                          setOpen(false);
+                        }}
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <div className="flex items-center">
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                value === language.id ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            <span>{language.label}</span>
+                          </div>
+                          {language.id === "english" && (
+                            <Badge variant="outline" className="ml-2 text-xs">Default</Badge>
+                          )}
+                        </div>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </React.Fragment>
+              );
+            })}
+          </CommandList>
         </Command>
       </PopoverContent>
     </Popover>
