@@ -1,3 +1,4 @@
+
 import { Language } from "@/types";
 
 export const LANGUAGES: { id: Language; label: string; region: string }[] = [

@@ -61,7 +61,7 @@ export const useSpeechRecognition = (language: Language = "english"): SpeechReco
 
   useEffect(() => {
     // Check if the browser supports speech recognition
-    if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+    if (typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       const recognitionInstance = new SpeechRecognition();
       
@@ -93,6 +93,18 @@ export const useSpeechRecognition = (language: Language = "english"): SpeechReco
           break;
         case "bengali": 
           recognitionInstance.lang = 'bn-IN'; 
+          break;
+        case "kannada":
+          recognitionInstance.lang = 'kn-IN';
+          break;
+        case "kashmiri":
+          recognitionInstance.lang = 'ks-IN';
+          break;
+        case "assamese":
+          recognitionInstance.lang = 'as-IN';
+          break;
+        case "manipuri":
+          recognitionInstance.lang = 'mni-IN';
           break;
         case "sanskrit":
         case "sindhi":
