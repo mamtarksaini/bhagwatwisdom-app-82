@@ -73,43 +73,6 @@ export const useSpeechRecognition = (language: Language = "english"): SpeechReco
         case "hindi": 
           recognitionInstance.lang = 'hi-IN'; 
           break;
-        case "tamil": 
-          recognitionInstance.lang = 'ta-IN'; 
-          break;
-        case "telugu": 
-          recognitionInstance.lang = 'te-IN'; 
-          break;
-        case "gujarati": 
-          recognitionInstance.lang = 'gu-IN'; 
-          break;
-        case "marathi": 
-          recognitionInstance.lang = 'mr-IN'; 
-          break;
-        case "punjabi": 
-          recognitionInstance.lang = 'pa-IN'; 
-          break;
-        case "malayalam": 
-          recognitionInstance.lang = 'ml-IN'; 
-          break;
-        case "bengali": 
-          recognitionInstance.lang = 'bn-IN'; 
-          break;
-        case "kannada":
-          recognitionInstance.lang = 'kn-IN';
-          break;
-        case "kashmiri":
-          recognitionInstance.lang = 'ks-IN';
-          break;
-        case "assamese":
-          recognitionInstance.lang = 'as-IN';
-          break;
-        case "manipuri":
-          recognitionInstance.lang = 'mni-IN';
-          break;
-        case "sanskrit":
-        case "sindhi":
-        case "odia":
-        case "konkani":
         default:
           recognitionInstance.lang = 'en-US';
           break;
