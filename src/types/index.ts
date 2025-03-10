@@ -1,22 +1,7 @@
-
 export type Language = 
   | "english" 
-  | "hindi" 
-  | "sanskrit" 
-  | "tamil" 
-  | "telugu" 
-  | "gujarati" 
-  | "marathi" 
-  | "punjabi" 
-  | "malayalam" 
-  | "sindhi" 
-  | "odia" 
-  | "konkani" 
-  | "bengali"
-  | "kannada"
-  | "kashmiri"
-  | "assamese"
-  | "manipuri";
+  | "hindi"
+  | "custom";
 
 export interface Verse {
   id: string;

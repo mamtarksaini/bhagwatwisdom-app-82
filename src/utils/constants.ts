@@ -1,27 +1,9 @@
-
 import { Language } from "@/types";
 
 export const LANGUAGES: { id: Language; label: string; region: string }[] = [
   { id: "english", label: "English", region: "Global" },
-  
-  { id: "hindi", label: "हिन्दी (Hindi)", region: "Indo-Aryan" },
-  { id: "sanskrit", label: "संस्कृतम् (Sanskrit)", region: "Indo-Aryan" },
-  { id: "punjabi", label: "ਪੰਜਾਬੀ (Punjabi)", region: "Indo-Aryan" },
-  { id: "bengali", label: "বাংলা (Bengali)", region: "Indo-Aryan" },
-  { id: "marathi", label: "मराठी (Marathi)", region: "Indo-Aryan" },
-  { id: "gujarati", label: "ગુજરાતી (Gujarati)", region: "Indo-Aryan" },
-  { id: "odia", label: "ଓଡ଼ିଆ (Odia)", region: "Indo-Aryan" },
-  { id: "sindhi", label: "سنڌي (Sindhi)", region: "Indo-Aryan" },
-  { id: "konkani", label: "कोंकणी (Konkani)", region: "Indo-Aryan" },
-  
-  { id: "tamil", label: "தமிழ் (Tamil)", region: "Dravidian" },
-  { id: "telugu", label: "తెలుగు (Telugu)", region: "Dravidian" },
-  { id: "malayalam", label: "മലയാളം (Malayalam)", region: "Dravidian" },
-  { id: "kannada", label: "ಕನ್ನಡ (Kannada)", region: "Dravidian" },
-  
-  { id: "kashmiri", label: "कॉशुर (Kashmiri)", region: "Other Indian" },
-  { id: "assamese", label: "অসমীয়া (Assamese)", region: "Other Indian" },
-  { id: "manipuri", label: "মৈতৈলোন্ (Manipuri)", region: "Other Indian" }
+  { id: "hindi", label: "हिन्दी (Hindi)", region: "India" },
+  { id: "custom", label: "Custom", region: "Other" }
 ];
 
 export const MOODS = [
