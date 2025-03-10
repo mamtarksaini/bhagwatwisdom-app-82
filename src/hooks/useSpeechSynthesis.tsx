@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { Language } from "@/types";
 
@@ -9,11 +10,26 @@ interface SpeechSynthesisHook {
   voices: SpeechSynthesisVoice[];
 }
 
-// Simplified language to voice mapping
+// Map our languages to matching voices
+// These are approximate mappings and might need adjustment
 const languageVoiceMap: Record<Language, string> = {
   english: "en",
   hindi: "hi",
-  custom: "en" // Default fallback for custom language
+  sanskrit: "hi", // Fallback to Hindi for Sanskrit
+  tamil: "ta",
+  telugu: "te",
+  gujarati: "gu",
+  marathi: "mr",
+  punjabi: "pa",
+  malayalam: "ml",
+  sindhi: "ur", // Fallback to Urdu for Sindhi
+  odia: "or",
+  konkani: "hi", // Fallback to Hindi for Konkani
+  bengali: "bn",
+  kannada: "kn",
+  kashmiri: "ks",
+  assamese: "as",
+  manipuri: "mni"
 };
 
 export function useSpeechSynthesis(language: Language = "english"): SpeechSynthesisHook {
