@@ -1,12 +1,16 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Language } from "@/types";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis";
-import { Mic, MicOff, Volume2, VolumeX, RotateCcw, Send } from "lucide-react";
+import { Mic, MicOff, Volume2, VolumeX, RotateCcw, Send, Key } from "lucide-react";
 import { getWisdomResponse, determineResponseCategory, fallbackWisdomResponses } from "@/lib/wisdom";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { toast } from "@/components/ui/use-toast";
 
 interface ProblemSolverProps {
   language: Language;
@@ -19,6 +23,8 @@ export function ProblemSolver({ language, isPremium = false }: ProblemSolverProp
   const [isLoading, setIsLoading] = useState(false);
   const { isListening, transcript, startListening, stopListening, resetTranscript, error } = useSpeechRecognition(language);
   const { speak, stop, isReading } = useSpeechSynthesis(language);
+  const [geminiKey, setGeminiKey] = useState(localStorage.getItem('geminiApiKey') || "");
+  const [keyDialogOpen, setKeyDialogOpen] = useState(false);
 
   const handleSpeechInput = () => {
     if (isListening) {
@@ -39,11 +45,21 @@ export function ProblemSolver({ language, isPremium = false }: ProblemSolverProp
   const handleSubmit = async () => {
     if (!problem.trim()) return;
     
+    if (!localStorage.getItem('geminiApiKey')) {
+      toast({
+        title: "API Key Required",
+        description: "Please set your Gemini API key first to get personalized wisdom.",
+        variant: "destructive"
+      });
+      setKeyDialogOpen(true);
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
       const category = determineResponseCategory(problem);
-      const response = await getWisdomResponse(category, language);
+      const response = await getWisdomResponse(category, language, problem);
       
       if (response) {
         setSolution(response);
@@ -72,6 +88,17 @@ export function ProblemSolver({ language, isPremium = false }: ProblemSolverProp
     }
     
     speak(solution);
+  };
+
+  const saveApiKey = () => {
+    if (geminiKey.trim()) {
+      localStorage.setItem('geminiApiKey', geminiKey.trim());
+      setKeyDialogOpen(false);
+      toast({
+        title: "API Key Saved",
+        description: "Your Gemini API key has been saved to your browser.",
+      });
+    }
   };
 
   useEffect(() => {
@@ -117,7 +144,38 @@ export function ProblemSolver({ language, isPremium = false }: ProblemSolverProp
           
           {error && <p className="text-destructive text-sm mt-2">{error}</p>}
           
-          <div className="mt-4 flex justify-end">
+          <div className="mt-4 flex justify-between items-center">
+            <Dialog open={keyDialogOpen} onOpenChange={setKeyDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Key className="h-4 w-4 mr-2" />
+                  Set Gemini API Key
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Gemini API Key</DialogTitle>
+                  <DialogDescription>
+                    Enter your Gemini API key to get AI-powered responses. Your key will be stored locally in your browser.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="py-4">
+                  <Input
+                    value={geminiKey}
+                    onChange={(e) => setGeminiKey(e.target.value)}
+                    placeholder="Paste your Gemini API key here"
+                    type="password"
+                  />
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Get a key from <a href="https://ai.google.dev/" target="_blank" rel="noreferrer" className="underline">Google AI Studio</a>
+                  </p>
+                </div>
+                <DialogFooter>
+                  <Button onClick={saveApiKey}>Save Key</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+            
             <Button 
               onClick={handleSubmit} 
               disabled={!problem.trim() || isLoading}
