@@ -1,81 +1,32 @@
 
-import { supabase } from './supabase';
 import { Language } from '@/types';
 import { toast } from '@/components/ui/use-toast';
+
+// Your Gemini API key - replace with your actual API key
+const GEMINI_API_KEY = 'your-gemini-api-key-here';
 
 // Function to get wisdom from Gemini API
 export async function getWisdomResponse(category: string, language: Language, question: string) {
   try {
-    // Try to fetch cached response from Supabase (if we've saved it before)
-    const { data: cachedResponse, error: fetchError } = await supabase
-      .from('palm_readings')  // Using existing palm_readings table
-      .select('results')
-      .eq('image_url', `${category}_${language}`) // Using image_url field as a cache key
-      .maybeSingle();
-
-    // If we have a cached response, return it
-    if (cachedResponse?.results && !fetchError) {
-      // Check if results is a string or an object with response property
-      if (typeof cachedResponse.results === 'object' && cachedResponse.results !== null && 'response' in cachedResponse.results) {
-        return cachedResponse.results.response;
-      } else {
-        return String(cachedResponse.results); // Convert to string if it's not an object
-      }
-    }
-    
-    // Otherwise, call Gemini API to get a new response
+    // Call Gemini API to get a response
     const geminiResponse = await fetchGeminiResponse(question, category, language);
     
-    // Cache the response for future use
+    // Return the response if successful
     if (geminiResponse) {
-      const userId = "system"; // Using a system user ID for non-user specific content
-      await supabase
-        .from('palm_readings')
-        .insert({
-          user_id: userId,
-          image_url: `${category}_${language}`, // Using image_url as cache key
-          results: { response: geminiResponse }
-        });
+      return geminiResponse;
     }
     
-    return geminiResponse;
+    // Fall back to pre-defined responses if Gemini API call fails
+    return getFallbackResponse(category, language);
   } catch (error) {
     console.error('Error fetching wisdom response:', error);
-    return null;
+    return getFallbackResponse(category, language);
   }
 }
 
 // Function to call Gemini API
 async function fetchGeminiResponse(question: string, category: string, language: Language) {
   try {
-    // Set a fallback API key - you might want to replace this or use the one from Supabase
-    let geminiKey = 'your-fallback-gemini-api-key'; // Replace with your actual fallback API key if you have one
-    
-    try {
-      // Try to get Gemini API key from Supabase
-      const { data: secretData, error: secretError } = await supabase
-        .from('secrets')
-        .select('value')
-        .eq('name', 'gemini_api_key')
-        .single();
-      
-      if (!secretError && secretData) {
-        geminiKey = secretData.value;
-      } else {
-        // If the table doesn't exist or there's an error, we'll use the fallback key
-        console.error('Failed to retrieve Gemini API key from Supabase:', secretError);
-        toast({
-          title: "Using Fallback Response",
-          description: "Could not connect to Gemini API. Please set up the secrets table in Supabase.",
-          variant: "destructive"
-        });
-        return getFallbackResponse(category, language);
-      }
-    } catch (error) {
-      console.error('Error accessing secrets table:', error);
-      return getFallbackResponse(category, language);
-    }
-    
     // Construct prompt based on category and language
     let prompt = `You are a wise spiritual guide who provides wisdom based on the Bhagavad Gita. 
     The user is asking about: "${question}" which falls under the category of "${category}".
@@ -85,7 +36,7 @@ async function fetchGeminiResponse(question: string, category: string, language:
       prompt += " Please respond in Hindi language.";
     }
     
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${geminiKey}`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -111,11 +62,21 @@ async function fetchGeminiResponse(question: string, category: string, language:
       return data.candidates[0].content.parts[0].text;
     } else {
       console.error('Unexpected Gemini API response format:', data);
-      return getFallbackResponse(category, language);
+      toast({
+        title: "Using Fallback Response",
+        description: "Could not get a valid response from Gemini API. Using pre-defined wisdom.",
+        variant: "destructive"
+      });
+      return null;
     }
   } catch (error) {
     console.error('Error calling Gemini API:', error);
-    return getFallbackResponse(category, language);
+    toast({
+      title: "API Error",
+      description: "Error connecting to Gemini API. Using pre-defined wisdom instead.",
+      variant: "destructive"
+    });
+    return null;
   }
 }
 
