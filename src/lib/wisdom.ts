@@ -1,3 +1,4 @@
+
 import { supabase } from './supabase';
 import { Language } from '@/types';
 
@@ -46,12 +47,19 @@ export async function getWisdomResponse(category: string, language: Language, qu
 // Function to call Gemini API
 async function fetchGeminiResponse(question: string, category: string, language: Language) {
   try {
-    const geminiKey = localStorage.getItem('geminiApiKey');
+    // Get Gemini API key from Supabase
+    const { data: secretData, error: secretError } = await supabase
+      .from('secrets')
+      .select('value')
+      .eq('name', 'gemini_api_key')
+      .single();
     
-    if (!geminiKey) {
-      console.error('Gemini API key not found. Please set it first.');
+    if (secretError || !secretData?.value) {
+      console.error('Failed to retrieve Gemini API key from Supabase:', secretError);
       return null;
     }
+    
+    const geminiKey = secretData.value;
     
     // Construct prompt based on category and language
     let prompt = `You are a wise spiritual guide who provides wisdom based on the Bhagavad Gita. 
@@ -135,7 +143,7 @@ export const fallbackWisdomResponses = {
     career: "भगवद गीता के अनुसार, अनासक्ति के साथ और दिव्य को समर्पित किया गया कार्य सच्ची पूर्ति लाता है...",
     health: "गीता सिखाती है कि शरीर आत्मा के लिए एक मंदिर है और इसे संतुलन के साथ बनाए रखा जाना चाहिए...",
     spirituality: "भगवद गीता के अनुसार आध्यात्मिक विकास का सार स्थिर अभ्यास और अनासक्ति में पाया जाता है...",
-    anxiety: "भगवद गीता अध्याय 2 में सीधे चि���ता को संबोधित करती है, जहां भगवान कृष्ण अर्जुन को शाश्वत स्वयं के ज्ञान...",
+    anxiety: "भगवद गीता अध्याय 2 में सीधे चिन्ता को संबोधित करती है, जहां भगवान कृष्ण अर्जुन को शाश्वत स्वयं के ज्ञान...",
     default: "भगवद गीता का ज्ञान हमें याद दिलाता है कि जीवन की चुनौतियां विकास और आत्म-खोज के अवसर हैं..."
   }
 };
