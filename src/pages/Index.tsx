@@ -8,14 +8,45 @@ import { DreamInterpreter } from "@/components/features/DreamInterpreter";
 import { MoodMantra } from "@/components/features/MoodMantra";
 import { DailyVerse } from "@/components/features/DailyVerse";
 import { LanguagePicker } from "@/components/features/LanguagePicker";
-import { BookOpen, Moon, Sun, Heart, Globe } from "lucide-react";
+import { BookOpen, Moon, Sun, Heart, Globe, User, LogIn, Crown } from "lucide-react";
 import { Language } from "@/types";
+import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { AuthModal } from "@/components/auth/AuthModal";
 
 const Index = () => {
   const [language, setLanguage] = useState<Language>("english");
+  const { user, isPremium } = useAuth();
+  const [authModalOpen, setAuthModalOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-background w-full">
+      {/* Navigation */}
+      <nav className="w-full py-4 px-4 md:px-6 flex justify-between items-center">
+        <div className="text-xl font-heading font-bold text-gradient">Bhagwat Wisdom</div>
+        <div className="flex items-center gap-2">
+          {user ? (
+            <Link to="/profile">
+              <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                <User className="h-4 w-4" />
+                {isPremium && <Crown className="h-4 w-4 text-gold" />}
+                <span className="hidden sm:inline">{user.name || 'Profile'}</span>
+              </Button>
+            </Link>
+          ) : (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setAuthModalOpen(true)}
+              className="flex items-center gap-2"
+            >
+              <LogIn className="h-4 w-4" />
+              <span className="hidden sm:inline">Sign In</span>
+            </Button>
+          )}
+        </div>
+      </nav>
+
       {/* Hero Section */}
       <section className="w-full py-12 md:py-24 lg:py-32 flex flex-col items-center justify-center text-center px-4">
         <div className="container px-4 md:px-6">
@@ -29,8 +60,13 @@ const Index = () => {
               </p>
             </div>
             <div className="space-x-4">
-              <Button className="button-gradient">Get Started</Button>
-              <Button variant="outline">Learn More</Button>
+              <Button className="button-gradient" onClick={() => {
+                // Scroll to features section
+                document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
+              }}>Get Started</Button>
+              {!user && (
+                <Button variant="outline" onClick={() => setAuthModalOpen(true)}>Sign In</Button>
+              )}
             </div>
           </div>
         </div>
@@ -50,7 +86,7 @@ const Index = () => {
       </section>
 
       {/* Features Tabs */}
-      <section className="w-full py-12 md:py-24">
+      <section id="features" className="w-full py-12 md:py-24">
         <div className="container px-4 md:px-6">
           <div className="flex flex-col items-center space-y-4 text-center mb-10">
             <h2 className="text-3xl font-heading font-bold tracking-tighter sm:text-4xl">
@@ -101,7 +137,7 @@ const Index = () => {
                     <CardDescription>Find solutions to your problems based on Bhagavad Gita teachings</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <ProblemSolver language={language} />
+                    <ProblemSolver language={language} isPremium={isPremium} />
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -170,6 +206,9 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* Auth Modal */}
+      <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
     </div>
   );
 };

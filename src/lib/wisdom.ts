@@ -13,7 +13,12 @@ export async function getWisdomResponse(category: string, language: Language, qu
 
     // If we have a cached response, return it
     if (cachedResponse?.results && !fetchError) {
-      return cachedResponse.results.response;
+      // Check if results is a string or an object with response property
+      if (typeof cachedResponse.results === 'object' && cachedResponse.results !== null && 'response' in cachedResponse.results) {
+        return cachedResponse.results.response;
+      } else {
+        return String(cachedResponse.results); // Convert to string if it's not an object
+      }
     }
     
     // Otherwise, call Gemini API to get a new response

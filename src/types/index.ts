@@ -14,3 +14,15 @@ export interface Verse {
 export interface ThemeState {
   isDark: boolean;
 }
+
+// User related types
+export interface UserProfile {
+  id: string;
+  name?: string;
+  email?: string;
+  avatar_url?: string;
+  is_premium?: boolean;
+  created_at?: string;
+}
+
+export type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
