@@ -1,4 +1,7 @@
 
+-- Enable UUID extension if not already enabled
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 -- Create a table for storing application secrets
 CREATE TABLE IF NOT EXISTS secrets (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -16,7 +19,7 @@ ON CONFLICT (name) DO NOTHING;
 -- Enable RLS for the secrets table
 ALTER TABLE secrets ENABLE ROW LEVEL SECURITY;
 
--- Only allow admins to access secrets
+-- Only allow authenticated users to access secrets
 CREATE POLICY "Only authenticated users can read secrets" 
   ON secrets
   FOR SELECT

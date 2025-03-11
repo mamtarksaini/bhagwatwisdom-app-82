@@ -53,6 +53,11 @@ export function ProblemSolver({ language, isPremium = false }: ProblemSolverProp
         const responses = fallbackWisdomResponses[language] || fallbackWisdomResponses.english;
         const fallbackResponse = responses[category] || responses.default;
         setSolution(fallbackResponse);
+        toast({
+          title: "Using Fallback Response",
+          description: "Could not connect to Gemini API. Using pre-defined wisdom.",
+          variant: "default"
+        });
       }
     } catch (error) {
       console.error("Error getting wisdom:", error);
@@ -62,6 +67,11 @@ export function ProblemSolver({ language, isPremium = false }: ProblemSolverProp
       const fallbackResponse = responses[category] || responses.default;
       
       setSolution(fallbackResponse);
+      toast({
+        title: "Error",
+        description: "Something went wrong. Using pre-defined wisdom instead.",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
