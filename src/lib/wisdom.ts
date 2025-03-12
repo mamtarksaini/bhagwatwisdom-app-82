@@ -1,82 +1,32 @@
-
 import { Language } from '@/types';
 import { toast } from '@/components/ui/use-toast';
+import { supabase } from './supabase';
 
-// Your Gemini API key - replace with your actual API key
-const GEMINI_API_KEY = 'your-gemini-api-key-here';
-
-// Function to get wisdom from Gemini API
+// Function to get wisdom from Supabase Edge Function
 export async function getWisdomResponse(category: string, language: Language, question: string) {
   try {
-    // Call Gemini API to get a response
-    const geminiResponse = await fetchGeminiResponse(question, category, language);
-    
-    // Return the response if successful
-    if (geminiResponse) {
-      return geminiResponse;
+    const { data, error } = await supabase.functions.invoke('get-wisdom', {
+      body: {
+        question,
+        category,
+        language
+      }
+    });
+
+    if (error) {
+      console.error('Error calling Supabase function:', error);
+      toast({
+        title: "Using Fallback Response",
+        description: "Could not get a response from the server. Using pre-defined wisdom.",
+        variant: "destructive"
+      });
+      return getFallbackResponse(category, language);
     }
-    
-    // Fall back to pre-defined responses if Gemini API call fails
-    return getFallbackResponse(category, language);
+
+    return data.answer;
   } catch (error) {
     console.error('Error fetching wisdom response:', error);
     return getFallbackResponse(category, language);
-  }
-}
-
-// Function to call Gemini API
-async function fetchGeminiResponse(question: string, category: string, language: Language) {
-  try {
-    // Construct prompt based on category and language
-    let prompt = `You are a wise spiritual guide who provides wisdom based on the Bhagavad Gita. 
-    The user is asking about: "${question}" which falls under the category of "${category}".
-    Please provide a thoughtful, compassionate response with references to relevant concepts from the Bhagavad Gita.`;
-    
-    if (language === 'hindi') {
-      prompt += " Please respond in Hindi language.";
-    }
-    
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [
-              { text: prompt }
-            ]
-          }
-        ],
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 800,
-        }
-      })
-    });
-    
-    const data = await response.json();
-    
-    if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
-      return data.candidates[0].content.parts[0].text;
-    } else {
-      console.error('Unexpected Gemini API response format:', data);
-      toast({
-        title: "Using Fallback Response",
-        description: "Could not get a valid response from Gemini API. Using pre-defined wisdom.",
-        variant: "destructive"
-      });
-      return null;
-    }
-  } catch (error) {
-    console.error('Error calling Gemini API:', error);
-    toast({
-      title: "API Error",
-      description: "Error connecting to Gemini API. Using pre-defined wisdom instead.",
-      variant: "destructive"
-    });
-    return null;
   }
 }
 
@@ -110,7 +60,7 @@ export const determineResponseCategory = (question: string): string => {
   return 'default';
 };
 
-// Fallback wisdom responses when Gemini API doesn't return results
+// Fallback wisdom responses when API doesn't return results
 export const fallbackWisdomResponses = {
   english: {
     relationships: "The Bhagavad Gita teaches us that true relationships are based on selfless love and understanding. Like Krishna advised Arjuna, 'Those who are motivated only by desire for the fruits of action are miserable, for they are constantly anxious about the results of what they do.' In relationships too, attachment to outcomes brings suffering, while selfless love brings peace.",
@@ -122,7 +72,7 @@ export const fallbackWisdomResponses = {
   },
   hindi: {
     relationships: "भगवद गीता हमें सिखाती है कि सच्चे संबंध निःस्वार्थ प्रेम और समझ पर आधारित होते हैं। जैसे कृष्ण ने अर्जुन को सलाह दी, 'जो केवल कर्म के फलों की इच्छा से प्रेरित होते हैं, वे दुखी होते हैं, क्योंकि वे लगातार अपने कार्यों के परिणामों के बारे में चिंतित रहते हैं।' रिश्तों में भी, परिणामों से जुड़ाव दुःख लाता है, जबकि निःस्वार्थ प्रेम शांति लाता है।",
-    career: "भगवद गीता के अनुसार, अनासक्ति के साथ और दिव्य को समर्पित किया गया कार्य सच्ची पूर्ति लाता है। जैसा कि भगवान कृष्ण कहते हैं, 'आपको अपने निर्धारित कर्तव्यों को करने का अधिकार है, लेकिन आप अपने कर्मों के फलों के हकदार नहीं हैं।' परिणामों के बारे में चिंतित होने के बजाय, उत्कृष्टता और समर्पण के साथ अपना काम करने पर ध्यान दें।",
+    career: "भगवद गीता के अनुसार, अनासक्ति के साथ और दिव्य को समर्पित किया गया कार्य सच्ची पूर्ति लाता है। जैसा कि भगवान कृष्ण कहते हैं, 'आपको अपने निर्धारित कर्तव्यों को करने का अधिकार है, लेकिन आप अपने ���र्मों के फलों के हकदार नहीं हैं।' परिणामों के बारे में चिंतित होने के बजाय, उत्कृष्टता और समर्पण के साथ अपना काम करने पर ध्यान दें।",
     health: "गीता सिखाती है कि शरीर आत्मा के लिए एक मंदिर है और इसे संतुलन के साथ बनाए रखा जाना चाहिए। भगवान कृष्ण सलाह देते हैं: 'योग उसके लिए नहीं है जो बहुत अधिक खाता है, या उसके लिए जो बहुत कम खाता है; यह उसके लिए नहीं है जो बहुत अधिक सोता है, या उसके लिए जो बहुत कम सोता है।' जीवन के सभी पहलुओं में संयम स्वास्थ्य और स्पष्टता लाता है।",
     spirituality: "भगवद गीता के अनुसार आध्यात्मिक विकास का सार स्थिर अभ्यास और अनासक्ति में पाया जाता है। कृष्ण सिखाते हैं, 'मन चंचल और नियंत्रित करना कठिन है, लेकिन यह अभ्यास और अनासक्ति से वश में होता है।' नियमित ध्यान, आत्म-जिज्ञासा, और भक्ति धीरे-धीरे आपके सच्चे आध्यात्मिक स्वभाव को प्रकट करेंगे।",
     anxiety: "भगवद गीता अध्याय 2 में सीधे चिन्ता को संबोधित करती है, जहां भगवान कृष्ण अर्जुन को शाश्वत स्वयं के ज्ञान के माध्यम से भय को दूर करना सिखाते हैं: 'आत्मा के लिए कभी जन्म नहीं है और न ही मृत्यु है। ऐसा नहीं है कि आत्मा कभी नहीं थी, अस्तित्व में आई है, या समाप्त हो जाएगी। यह अजन्मा, शाश्वत, सदा-विद्यमान, अमर और आदिकालीन है।'",
