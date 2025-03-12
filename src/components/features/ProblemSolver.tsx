@@ -42,20 +42,25 @@ export function ProblemSolver({ language, isPremium = false }: ProblemSolverProp
     if (!problem.trim()) return;
     
     setIsLoading(true);
+    console.log('Submitting problem:', { problem, language });
     
     try {
       const category = determineResponseCategory(problem);
+      console.log('Determined category:', category);
+      
       const response = await getWisdomResponse(category, language, problem);
+      console.log('Got wisdom response:', response);
       
       if (response) {
         setSolution(response);
       } else {
+        console.error('No response received from getWisdomResponse');
         const responses = fallbackWisdomResponses[language] || fallbackWisdomResponses.english;
         const fallbackResponse = responses[category] || responses.default;
         setSolution(fallbackResponse);
         toast({
           title: "Using Fallback Response",
-          description: "Could not connect to Gemini API. Using pre-defined wisdom.",
+          description: "Could not connect to wisdom service. Using pre-defined wisdom.",
           variant: "default"
         });
       }

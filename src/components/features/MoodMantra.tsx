@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,48 +25,66 @@ export function MoodMantra({ language, isPremium = false }: MoodMantraProps) {
     
     setIsLoading(true);
     
-    // Mock API call for mantra
-    setTimeout(() => {
-      const mockMantras: Record<string, { [key: string]: { text: string; meaning: string } }> = {
-        "Calm": {
-          english: {
-            text: "Om Shanti Om",
-            meaning: "I am peace, divine peace flows through me. This mantra aligns with the Bhagavad Gita's teaching from Chapter 2, Verse 71 about achieving peace by abandoning desires and living without longing, free from possessiveness and ego."
-          },
-          hindi: {
-            text: "ॐ शांति ॐ",
-            meaning: "मैं शांति हूँ, दिव्य शांति मुझमें से बहती है। यह मंत्र भगवद गीता के अध्याय 2, श्लोक 71 के शिक्षा से मेल खाता है, जिसमें इच्छाओं को त्याग कर और लालसा के बिना, अपनत्व और अहंकार से मुक्त होकर शांति प्राप्त करने के बारे में बताया गया है।"
-          }
+    // Updated mock mantras with different content for each mood
+    const mockMantras: Record<string, { [key: string]: { text: string; meaning: string } }> = {
+      "Calm": {
+        english: {
+          text: "Om Shanti Om",
+          meaning: "I am peace, divine peace flows through me. This mantra aligns with the Bhagavad Gita's teaching from Chapter 2, Verse 71 about achieving peace by abandoning desires and living without longing."
         },
-        "Anxious": {
-          english: {
-            text: "Om Namah Shivaya",
-            meaning: "I bow to the divine within. This powerful mantra helps calm anxious thoughts, reminding you of your divine nature beyond temporary worries, aligning with the Gita's Chapter 6 teachings on meditation and controlling the mind."
-          },
-          hindi: {
-            text: "ॐ नमः शिवाय",
-            meaning: "मैं अपने भीतर के दिव्य को नमन करता हूँ। यह शक्तिशाली मंत्र चिंताग्रस्त विचारों को शांत करने में मदद करता है, आपको अस्थायी चिंताओं से परे आपके दिव्य स्वभाव की याद दिलाता है, गीता के अध्याय 6 के ध्यान और मन को नियंत्रित करने के शिक्षाओं के अनुरूप है।"
-          }
-        },
-        "Happy": {
-          english: {
-            text: "Om Anandham Paramanandham",
-            meaning: "I am bliss, I am supreme bliss. This mantra celebrates your natural state of joy, reflecting the Gita's teaching that true happiness comes from within, not external circumstances."
-          },
-          hindi: {
-            text: "ॐ आनन्दम् परमानन्दम्",
-            meaning: "मैं आनंद हूँ, मैं परम आनंद हूँ। यह मंत्र आपकी प्राकृतिक आनंद की स्थिति का जश्न मनाता है, गीता की शिक्षा को दर्शाता है कि सच्चा सुख बाहरी परिस्थितियों से नहीं, भीतर से आता है।"
-          }
+        hindi: {
+          text: "ॐ शांति ॐ",
+          meaning: "मैं शांति हूँ, दिव्य शांति मुझमें से बहती है। यह मंत्र भगवद गीता के अध्याय 2, श्लोक 71 के शिक्षा से मेल खाता है।"
         }
-      };
-      
-      // Get mantra for selected mood, fallback to English if language not available
-      const moodMantras = mockMantras[selectedMood || "Calm"] || mockMantras["Calm"];
-      const selectedMantra = moodMantras[language] || moodMantras.english;
-      
-      setMantra(selectedMantra);
-      setIsLoading(false);
-    }, 1000);
+      },
+      "Anxious": {
+        english: {
+          text: "Om Namah Shivaya",
+          meaning: "I bow to the divine within. This powerful mantra helps calm anxious thoughts, reminding you of your divine nature beyond temporary worries."
+        },
+        hindi: {
+          text: "ॐ नमः शिवाय",
+          meaning: "मैं अपने भीतर के दिव्य को नमन करता हूँ। यह शक्तिशाली मंत्र चिंताग्रस्त विचारों को शांत करने में मदद करता है।"
+        }
+      },
+      "Happy": {
+        english: {
+          text: "Om Anandham Paramanandham",
+          meaning: "I am bliss, I am supreme bliss. This mantra celebrates your natural state of joy and inner happiness."
+        },
+        hindi: {
+          text: "ॐ आनन्दम् परमानन्दम्",
+          meaning: "मैं आनंद हूँ, मैं परम आनंद हूँ। यह मंत्र आपकी प्राकृतिक आनंद की स्थिति का जश्न मनाता है।"
+        }
+      },
+      "Sad": {
+        english: {
+          text: "Om Sarvesham Svastir Bhavatu",
+          meaning: "May all beings be happy and free from suffering. This mantra helps transform sadness through compassion."
+        },
+        hindi: {
+          text: "ॐ सर्वेषां स्वस्तिर्भवतु",
+          meaning: "सभी प्राणी सुखी और दुख से मुक्त हों। यह मंत्र करुणा के माध्यम से दुख को बदलने में मदद करता है।"
+        }
+      },
+      "Confused": {
+        english: {
+          text: "Om Gam Ganapataye Namaha",
+          meaning: "I bow to the remover of obstacles. This mantra helps clear confusion and brings clarity of thought."
+        },
+        hindi: {
+          text: "ॐ गं गणपतये नमः",
+          meaning: "मैं बाधाओं को दूर करने वाले को नमन करता हूं। यह मंत्र भ्रम को दूर करने और विचारों में स्पष्टता लाने में मदद करता है।"
+        }
+      }
+    };
+    
+    // Get mantra for selected mood, fallback to Calm if mood not found
+    const moodMantras = mockMantras[mood] || mockMantras["Calm"];
+    const selectedMantra = moodMantras[language] || moodMantras.english;
+    
+    setMantra(selectedMantra);
+    setIsLoading(false);
   };
 
   const handleReset = () => {
