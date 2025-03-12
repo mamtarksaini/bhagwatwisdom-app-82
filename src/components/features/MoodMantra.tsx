@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -76,12 +77,65 @@ export function MoodMantra({ language, isPremium = false }: MoodMantraProps) {
           text: "ॐ गं गणपतये नमः",
           meaning: "मैं बाधाओं को दूर करने वाले को नमन करता हूं। यह मंत्र भ्रम को दूर करने और विचारों में स्पष्टता लाने में मदद करता है।"
         }
+      },
+      "Fearful": {
+        english: {
+          text: "Om Durgaya Namaha",
+          meaning: "I bow to the divine power that protects from all difficulties. This mantra invokes courage and protection, reminding us that fear is temporary while our divine nature is eternal."
+        },
+        hindi: {
+          text: "ॐ दुर्गायै नमः",
+          meaning: "मैं सभी कठिनाइयों से रक्षा करने वाली दिव्य शक्ति को नमन करता हूं। यह मंत्र साहस और सुरक्षा का आह्वान करता है, हमें याद दिलाता है कि भय अस्थायी है जबकि हमारा दिव्य स्वभाव शाश्वत है।"
+        }
+      },
+      "Grateful": {
+        english: {
+          text: "Om Sarva Mangala Mangalye",
+          meaning: "I honor the source of all auspiciousness. This mantra helps cultivate deep gratitude by recognizing the divine blessings in every aspect of life, as taught in the Bhagavad Gita's lessons on contentment."
+        },
+        hindi: {
+          text: "ॐ सर्व मंगल मांगल्ये",
+          meaning: "मैं सभी शुभता के स्रोत का सम्मान करता हूं। यह मंत्र जीवन के हर पहलू में दिव्य आशीर्वाद को पहचानकर गहरी कृतज्ञता को विकसित करने में मदद करता है, जैसा कि भगवद गीता के संतोष के पाठों में सिखाया गया है।"
+        }
+      },
+      "Peaceful": {
+        english: {
+          text: "Om Sahana Vavatu",
+          meaning: "May we be protected together. This ancient peace mantra creates harmony within and around us, resonating with the Bhagavad Gita's teachings on inner tranquility despite external circumstances."
+        },
+        hindi: {
+          text: "ॐ सहना वावतु",
+          meaning: "हम एक साथ सुरक्षित रहें। यह प्राचीन शांति मंत्र हमारे भीतर और हमारे आसपास सद्भाव बनाता है, जो बाहरी परिस्थितियों के बावजूद भगवद गीता के आंतरिक शांति के शिक्षाओं के साथ गूंजता है।"
+        }
+      },
+      "Energetic": {
+        english: {
+          text: "Om Hreem Sooryaya Namaha",
+          meaning: "I bow to the divine sun energy. This powerful energizing mantra awakens our inner vitality and enthusiasm, connecting us to the cosmic energy that fuels all action as described in the Bhagavad Gita."
+        },
+        hindi: {
+          text: "ॐ ह्रीं सूर्याय नमः",
+          meaning: "मैं दिव्य सूर्य ऊर्जा को नमन करता हूं। यह शक्तिशाली ऊर्जावान मंत्र हमारी आंतरिक प्राणशक्ति और उत्साह को जगाता है, हमें उस कॉस्मिक ऊर्जा से जोड़ता है जो भगवद गीता में वर्णित सभी कार्यों को शक्ति प्रदान करती है।"
+        }
+      },
+      "Motivated": {
+        english: {
+          text: "Om Vajra Pani Namaha",
+          meaning: "Salutations to the divine force of determination. This motivational mantra ignites inner strength and resolve, reflecting the Bhagavad Gita's guidance on disciplined action and perseverance."
+        },
+        hindi: {
+          text: "ॐ वज्र पाणि नमः",
+          meaning: "दृढ़ संकल्प की दिव्य शक्ति को नमस्कार। यह प्रेरणादायक मंत्र आंतरिक शक्ति और दृढ़ संकल्प को प्रज्वलित करता है, जो भगवद गीता के अनुशासित कार्य और दृढ़ता पर मार्गदर्शन को दर्शाता है।"
+        }
       }
     };
     
     // Get mantra for selected mood, fallback to Calm if mood not found
     const moodMantras = mockMantras[mood] || mockMantras["Calm"];
+    console.log(`Selected mood: ${mood}, Available mantras:`, Object.keys(mockMantras));
+    
     const selectedMantra = moodMantras[language] || moodMantras.english;
+    console.log(`Mantra for ${mood} in ${language}:`, selectedMantra);
     
     setMantra(selectedMantra);
     setIsLoading(false);

@@ -15,6 +15,14 @@ interface AuthContextType {
   upgradeToPremium: () => Promise<void>;
 }
 
+// Define the profile type with is_premium
+interface Profile {
+  id: string;
+  name: string;
+  created_at: string;
+  is_premium: boolean;
+}
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
