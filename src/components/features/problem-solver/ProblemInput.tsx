@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Mic, MicOff, RotateCcw, Send } from "lucide-react";
 import { Language } from "@/types";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
+import { toast } from "@/components/ui/use-toast";
 
 interface ProblemInputProps {
   problem: string;
@@ -23,16 +24,37 @@ export function ProblemInput({
   isLoading, 
   language 
 }: ProblemInputProps) {
-  const { isListening, transcript, startListening, stopListening, resetTranscript, error: speechError } = useSpeechRecognition(language);
+  const { 
+    isListening, 
+    transcript, 
+    startListening, 
+    stopListening, 
+    resetTranscript, 
+    error: speechError 
+  } = useSpeechRecognition(language);
   
   const handleSpeechInput = () => {
     if (isListening) {
       stopListening();
-      // Fix: Instead of using a function, directly concatenate the strings
-      setProblem(problem + " " + transcript);
-      resetTranscript();
+      if (transcript) {
+        // Safely concatenate strings
+        setProblem((prev) => {
+          const trimmedPrev = prev.trim();
+          const trimmedTranscript = transcript.trim();
+          
+          if (!trimmedPrev) return trimmedTranscript;
+          if (!trimmedTranscript) return trimmedPrev;
+          
+          return `${trimmedPrev} ${trimmedTranscript}`;
+        });
+        resetTranscript();
+      }
     } else {
       startListening();
+      toast({
+        title: "Voice input activated",
+        description: "Speak clearly to record your problem",
+      });
     }
   };
 
@@ -58,6 +80,7 @@ export function ProblemInput({
             size="icon"
             className={`rounded-full ${isListening ? 'bg-red-100 text-red-500 animate-pulse' : ''}`}
             onClick={handleSpeechInput}
+            type="button"
           >
             {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
           </Button>
@@ -66,6 +89,7 @@ export function ProblemInput({
             size="icon"
             className="rounded-full"
             onClick={onReset}
+            type="button"
           >
             <RotateCcw className="h-4 w-4" />
           </Button>
@@ -79,6 +103,7 @@ export function ProblemInput({
           onClick={onSubmit} 
           disabled={!problem.trim() || isLoading}
           className="button-gradient"
+          type="button"
         >
           {isLoading ? (
             <>

@@ -17,11 +17,18 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
   };
 
   const handleSubmit = async () => {
-    if (!problem.trim()) return;
+    if (!problem.trim() || isLoading) return;
     
     setIsLoading(true);
     setUsingFallback(false);
     setSolution(""); // Clear previous solution
+    
+    // Show loading toast
+    const loadingToast = toast({
+      title: "Processing your request",
+      description: "Finding wisdom to guide you..."
+    });
+    
     console.log('Submitting problem:', { problem, language });
     
     try {
@@ -53,9 +60,13 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
             toast({
               title: "Using offline guidance",
               description: "We're currently providing wisdom from our local database. AI-generated responses will be available soon.",
-              variant: "default",
             });
           }
+        } else {
+          toast({
+            title: "Wisdom found",
+            description: "Ancient guidance is now available for your reflection.",
+          });
         }
       } else {
         console.error('No response received from getWisdomResponse');
@@ -63,6 +74,11 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
         const fallbackResponse = responses[category] || responses.default;
         setSolution(fallbackResponse);
         setUsingFallback(true);
+        
+        toast({
+          title: "Using offline wisdom",
+          description: "We couldn't connect to our wisdom server, but local guidance is available.",
+        });
       }
     } catch (error) {
       console.error("Error getting wisdom:", error);
@@ -73,7 +89,13 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
       
       setSolution(fallbackResponse);
       setUsingFallback(true);
+      
+      toast({
+        title: "Connection issue",
+        description: "We're providing local wisdom while we resolve connectivity issues.",
+      });
     } finally {
+      loadingToast.dismiss();
       setIsLoading(false);
     }
   };
