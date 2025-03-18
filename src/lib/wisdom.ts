@@ -3,64 +3,158 @@ import { Language } from '@/types';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from './supabase';
 
-// Function to get wisdom from Supabase Edge Function
+// Helper function to make a direct API call to Gemini
+async function callGeminiDirectly(prompt: string) {
+  const GEMINI_API_KEY = 'YOUR_FRONTEND_PUBLISHABLE_KEY_HERE'; // Replace with your publishable key
+  
+  if (!GEMINI_API_KEY || GEMINI_API_KEY === 'YOUR_FRONTEND_PUBLISHABLE_KEY_HERE') {
+    console.warn('No direct Gemini API key provided for fallback');
+    return null;
+  }
+  
+  try {
+    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': GEMINI_API_KEY,
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            role: 'user',
+            parts: [{ text: prompt }]
+          }
+        ],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 800,
+        }
+      }),
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Direct Gemini API error: ${response.status} - ${errorText}`);
+    }
+    
+    const data = await response.json();
+    
+    if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
+      throw new Error('Invalid Gemini API response structure');
+    }
+    
+    return data.candidates[0].content.parts[0].text;
+  } catch (error) {
+    console.error('Direct Gemini API call failed:', error);
+    return null;
+  }
+}
+
+// Function to get wisdom from Supabase Edge Function or direct API call
 export async function getWisdomResponse(category: string, language: Language, question: string) {
   try {
     console.log('Calling get-wisdom function with:', { category, language, question });
+    
+    // Construct prompt for modern relevance
+    const prompt = `You are both a wise spiritual guide knowledgeable in the Bhagavad Gita AND a modern psychologist or life coach. Respond to this problem in a way that today's generation would relate to while providing authentic wisdom.
+
+    The user's problem is: "${question}" (category: ${category})
+    
+    Your response should:
+    1. Acknowledge their struggle with empathy in 1-2 sentences
+    2. Provide one or two relevant principles from the Bhagavad Gita, explaining the concept in modern language
+    3. Outline 2-3 practical steps they can take, rooted in this wisdom but presented in contemporary terms
+    4. End with a brief encouraging statement
+    
+    Use accessible language while preserving the depth of the wisdom. Avoid religious jargon that might alienate someone unfamiliar with Hindu concepts - instead, focus on the psychological insights.
+    
+    Keep your response concise (200-400 words).
+    ${language === 'hindi' ? "Please respond in conversational Hindi language that's easy to understand." : ""}`;
     
     // Add a longer timeout for the edge function call
     const timeoutPromise = new Promise((_, reject) => 
       setTimeout(() => reject(new Error('Edge function request timed out')), 30000)
     );
     
-    const functionCallPromise = supabase.functions.invoke('get-wisdom', {
-      body: {
-        question,
-        category,
-        language
-      }
-    });
+    let edgeFunctionResponse;
+    let edgeError = null;
     
-    // Race between the response and timeout
-    const { data, error } = await Promise.race([
-      functionCallPromise,
-      timeoutPromise.then(() => { 
-        throw new Error('Edge function request timed out');
-      })
-    ]) as { data: any, error: any };
-
-    if (error) {
-      console.error('Error calling Supabase function:', error);
-      throw new Error(`Failed to connect to wisdom service: ${error.message}`);
-    }
-
-    // Add extra logging to see what's coming back
-    console.log('Response from edge function:', JSON.stringify(data));
-
-    // Handle error status from edge function
-    if (data?.status === 'error') {
-      console.error('Server returned error:', data.message);
-      throw new Error(data.message || 'Server error');
-    }
-
-    // Check if we need to use fallback (API key missing or other server error)
-    if (data?.useFallback) {
-      console.warn('Server indicated fallback should be used:', data);
+    try {
+      // Try to call the Edge Function first
+      const functionCallPromise = supabase.functions.invoke('get-wisdom', {
+        body: {
+          question,
+          category,
+          language
+        }
+      });
       
-      if (data?.error) {
-        console.error('Server error details:', data.error);
+      // Race between the response and timeout
+      edgeFunctionResponse = await Promise.race([
+        functionCallPromise,
+        timeoutPromise.then(() => { 
+          throw new Error('Edge function request timed out');
+        })
+      ]);
+      
+    } catch (error) {
+      console.error('Edge function error, will try direct API call:', error);
+      edgeError = error;
+    }
+    
+    // Process Edge Function response if successful
+    if (edgeFunctionResponse && !edgeFunctionResponse.error) {
+      const data = edgeFunctionResponse.data;
+      
+      // Add extra logging to see what's coming back
+      console.log('Response from edge function:', JSON.stringify(data));
+  
+      // Handle error status from edge function
+      if (data?.status === 'error') {
+        console.error('Server returned error:', data.message);
+        throw new Error(data.message || 'Server error');
       }
+  
+      // Check if we need to use fallback (API key missing or other server error)
+      if (data?.useFallback) {
+        console.warn('Server indicated fallback should be used:', data);
+        
+        if (data?.error) {
+          console.error('Server error details:', data.error);
+        }
+        
+        throw new Error(`AI service unavailable: ${data.error || 'Unknown reason'}`);
+      }
+  
+      if (data && data.answer) {
+        console.log('Got wisdom response from edge function:', data.answer.substring(0, 100) + '...');
+        return data.answer;
+      }
+    }
+    
+    // If Edge Function failed or returned invalid response, try direct API
+    console.log('Edge function failed or returned invalid response, trying direct API call');
+    
+    // Try direct Gemini API call as a fallback
+    const directAnswer = await callGeminiDirectly(prompt);
+    
+    if (directAnswer) {
+      console.log('Got wisdom response from direct API call:', directAnswer.substring(0, 100) + '...');
       
-      throw new Error(`AI service unavailable: ${data.error || 'Unknown reason'}`);
+      // Show toast that we're using direct API
+      toast({
+        title: "Using direct Gemini API",
+        description: "Edge Function unavailable, using fallback connection method.",
+      });
+      
+      return directAnswer;
     }
-
-    if (!data || !data.answer) {
-      console.error('Invalid response from Supabase function:', data);
-      throw new Error('Invalid response from wisdom service');
-    }
-
-    console.log('Got wisdom response:', data.answer.substring(0, 100) + '...');
-    return data.answer;
+    
+    // If both methods fail, use fallback response
+    console.warn('Both Edge Function and direct API call failed, using static fallback');
+    throw new Error('All wisdom services unavailable');
+    
   } catch (error) {
     console.error('Error fetching wisdom response:', error);
     
@@ -73,14 +167,14 @@ export async function getWisdomResponse(category: string, language: Language, qu
       errorMessage.includes('Failed to connect to wisdom service')
     ) {
       toast({
-        title: "Edge Function Connection Error",
-        description: "Unable to connect to the Edge Function. Please ensure it is deployed correctly.",
+        title: "Connection Error",
+        description: "Unable to connect to wisdom services. Showing offline wisdom instead.",
         variant: "destructive"
       });
     } else {
       toast({
         title: "AI Service Unavailable",
-        description: "Please check if the GEMINI_API_KEY is properly configured in Supabase Edge Function Secrets.",
+        description: "Please try again later. Showing offline wisdom instead.",
         variant: "destructive"
       });
     }

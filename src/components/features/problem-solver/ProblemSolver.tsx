@@ -6,6 +6,8 @@ import { ProblemInput } from './ProblemInput';
 import { WisdomDisplay } from './WisdomDisplay';
 import { PremiumBanner } from './PremiumBanner';
 import { useProblemSolver } from './useProblemSolver';
+import { AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface ProblemSolverProps {
   language: Language;
@@ -23,7 +25,8 @@ export function ProblemSolver({ language, isPremium = false }: ProblemSolverProp
     handleReset,
     handleSubmit,
     handleRetry,
-    retryCount
+    retryCount,
+    directApiUsed
   } = useProblemSolver(language, isPremium);
 
   return (
@@ -33,6 +36,28 @@ export function ProblemSolver({ language, isPremium = false }: ProblemSolverProp
         <CardDescription>Share your challenge and receive guidance from ancient Bhagavad Gita wisdom</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        {networkError && !isLoading && (
+          <Alert variant="default" className="bg-amber-500/10 border border-amber-500/30">
+            <AlertCircle className="h-4 w-4 text-amber-500" />
+            <AlertDescription>
+              {language === 'hindi' 
+                ? "एज फंक्शन कनेक्शन में समस्या। प्रश्न उत्तर के लिए अतिरिक्त विकल्पों का उपयोग किया जा रहा है।" 
+                : "Edge Function connection issues. Using alternative methods for responses."}
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {directApiUsed && !isLoading && (
+          <Alert variant="default" className="bg-blue-500/10 border border-blue-500/30">
+            <AlertCircle className="h-4 w-4 text-blue-500" />
+            <AlertDescription>
+              {language === 'hindi' 
+                ? "सीधे API कनेक्शन का उपयोग कर रहे हैं। मुख्य सेवा उपलब्ध नहीं है।" 
+                : "Using direct API connection. Primary service unavailable."}
+            </AlertDescription>
+          </Alert>
+        )}
+
         <ProblemInput
           problem={problem}
           setProblem={setProblem}
@@ -51,6 +76,7 @@ export function ProblemSolver({ language, isPremium = false }: ProblemSolverProp
             onRetry={handleRetry}
             retryCount={retryCount}
             networkError={networkError}
+            directApiUsed={directApiUsed}
           />
         )}
         

@@ -14,6 +14,7 @@ interface WisdomDisplayProps {
   onRetry?: () => void;
   retryCount?: number;
   networkError?: boolean;
+  directApiUsed?: boolean;
 }
 
 export function WisdomDisplay({ 
@@ -23,7 +24,8 @@ export function WisdomDisplay({
   language,
   onRetry,
   retryCount = 0,
-  networkError = false
+  networkError = false,
+  directApiUsed = false
 }: WisdomDisplayProps) {
   return (
     <div className="space-y-4">
@@ -48,8 +50,24 @@ export function WisdomDisplay({
           </AlertTitle>
           <AlertDescription>
             {language === 'hindi' 
-              ? "एज फंक्शन से कनेक्ट करने में समस्या है। सुनिश्चित करें कि एज फंक्शन डिप्लॉय है।" 
-              : "Unable to connect to Edge Function. Please ensure the Edge Function is deployed."}
+              ? "ज्ञान सेवाओं से कनेक्ट करने में समस्या है। सुनिश्चित करें कि एज फंक्शन डिप्लॉय है।" 
+              : "Unable to connect to wisdom services. Please ensure the Edge Function is deployed."}
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      {directApiUsed && !usingFallback && (
+        <Alert variant="default" className="bg-green-500/10 border border-green-500/30">
+          <Wifi className="h-4 w-4 text-green-500" />
+          <AlertTitle>
+            {language === 'hindi' 
+              ? "वैकल्पिक AI कनेक्शन का उपयोग" 
+              : "Using Alternative AI Connection"}
+          </AlertTitle>
+          <AlertDescription>
+            {language === 'hindi' 
+              ? "एज फंक्शन अनुपलब्ध है, प्रत्यक्ष API कनेक्शन का उपयोग कर रहे हैं।" 
+              : "Edge Function unavailable, using direct API connection instead."}
           </AlertDescription>
         </Alert>
       )}
@@ -97,8 +115,8 @@ export function WisdomDisplay({
             <div className="flex items-center justify-center px-4 py-2 rounded-md bg-amber-500/10 border border-amber-500/30">
               <p>
                 {language === 'hindi' 
-                  ? "एज फंक्शन कनेक्शन सुनिश्चित करें और GEMINI_API_KEY की जांच करें। पुनः प्रयास करें।" 
-                  : "Verify edge function connection and check GEMINI_API_KEY. Try again."}
+                  ? "ज्ञान सेवाओं से कनेक्शन सुनिश्चित करें। पुनः प्रयास करें या बाद में फिर से कोशिश करें।" 
+                  : "Verify connection to wisdom services. Try again or check back later."}
               </p>
             </div>
           ) : (
