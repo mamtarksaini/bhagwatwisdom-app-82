@@ -19,6 +19,7 @@ export function ProblemSolver({ language, isPremium = false }: ProblemSolverProp
     solution,
     isLoading,
     usingFallback,
+    networkError,
     handleReset,
     handleSubmit,
     handleRetry,
@@ -49,6 +50,7 @@ export function ProblemSolver({ language, isPremium = false }: ProblemSolverProp
             language={language}
             onRetry={handleRetry}
             retryCount={retryCount}
+            networkError={networkError}
           />
         )}
         

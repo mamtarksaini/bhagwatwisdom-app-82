@@ -63,10 +63,28 @@ export async function getWisdomResponse(category: string, language: Language, qu
     return data.answer;
   } catch (error) {
     console.error('Error fetching wisdom response:', error);
-    toast({
-      title: "AI Service Unavailable",
-      description: "Please check if the GEMINI_API_KEY is properly configured in Supabase Edge Function Secrets.",
-    });
+    
+    // Check if it's a network/connection error
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    if (
+      errorMessage.includes('Failed to fetch') || 
+      errorMessage.includes('NetworkError') ||
+      errorMessage.includes('Failed to send a request') ||
+      errorMessage.includes('Failed to connect to wisdom service')
+    ) {
+      toast({
+        title: "Edge Function Connection Error",
+        description: "Unable to connect to the Edge Function. Please ensure it is deployed correctly.",
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "AI Service Unavailable",
+        description: "Please check if the GEMINI_API_KEY is properly configured in Supabase Edge Function Secrets.",
+        variant: "destructive"
+      });
+    }
+    
     return getFallbackResponse(category, language);
   }
 }

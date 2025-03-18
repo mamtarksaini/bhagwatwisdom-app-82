@@ -10,12 +10,14 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
   const [isLoading, setIsLoading] = useState(false);
   const [usingFallback, setUsingFallback] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [networkError, setNetworkError] = useState(false);
 
   const handleReset = () => {
     setProblem("");
     setSolution("");
     setUsingFallback(false);
     setRetryCount(0);
+    setNetworkError(false);
   };
 
   const handleRetry = async () => {
@@ -23,6 +25,7 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
       setRetryCount(prev => prev + 1);
       setIsLoading(true);
       setUsingFallback(false);
+      setNetworkError(false);
       
       toast({
         title: "Retrying AI connection",
@@ -35,7 +38,8 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
         console.error("Retry failed:", error);
         toast({
           title: "Retry failed",
-          description: "Please ensure the Gemini API key is properly configured in Supabase Edge Function secrets.",
+          description: "Please ensure the Edge Function is deployed and the Gemini API key is properly configured.",
+          variant: "destructive"
         });
       } finally {
         setIsLoading(false);
@@ -65,11 +69,12 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
             // Only show toast for premium users
             toast({
               title: "Using offline guidance",
-              description: "Please ensure the GEMINI_API_KEY is properly configured in Supabase Edge Function secrets.",
+              description: "Please ensure the Edge Function is deployed and the GEMINI_API_KEY is properly configured.",
             });
           }
         } else {
           setUsingFallback(false);
+          setNetworkError(false);
           toast({
             title: "AI wisdom found",
             description: "AI-powered guidance is now available for your reflection.",
@@ -84,11 +89,20 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
         
         toast({
           title: "API Configuration Issue",
-          description: "Please ensure the GEMINI_API_KEY is properly configured in Supabase Edge Function secrets.",
+          description: "Please ensure the Edge Function is deployed and the GEMINI_API_KEY is properly configured.",
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error getting wisdom:", error);
+      
+      // Check for network error specifically
+      const isNetworkError = 
+        error.message?.includes('Failed to fetch') || 
+        error.message?.includes('Network Error') ||
+        error.message?.includes('Failed to connect to wisdom service') ||
+        error.message?.includes('Failed to send a request');
+      
+      setNetworkError(isNetworkError);
       
       const responses = fallbackWisdomResponses[language] || fallbackWisdomResponses.english;
       const category = determineResponseCategory(problem);
@@ -98,8 +112,11 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
       setUsingFallback(true);
       
       toast({
-        title: "AI Service Unavailable",
-        description: "Please ensure the GEMINI_API_KEY is properly configured in Supabase Edge Function secrets.",
+        title: isNetworkError ? "Edge Function Connection Error" : "AI Service Unavailable",
+        description: isNetworkError 
+          ? "Unable to connect to the Edge Function. Please ensure it is deployed correctly."
+          : "Please ensure the GEMINI_API_KEY is properly configured in Supabase Edge Function Secrets.",
+        variant: "destructive"
       });
     }
   };
@@ -109,6 +126,7 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
     
     setIsLoading(true);
     setUsingFallback(false);
+    setNetworkError(false);
     setSolution(""); // Clear previous solution
     
     // Show loading toast
@@ -133,6 +151,7 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
     solution,
     isLoading,
     usingFallback,
+    networkError,
     handleReset,
     handleSubmit,
     handleRetry,

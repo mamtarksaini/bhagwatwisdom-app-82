@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Language } from "@/types";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, AlertCircle, Info } from "lucide-react";
+import { RefreshCw, AlertCircle, Info, Wifi, WifiOff } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface WisdomDisplayProps {
@@ -13,6 +13,7 @@ interface WisdomDisplayProps {
   language: Language;
   onRetry?: () => void;
   retryCount?: number;
+  networkError?: boolean;
 }
 
 export function WisdomDisplay({ 
@@ -21,7 +22,8 @@ export function WisdomDisplay({
   isPremium,
   language,
   onRetry,
-  retryCount = 0
+  retryCount = 0,
+  networkError = false
 }: WisdomDisplayProps) {
   return (
     <div className="space-y-4">
@@ -32,6 +34,22 @@ export function WisdomDisplay({
             {language === 'hindi' 
               ? "अभी हम ऑफ़लाइन ज्ञान दिखा रहे हैं। AI उत्तर प्राप्त करने के लिए पुनः प्रयास करें।" 
               : "Currently showing offline wisdom. Please retry for AI-powered responses."}
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      {networkError && (
+        <Alert variant="destructive" className="bg-red-500/10 border border-red-500/30">
+          <WifiOff className="h-4 w-4" />
+          <AlertTitle>
+            {language === 'hindi' 
+              ? "नेटवर्क कनेक्शन समस्या" 
+              : "Network Connection Issue"}
+          </AlertTitle>
+          <AlertDescription>
+            {language === 'hindi' 
+              ? "एज फंक्शन से कनेक्ट करने में समस्या है। सुनिश्चित करें कि एज फंक्शन डिप्लॉय है।" 
+              : "Unable to connect to Edge Function. Please ensure the Edge Function is deployed."}
           </AlertDescription>
         </Alert>
       )}
