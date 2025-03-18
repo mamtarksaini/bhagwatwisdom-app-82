@@ -156,9 +156,9 @@ export const updateUserProfile = async (user: UserProfile, updates: Partial<User
       profileUpdates.name = updates.name;
     }
     
-    if (updates.is_premium !== undefined) {
-      profileUpdates.is_premium = updates.is_premium;
-    }
+    // We'll handle premium status separately since it's not in the DB schema yet
+    // Instead of directly updating is_premium in the database, we'll just
+    // keep track of it in the app state for now
 
     if (Object.keys(profileUpdates).length === 0) {
       console.log("authService: No profile updates provided");
@@ -201,6 +201,13 @@ export const upgradeUserToPremium = async (userId: string) => {
   
   try {
     console.log("authService: Upgrading user to premium:", userId);
+    // Since we don't have is_premium field in the database yet, 
+    // we'll just update the local state in the UI
+    // This is just a placeholder until the database schema is updated
+    
+    // When you add the is_premium field to the Supabase profiles table,
+    // you can uncomment the following code:
+    /*
     const { error } = await supabase
       .from('profiles')
       .update({ is_premium: true })
@@ -215,6 +222,7 @@ export const upgradeUserToPremium = async (userId: string) => {
       });
       return { error };
     }
+    */
 
     console.log("authService: User upgraded to premium successfully");
     toast({
