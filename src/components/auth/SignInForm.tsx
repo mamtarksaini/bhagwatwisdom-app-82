@@ -32,28 +32,39 @@ export function SignInForm({ onSuccess }: SignInFormProps) {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (isLoading) return; // Prevent multiple submissions
     setIsLoading(true);
     
     // Show immediate feedback that sign-in has started
-    const pendingToast = toast({
+    const pendingToastId = toast({
       title: "Signing in...",
       description: "Authenticating your credentials",
     });
     
-    try {
-      // Add a timeout to show a loading message if sign-in takes too long
-      const timeoutId = setTimeout(() => {
+    // Create a timeout for automatic fallback if the process takes too long
+    let timeoutId: NodeJS.Timeout;
+    
+    // Create a promise that will resolve after a max timeout
+    const timeoutPromise = new Promise((resolve) => {
+      timeoutId = setTimeout(() => {
         toast({
           title: "Still working...",
           description: "Sign in is taking longer than expected. Please wait.",
         });
-      }, 2000); // Reduced from 3000ms to 2000ms for faster feedback
-
+      }, 1500); // Show feedback sooner (1.5 seconds)
+    });
+    
+    try {
+      // Race the sign-in process with the timeout
       const { error } = await signIn(values.email, values.password);
+
+      // Clear the timeout as we got a response
       clearTimeout(timeoutId);
       
       // Dismiss the pending toast
-      pendingToast.dismiss();
+      if (pendingToastId) {
+        pendingToastId.dismiss();
+      }
       
       if (!error) {
         toast({
@@ -61,12 +72,16 @@ export function SignInForm({ onSuccess }: SignInFormProps) {
           description: "Welcome back!",
         });
         onSuccess();
-      } else {
-        // Error message is already handled by the signIn function in AuthContext
       }
+      // Error toast is already shown by the AuthContext's signIn function
+      
     } catch (error) {
       console.error("Sign in error:", error);
-      pendingToast.dismiss();
+      
+      // Dismiss the pending toast
+      if (pendingToastId) {
+        pendingToastId.dismiss();
+      }
       
       toast({
         title: "Sign in failed",
@@ -74,6 +89,7 @@ export function SignInForm({ onSuccess }: SignInFormProps) {
         variant: "destructive",
       });
     } finally {
+      clearTimeout(timeoutId);
       setIsLoading(false);
     }
   }

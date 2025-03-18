@@ -35,7 +35,7 @@ type ActionType = typeof actionTypes
 type Action =
   | {
       type: ActionType["ADD_TOAST"]
-      toast: Omit<ToasterToast, "id"> & { id?: string }
+      toast: ToasterToast
     }
   | {
       type: ActionType["UPDATE_TOAST"]
@@ -63,7 +63,7 @@ const reducer = (state: State, action: Action): State => {
         ...state,
         toasts: [
           ...state.toasts,
-          { ...action.toast, id: action.toast.id || genId() },
+          action.toast,
         ].slice(-TOAST_LIMIT),
       }
 
@@ -123,22 +123,23 @@ function dispatch(action: Action) {
   })
 }
 
-type Toast = Omit<ToasterToast, "id">
-
-function toast(props: Toast) {
+function toast(props: Omit<ToasterToast, "id">) {
   const id = genId()
+
+  const toastWithId = { ...props, id } as ToasterToast
 
   const update = (props: ToasterToast) =>
     dispatch({
       type: actionTypes.UPDATE_TOAST,
       toast: { ...props, id },
     })
+    
   const dismiss = () => dispatch({ type: actionTypes.DISMISS_TOAST, toastId: id })
 
   dispatch({
     type: actionTypes.ADD_TOAST,
     toast: {
-      ...props,
+      ...toastWithId,
       open: true,
       onOpenChange: (open) => {
         if (!open) dismiss()
