@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext } from 'react';
 import { UserProfile } from '@/types';
 import { AuthContextType } from '@/types/auth';
@@ -19,7 +18,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Sign in with email and password
   const signIn = async (email: string, password: string) => {
-    return await signInWithEmail(email, password);
+    try {
+      console.log("AuthContext: Starting sign in process");
+      const result = await signInWithEmail(email, password);
+      
+      if (result.error) {
+        console.error("AuthContext: Sign in error:", result.error);
+        toast({
+          title: "Sign in failed",
+          description: result.error.message || "Invalid credentials. Please try again.",
+          variant: "destructive",
+        });
+      } else {
+        console.log("AuthContext: Sign in successful");
+        toast({
+          title: "Welcome back!",
+          description: "You've successfully signed in.",
+        });
+      }
+      
+      return result;
+    } catch (error: any) {
+      console.error("AuthContext: Exception during sign in:", error);
+      toast({
+        title: "Sign in failed",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+      return { error };
+    }
   };
 
   // Sign up with email and password

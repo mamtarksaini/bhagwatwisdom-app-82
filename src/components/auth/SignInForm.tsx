@@ -32,38 +32,32 @@ export function SignInForm({ onSuccess }: SignInFormProps) {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (isLoading) return;
+    if (isLoading) {
+      console.log("Submit prevented: Already processing a request");
+      return;
+    }
     
     setIsLoading(true);
+    console.log("SignInForm: Starting sign in with:", values.email);
     
     try {
-      console.log("Attempting to sign in with:", values.email);
-      
       const { error } = await signIn(values.email, values.password);
       
-      if (error) {
-        console.error("Sign in error:", error);
-        toast({
-          title: "Sign in failed",
-          description: error.message || "Please check your credentials and try again.",
-          variant: "destructive",
-        });
-      } else {
-        console.log("Sign in successful");
-        toast({
-          title: "Welcome back!",
-          description: "You've successfully signed in.",
-        });
+      if (!error) {
+        console.log("SignInForm: Sign in successful, calling onSuccess");
         onSuccess();
+      } else {
+        console.error("SignInForm: Error returned from signIn:", error);
       }
     } catch (error: any) {
-      console.error("Sign in exception:", error);
+      console.error("SignInForm: Exception during sign in:", error);
       toast({
         title: "Sign in failed",
         description: error?.message || "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {
+      console.log("SignInForm: Completed sign in process");
       setIsLoading(false);
     }
   }

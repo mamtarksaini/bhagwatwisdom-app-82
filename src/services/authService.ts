@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase';
 import { UserProfile } from '@/types';
 import { Profile } from '@/types/auth';
@@ -6,38 +5,50 @@ import { toast } from '@/components/ui/use-toast';
 
 export const fetchUserSession = async () => {
   const { data: { session } } = await supabase.auth.getSession();
+  console.log("authService: Fetched session:", session ? "Session exists" : "No session");
   return session;
 };
 
 export const fetchUserProfile = async (userId: string) => {
-  const { data: profileData } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
-    .single();
+  try {
+    console.log("authService: Fetching profile for user:", userId);
+    const { data: profileData, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
     
-  return profileData as Profile;
+    if (error) {
+      console.error("authService: Error fetching profile:", error);
+      return null;
+    }
+    
+    console.log("authService: Profile data:", profileData);
+    return profileData as Profile;
+  } catch (error) {
+    console.error("authService: Exception fetching profile:", error);
+    return null;
+  }
 };
 
 export const signInWithEmail = async (email: string, password: string) => {
   try {
+    console.log("authService: Attempting sign in for:", email);
+    
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
     if (error) {
-      toast({
-        title: "Sign in failed",
-        description: error.message,
-        variant: "destructive",
-      });
+      console.error("authService: Sign in error:", error);
       return { error };
     }
 
-    return { error: null };
+    console.log("authService: Sign in successful, user:", data.user?.id);
+    return { data, error: null };
   } catch (error) {
-    console.error('Error signing in:', error);
+    console.error('authService: Exception during sign in:', error);
     return { error };
   }
 };
