@@ -28,7 +28,8 @@ export function ProblemInput({
   const handleSpeechInput = () => {
     if (isListening) {
       stopListening();
-      setProblem(prev => prev + " " + transcript);
+      // Fix: Instead of using a function, directly concatenate the strings
+      setProblem(problem + " " + transcript);
       resetTranscript();
     } else {
       startListening();
