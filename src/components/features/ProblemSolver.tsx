@@ -6,10 +6,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Language } from "@/types";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis";
-import { Mic, MicOff, Volume2, VolumeX, RotateCcw, Send, AlertCircle } from "lucide-react";
+import { Mic, MicOff, Volume2, VolumeX, RotateCcw, Send } from "lucide-react";
 import { getWisdomResponse, determineResponseCategory, fallbackWisdomResponses } from "@/lib/wisdom";
 import { toast } from "@/components/ui/use-toast";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 interface ProblemSolverProps {
   language: Language;
@@ -66,6 +65,7 @@ export function ProblemSolver({ language, isPremium = false }: ProblemSolverProp
         
         if (response === fallbackResponse) {
           setUsingFallback(true);
+          // Don't show error toast for fallback responses
         }
       } else {
         console.error('No response received from getWisdomResponse');
@@ -165,36 +165,25 @@ export function ProblemSolver({ language, isPremium = false }: ProblemSolverProp
         </div>
         
         {solution && (
-          <>
-            {usingFallback && (
-              <Alert variant="destructive" className="mb-4">
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Using Fallback Response</AlertTitle>
-                <AlertDescription>
-                  Could not get a response from the server. Using pre-defined wisdom.
-                </AlertDescription>
-              </Alert>
-            )}
-            <div className="bg-spiritual dark:bg-gray-800/40 rounded-lg p-4 border border-spiritual-dark dark:border-gray-700 animate-fade-in">
-              <div className="flex justify-between items-center mb-2">
-                <h3 className="font-heading font-medium text-lg">Bhagavad Gita Wisdom</h3>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-foreground/80 hover:text-foreground"
-                  onClick={handleSpeak}
-                >
-                  {isReading ? (
-                    <VolumeX className="h-4 w-4 mr-2" />
-                  ) : (
-                    <Volume2 className="h-4 w-4 mr-2" />
-                  )}
-                  {isReading ? "Stop" : "Listen"}
-                </Button>
-              </div>
-              <p className="leading-relaxed">{solution}</p>
+          <div className="bg-spiritual dark:bg-gray-800/40 rounded-lg p-4 border border-spiritual-dark dark:border-gray-700 animate-fade-in">
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="font-heading font-medium text-lg">Bhagavad Gita Wisdom</h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-foreground/80 hover:text-foreground"
+                onClick={handleSpeak}
+              >
+                {isReading ? (
+                  <VolumeX className="h-4 w-4 mr-2" />
+                ) : (
+                  <Volume2 className="h-4 w-4 mr-2" />
+                )}
+                {isReading ? "Stop" : "Listen"}
+              </Button>
             </div>
-          </>
+            <p className="leading-relaxed">{solution}</p>
+          </div>
         )}
         
         {!isPremium && (

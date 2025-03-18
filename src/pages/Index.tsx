@@ -19,6 +19,13 @@ const Index = () => {
   const { user, isPremium } = useAuth();
   const [authModalOpen, setAuthModalOpen] = useState(false);
 
+  // Devotee data with the requested names
+  const devotees = [
+    { id: 1, name: "Manish", role: "Spiritual Seeker" },
+    { id: 2, name: "Rita", role: "Spiritual Seeker" },
+    { id: 3, name: "Ankur", role: "Spiritual Seeker" },
+  ];
+
   return (
     <div className="min-h-screen bg-background w-full">
       {/* Navigation */}
@@ -183,16 +190,16 @@ const Index = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[1, 2, 3].map((i) => (
-              <Card key={i} className="glass-card">
+            {devotees.map((devotee) => (
+              <Card key={devotee.id} className="glass-card">
                 <CardHeader>
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                      <span className="text-primary font-bold">{String.fromCharCode(64 + i)}</span>
+                      <span className="text-primary font-bold">{devotee.name.charAt(0)}</span>
                     </div>
                     <div>
-                      <CardTitle className="text-lg">Devotee {i}</CardTitle>
-                      <CardDescription>Spiritual Seeker</CardDescription>
+                      <CardTitle className="text-lg">{devotee.name}</CardTitle>
+                      <CardDescription>{devotee.role}</CardDescription>
                     </div>
                   </div>
                 </CardHeader>

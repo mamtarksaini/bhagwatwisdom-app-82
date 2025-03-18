@@ -15,23 +15,22 @@ serve(async (req) => {
   }
   
   try {
-    // Validate API key
+    // Validate API key without showing error message
     if (!GEMINI_API_KEY) {
       console.error('GEMINI_API_KEY is not configured in environment variables');
       return new Response(
         JSON.stringify({ 
-          error: 'GEMINI_API_KEY is not configured. Please add it to the Edge Function Secrets in Supabase.',
           status: 'error',
           useFallback: true
         }),
-        { headers: CORS_HEADERS, status: 500 }
+        { headers: CORS_HEADERS, status: 200 }
       );
     }
 
     // Validate request
     const { question, category, language } = await req.json()
     if (!question || !category || !language) {
-      throw new Error('Missing required fields: question, category, or language')
+      throw new Error('Missing required fields')
     }
     
     // Construct prompt
@@ -66,7 +65,13 @@ serve(async (req) => {
     // Validate Gemini API response
     if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
       console.error('Invalid Gemini API response:', data)
-      throw new Error('Invalid response from Gemini API')
+      return new Response(
+        JSON.stringify({ 
+          status: 'error',
+          useFallback: true
+        }),
+        { headers: CORS_HEADERS, status: 200 }
+      );
     }
 
     // Return successful response
@@ -87,12 +92,11 @@ serve(async (req) => {
     // Return error response with useFallback flag
     return new Response(
       JSON.stringify({ 
-        error: error.message,
         status: 'error',
         useFallback: true
       }),
       { 
-        status: 500,
+        status: 200,
         headers: { ...CORS_HEADERS }
       }
     )
