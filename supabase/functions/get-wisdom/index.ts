@@ -15,7 +15,13 @@ serve(async (req) => {
   }
   
   try {
-    // Validate API key without showing error message
+    // Validate request
+    const { question, category, language } = await req.json()
+    if (!question || !category || !language) {
+      throw new Error('Missing required fields')
+    }
+    
+    // Check if Gemini API key is available
     if (!GEMINI_API_KEY) {
       console.error('GEMINI_API_KEY is not configured in environment variables');
       return new Response(
@@ -26,18 +32,14 @@ serve(async (req) => {
         { headers: CORS_HEADERS, status: 200 }
       );
     }
-
-    // Validate request
-    const { question, category, language } = await req.json()
-    if (!question || !category || !language) {
-      throw new Error('Missing required fields')
-    }
     
     // Construct prompt
     const prompt = `You are a wise spiritual guide who provides wisdom based on the Bhagavad Gita. 
     The user is asking about: "${question}" which falls under the category of "${category}".
     Please provide a thoughtful, compassionate response with references to relevant concepts from the Bhagavad Gita.
     ${language === 'hindi' ? " Please respond in Hindi language." : ""}`
+    
+    console.log('Calling Gemini API with prompt:', prompt.substring(0, 100) + '...');
     
     // Call Gemini API
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`, {
@@ -61,6 +63,7 @@ serve(async (req) => {
     })
 
     const data = await response.json()
+    console.log('Received response from Gemini API:', JSON.stringify(data).substring(0, 100) + '...');
     
     // Validate Gemini API response
     if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
@@ -75,9 +78,12 @@ serve(async (req) => {
     }
 
     // Return successful response
+    const answer = data.candidates[0].content.parts[0].text;
+    console.log('Returning answer:', answer.substring(0, 100) + '...');
+    
     return new Response(
       JSON.stringify({ 
-        answer: data.candidates[0].content.parts[0].text,
+        answer: answer,
         status: 'success'
       }), 
       {

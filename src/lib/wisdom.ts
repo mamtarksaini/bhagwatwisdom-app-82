@@ -1,4 +1,3 @@
-
 import { Language } from '@/types';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from './supabase';
@@ -18,14 +17,12 @@ export async function getWisdomResponse(category: string, language: Language, qu
 
     if (error) {
       console.error('Error calling Supabase function:', error);
-      // Don't show toast for network errors - just return fallback
       return getFallbackResponse(category, language);
     }
 
     // Check if we need to use fallback (API key missing or other server error)
     if (data?.useFallback) {
       console.warn('Server indicated fallback should be used');
-      // Don't show error toast here either
       return getFallbackResponse(category, language);
     }
 
@@ -34,10 +31,10 @@ export async function getWisdomResponse(category: string, language: Language, qu
       return getFallbackResponse(category, language);
     }
 
+    console.log('Got wisdom response:', data.answer);
     return data.answer;
   } catch (error) {
     console.error('Error fetching wisdom response:', error);
-    // Don't show toast for errors - just return fallback
     return getFallbackResponse(category, language);
   }
 }
