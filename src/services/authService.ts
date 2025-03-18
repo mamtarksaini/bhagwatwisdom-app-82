@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase';
 import { UserProfile } from '@/types';
 import { Profile } from '@/types/auth';
@@ -98,10 +97,10 @@ export const signUpWithEmail = async (email: string, password: string, name: str
 
     if (data.user) {
       console.log("authService: Creating profile for new user:", data.user.id);
+      
       const { error: profileError } = await supabase.from('profiles').insert({
         id: data.user.id,
         name,
-        is_premium: false,
       });
       
       if (profileError) {

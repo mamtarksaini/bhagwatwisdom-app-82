@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { UserProfile, AuthStatus } from '@/types';
@@ -22,12 +21,12 @@ export const useAuthState = () => {
           email: session.user.email,
           name: profile?.name || null,
           created_at: profile?.created_at || new Date().toISOString(),
-          is_premium: !!profile?.is_premium
+          is_premium: false
         };
         
         console.log("useAuthState: Profile fetched successfully, updating user state");
         setUser(updatedUser);
-        setIsPremium(!!profile?.is_premium);
+        setIsPremium(false);
         setStatus('authenticated');
       } catch (error) {
         console.error("useAuthState: Error handling auth state change:", error);
@@ -43,21 +42,17 @@ export const useAuthState = () => {
     }
   };
 
-  // Initialize auth state
   useEffect(() => {
     console.log("useAuthState: Initializing auth state");
     let authSubscription: { data: { subscription: { unsubscribe: () => void } } };
     
     const initialize = async () => {
       try {
-        // Get the current session
         const { data: { session } } = await supabase.auth.getSession();
         console.log("useAuthState: Current session:", session ? "exists" : "null");
         
-        // Handle the current session
         await handleAuthStateChange(session);
         
-        // Subscribe to auth changes
         console.log("useAuthState: Setting up auth state change subscription");
         authSubscription = supabase.auth.onAuthStateChange(
           async (event, session) => {
@@ -73,7 +68,6 @@ export const useAuthState = () => {
 
     initialize();
 
-    // Cleanup function
     return () => {
       console.log("useAuthState: Cleaning up auth subscription");
       if (authSubscription?.data?.subscription) {
