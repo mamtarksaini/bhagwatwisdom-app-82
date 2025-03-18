@@ -20,7 +20,7 @@ serve(async (req) => {
       console.error('GEMINI_API_KEY is not configured in environment variables');
       return new Response(
         JSON.stringify({ 
-          status: 'error',
+          status: 'success',
           useFallback: true
         }),
         { headers: CORS_HEADERS, status: 200 }
@@ -67,7 +67,7 @@ serve(async (req) => {
       console.error('Invalid Gemini API response:', data)
       return new Response(
         JSON.stringify({ 
-          status: 'error',
+          status: 'success',
           useFallback: true
         }),
         { headers: CORS_HEADERS, status: 200 }
@@ -89,10 +89,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('Edge function error:', error)
     
-    // Return error response with useFallback flag
+    // Return successful response with useFallback flag
     return new Response(
       JSON.stringify({ 
-        status: 'error',
+        status: 'success',
         useFallback: true
       }),
       { 

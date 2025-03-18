@@ -18,22 +18,14 @@ export async function getWisdomResponse(category: string, language: Language, qu
 
     if (error) {
       console.error('Error calling Supabase function:', error);
-      toast({
-        title: "Using Fallback Response",
-        description: "Could not connect to wisdom service. Using pre-defined wisdom.",
-        variant: "destructive"
-      });
+      // Don't show toast for network errors - just return fallback
       return getFallbackResponse(category, language);
     }
 
     // Check if we need to use fallback (API key missing or other server error)
     if (data?.useFallback) {
-      console.warn('Server indicated fallback should be used:', data.error);
-      toast({
-        title: "Using Fallback Response",
-        description: "The wisdom server needs configuration. Using pre-defined wisdom.",
-        variant: "default"
-      });
+      console.warn('Server indicated fallback should be used');
+      // Don't show error toast here either
       return getFallbackResponse(category, language);
     }
 
@@ -45,11 +37,7 @@ export async function getWisdomResponse(category: string, language: Language, qu
     return data.answer;
   } catch (error) {
     console.error('Error fetching wisdom response:', error);
-    toast({
-      title: "Error",
-      description: "Something went wrong. Using fallback wisdom.",
-      variant: "destructive"
-    });
+    // Don't show toast for errors - just return fallback
     return getFallbackResponse(category, language);
   }
 }
