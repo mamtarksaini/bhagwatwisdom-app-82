@@ -18,7 +18,14 @@ serve(async (req) => {
     // Validate API key
     if (!GEMINI_API_KEY) {
       console.error('GEMINI_API_KEY is not configured in environment variables');
-      throw new Error('GEMINI_API_KEY is not configured in environment variables')
+      return new Response(
+        JSON.stringify({ 
+          error: 'GEMINI_API_KEY is not configured. Please add it to the Edge Function Secrets in Supabase.',
+          status: 'error',
+          useFallback: true
+        }),
+        { headers: CORS_HEADERS, status: 500 }
+      );
     }
 
     // Validate request
@@ -77,11 +84,12 @@ serve(async (req) => {
   } catch (error) {
     console.error('Edge function error:', error)
     
-    // Return error response
+    // Return error response with useFallback flag
     return new Response(
       JSON.stringify({ 
         error: error.message,
-        status: 'error'
+        status: 'error',
+        useFallback: true
       }),
       { 
         status: 500,

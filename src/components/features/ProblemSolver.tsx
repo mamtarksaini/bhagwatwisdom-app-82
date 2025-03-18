@@ -6,9 +6,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Language } from "@/types";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis";
-import { Mic, MicOff, Volume2, VolumeX, RotateCcw, Send } from "lucide-react";
+import { Mic, MicOff, Volume2, VolumeX, RotateCcw, Send, AlertCircle } from "lucide-react";
 import { getWisdomResponse, determineResponseCategory, fallbackWisdomResponses } from "@/lib/wisdom";
 import { toast } from "@/components/ui/use-toast";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 interface ProblemSolverProps {
   language: Language;
@@ -19,6 +20,7 @@ export function ProblemSolver({ language, isPremium = false }: ProblemSolverProp
   const [problem, setProblem] = useState("");
   const [solution, setSolution] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [usingFallback, setUsingFallback] = useState(false);
   const { isListening, transcript, startListening, stopListening, resetTranscript, error: speechError } = useSpeechRecognition(language);
   const { speak, stop, isReading } = useSpeechSynthesis(language);
 
@@ -36,12 +38,14 @@ export function ProblemSolver({ language, isPremium = false }: ProblemSolverProp
     setProblem("");
     setSolution("");
     resetTranscript();
+    setUsingFallback(false);
   };
 
   const handleSubmit = async () => {
     if (!problem.trim()) return;
     
     setIsLoading(true);
+    setUsingFallback(false);
     console.log('Submitting problem:', { problem, language });
     
     try {
@@ -55,16 +59,20 @@ export function ProblemSolver({ language, isPremium = false }: ProblemSolverProp
       
       if (response) {
         setSolution(response);
+        
+        // Check if we're using fallback by comparing with fallback responses
+        const fallbackResponses = fallbackWisdomResponses[language] || fallbackWisdomResponses.english;
+        const fallbackResponse = fallbackResponses[category] || fallbackResponses.default;
+        
+        if (response === fallbackResponse) {
+          setUsingFallback(true);
+        }
       } else {
         console.error('No response received from getWisdomResponse');
         const responses = fallbackWisdomResponses[language] || fallbackWisdomResponses.english;
         const fallbackResponse = responses[category] || responses.default;
         setSolution(fallbackResponse);
-        toast({
-          title: "Using Fallback Response",
-          description: "Could not connect to wisdom service. Using pre-defined wisdom.",
-          variant: "default"
-        });
+        setUsingFallback(true);
       }
     } catch (error) {
       console.error("Error getting wisdom:", error);
@@ -74,11 +82,7 @@ export function ProblemSolver({ language, isPremium = false }: ProblemSolverProp
       const fallbackResponse = responses[category] || responses.default;
       
       setSolution(fallbackResponse);
-      toast({
-        title: "Error",
-        description: "Something went wrong. Using pre-defined wisdom instead.",
-        variant: "destructive"
-      });
+      setUsingFallback(true);
     } finally {
       setIsLoading(false);
     }
@@ -161,25 +165,36 @@ export function ProblemSolver({ language, isPremium = false }: ProblemSolverProp
         </div>
         
         {solution && (
-          <div className="bg-spiritual dark:bg-gray-800/40 rounded-lg p-4 border border-spiritual-dark dark:border-gray-700 animate-fade-in">
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="font-heading font-medium text-lg">Bhagavad Gita Wisdom</h3>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-foreground/80 hover:text-foreground"
-                onClick={handleSpeak}
-              >
-                {isReading ? (
-                  <VolumeX className="h-4 w-4 mr-2" />
-                ) : (
-                  <Volume2 className="h-4 w-4 mr-2" />
-                )}
-                {isReading ? "Stop" : "Listen"}
-              </Button>
+          <>
+            {usingFallback && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Using Fallback Response</AlertTitle>
+                <AlertDescription>
+                  Could not get a response from the server. Using pre-defined wisdom.
+                </AlertDescription>
+              </Alert>
+            )}
+            <div className="bg-spiritual dark:bg-gray-800/40 rounded-lg p-4 border border-spiritual-dark dark:border-gray-700 animate-fade-in">
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="font-heading font-medium text-lg">Bhagavad Gita Wisdom</h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-foreground/80 hover:text-foreground"
+                  onClick={handleSpeak}
+                >
+                  {isReading ? (
+                    <VolumeX className="h-4 w-4 mr-2" />
+                  ) : (
+                    <Volume2 className="h-4 w-4 mr-2" />
+                  )}
+                  {isReading ? "Stop" : "Listen"}
+                </Button>
+              </div>
+              <p className="leading-relaxed">{solution}</p>
             </div>
-            <p className="leading-relaxed">{solution}</p>
-          </div>
+          </>
         )}
         
         {!isPremium && (
