@@ -34,6 +34,12 @@ export function SignInForm({ onSuccess }: SignInFormProps) {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     
+    // Show immediate feedback that sign-in has started
+    const pendingToast = toast({
+      title: "Signing in...",
+      description: "Authenticating your credentials",
+    });
+    
     try {
       // Add a timeout to show a loading message if sign-in takes too long
       const timeoutId = setTimeout(() => {
@@ -41,10 +47,13 @@ export function SignInForm({ onSuccess }: SignInFormProps) {
           title: "Still working...",
           description: "Sign in is taking longer than expected. Please wait.",
         });
-      }, 3000);
+      }, 2000); // Reduced from 3000ms to 2000ms for faster feedback
 
       const { error } = await signIn(values.email, values.password);
       clearTimeout(timeoutId);
+      
+      // Dismiss the pending toast
+      pendingToast.dismiss();
       
       if (!error) {
         toast({
@@ -52,9 +61,13 @@ export function SignInForm({ onSuccess }: SignInFormProps) {
           description: "Welcome back!",
         });
         onSuccess();
+      } else {
+        // Error message is already handled by the signIn function in AuthContext
       }
     } catch (error) {
       console.error("Sign in error:", error);
+      pendingToast.dismiss();
+      
       toast({
         title: "Sign in failed",
         description: "An unexpected error occurred. Please try again.",
