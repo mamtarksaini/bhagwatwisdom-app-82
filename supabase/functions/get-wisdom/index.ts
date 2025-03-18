@@ -1,7 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
-const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY') || Deno.env.get('PERPLEXITY_API_KEY')
+const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY') 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -58,7 +58,7 @@ serve(async (req) => {
     try {
       // Call Gemini API with timeout
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 12000); // 12 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 second timeout for more reliability
 
       // Gemini API endpoint
       const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent', {
@@ -86,15 +86,7 @@ serve(async (req) => {
       
       if (!response.ok) {
         console.error(`Gemini API returned non-200 status: ${response.status}`);
-        console.error(`Response text: ${await response.text()}`);
-        return new Response(
-          JSON.stringify({ 
-            status: 'success',
-            useFallback: true,
-            error: `API error: ${response.status}`
-          }),
-          { headers: CORS_HEADERS, status: 200 }
-        );
+        throw new Error(`API error: ${response.status}`);
       }
 
       const data = await response.json();
@@ -103,14 +95,7 @@ serve(async (req) => {
       // Validate Gemini API response
       if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
         console.error('Invalid Gemini API response structure:', JSON.stringify(data).substring(0, 200));
-        return new Response(
-          JSON.stringify({ 
-            status: 'success',
-            useFallback: true,
-            error: 'Invalid API response format'
-          }),
-          { headers: CORS_HEADERS, status: 200 }
-        );
+        throw new Error('Invalid API response format');
       }
 
       // Return successful response
@@ -129,33 +114,21 @@ serve(async (req) => {
         }
       );
     } catch (apiError) {
-      // Handle fetch timeouts and other network errors
-      console.error('Error calling Gemini API:', typeof apiError === 'object' ? JSON.stringify(apiError) : apiError);
-      if (apiError.name === 'AbortError') {
-        console.error('Request timed out');
-      }
-      
-      return new Response(
-        JSON.stringify({ 
-          status: 'success',
-          useFallback: true,
-          error: apiError.message || 'API request failed or timed out'
-        }),
-        { headers: CORS_HEADERS, status: 200 }
-      );
+      // Instead of returning fallback, rethrow to try again
+      throw apiError;
     }
   } catch (error) {
     console.error('Edge function error:', error);
     
-    // Return successful response with useFallback flag
+    // Return error status to trigger retry
     return new Response(
       JSON.stringify({ 
-        status: 'success',
-        useFallback: true,
-        error: error.message || 'Request processing failed'
+        status: 'error',
+        message: error.message || 'Request processing failed',
+        retryable: true
       }),
       { 
-        status: 200,
+        status: 500,
         headers: CORS_HEADERS
       }
     );

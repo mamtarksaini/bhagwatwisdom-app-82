@@ -30,8 +30,8 @@ export function WisdomDisplay({
           <AlertCircle className="h-4 w-4 text-amber-500" />
           <AlertDescription>
             {language === 'hindi' 
-              ? "हम वर्तमान में ऑफलाइन ज्ञान प्रदान कर रहे हैं। कृपया फिर से कोशिश करें।" 
-              : "We're currently providing offline wisdom. Please retry for AI-powered insights."}
+              ? "हम वर्तमान में ऑफलाइन ज्ञान प्रदान कर रहे हैं। AI उत्तर के लिए GEMINI_API_KEY को सेट करें।" 
+              : "Currently using offline wisdom. Please set GEMINI_API_KEY in Supabase Edge Function secrets."}
           </AlertDescription>
         </Alert>
       )}
@@ -39,11 +39,11 @@ export function WisdomDisplay({
       {isPremium && usingFallback && (
         <Alert variant="default" className="bg-blue-500/10 border border-blue-500/30">
           <Info className="h-4 w-4 text-blue-500" />
-          <AlertTitle>Note for premium users</AlertTitle>
+          <AlertTitle>API Configuration Required</AlertTitle>
           <AlertDescription>
             {language === 'hindi' 
-              ? "सुपाबेस एज फंक्शन या जेमिनी AI API कुंजी की समस्या के कारण AI बुद्धि प्रदान नहीं कर सकते हैं। AI उत्तर के लिए पुनः प्रयास करें।" 
-              : "We cannot provide AI wisdom due to a Supabase Edge Function or Gemini AI API key issue. Retry for AI response."}
+              ? "AI बुद्धि प्रदान करने के लिए, सुपाबेस एज फंक्शन सीक्रेट्स में GEMINI_API_KEY सेट करें।" 
+              : "To provide AI wisdom, please set GEMINI_API_KEY in Supabase Edge Function secrets."}
           </AlertDescription>
         </Alert>
       )}
@@ -79,8 +79,8 @@ export function WisdomDisplay({
             <div className="flex items-center justify-center px-4 py-2 rounded-md bg-amber-500/10 border border-amber-500/30">
               <p>
                 {language === 'hindi' 
-                  ? "हम वर्तमान में ऑफलाइन ज्ञान प्रदान कर रहे हैं। AI उत्तर जल्द ही उपलब्ध होंगे।" 
-                  : "We're currently providing offline wisdom. AI-powered responses will be available soon."}
+                  ? "AI उत्तर प्राप्त करने के लिए GEMINI_API_KEY सेटअप आवश्यक है।" 
+                  : "GEMINI_API_KEY setup required to receive AI responses."}
               </p>
             </div>
           ) : (

@@ -25,15 +25,25 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
       setUsingFallback(false);
       
       toast({
-        title: "Retrying request",
+        title: "Retrying AI connection",
         description: "Attempting to connect to our wisdom servers again.",
       });
       
-      await handleSubmitInternal();
+      try {
+        await handleSubmitInternal(true);
+      } catch (error) {
+        console.error("Retry failed:", error);
+        toast({
+          title: "Retry failed",
+          description: "Please ensure the Gemini API key is properly configured in Supabase Edge Function secrets.",
+        });
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
-  const handleSubmitInternal = async () => {
+  const handleSubmitInternal = async (isRetry = false) => {
     try {
       // Determine the category of the problem
       const category = determineResponseCategory(problem);
@@ -55,13 +65,14 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
             // Only show toast for premium users
             toast({
               title: "Using offline guidance",
-              description: "We're currently providing wisdom from our local database. AI-generated responses will be available soon.",
+              description: "Please ensure the GEMINI_API_KEY is properly configured in Supabase Edge Function secrets.",
             });
           }
         } else {
+          setUsingFallback(false);
           toast({
-            title: "Wisdom found",
-            description: "Ancient guidance is now available for your reflection.",
+            title: "AI wisdom found",
+            description: "AI-powered guidance is now available for your reflection.",
           });
         }
       } else {
@@ -72,8 +83,8 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
         setUsingFallback(true);
         
         toast({
-          title: "Using offline wisdom",
-          description: "We couldn't connect to our wisdom server, but local guidance is available.",
+          title: "API Configuration Issue",
+          description: "Please ensure the GEMINI_API_KEY is properly configured in Supabase Edge Function secrets.",
         });
       }
     } catch (error) {
@@ -87,11 +98,9 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
       setUsingFallback(true);
       
       toast({
-        title: "Connection issue",
-        description: "We're providing local wisdom while we resolve connectivity issues.",
+        title: "AI Service Unavailable",
+        description: "Please ensure the GEMINI_API_KEY is properly configured in Supabase Edge Function secrets.",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -114,6 +123,7 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
       await handleSubmitInternal();
     } finally {
       loadingToast.dismiss();
+      setIsLoading(false);
     }
   };
 

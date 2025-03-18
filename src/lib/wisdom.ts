@@ -1,4 +1,3 @@
-
 import { Language } from '@/types';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from './supabase';
@@ -10,7 +9,7 @@ export async function getWisdomResponse(category: string, language: Language, qu
     
     // Add a longer timeout for the edge function call
     const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Edge function request timed out')), 15000)
+      setTimeout(() => reject(new Error('Edge function request timed out')), 25000)
     );
     
     const functionCallPromise = supabase.functions.invoke('get-wisdom', {
@@ -31,15 +30,17 @@ export async function getWisdomResponse(category: string, language: Language, qu
 
     if (error) {
       console.error('Error calling Supabase function:', error);
-      toast({
-        title: "Connection issue",
-        description: "We're providing offline wisdom while our AI services reconnect.",
-      });
-      return getFallbackResponse(category, language);
+      throw new Error(`Failed to connect to wisdom service: ${error.message}`);
     }
 
     // Add extra logging to see what's coming back
     console.log('Response from edge function:', JSON.stringify(data).substring(0, 200) + '...');
+
+    // Handle error status from edge function
+    if (data?.status === 'error') {
+      console.error('Server returned error:', data.message);
+      throw new Error(data.message || 'Server error');
+    }
 
     // Check if we need to use fallback (API key missing or other server error)
     if (data?.useFallback) {
@@ -49,21 +50,12 @@ export async function getWisdomResponse(category: string, language: Language, qu
         console.error('Server error details:', data.error);
       }
       
-      toast({
-        title: "Using offline wisdom",
-        description: "We're temporarily using pre-stored wisdom while our AI services reconnect.",
-      });
-      
-      return getFallbackResponse(category, language);
+      throw new Error(`AI service unavailable: ${data.error || 'Unknown reason'}`);
     }
 
     if (!data || !data.answer) {
       console.error('Invalid response from Supabase function:', data);
-      toast({
-        title: "Response error",
-        description: "We couldn't process your request. Using offline wisdom instead.",
-      });
-      return getFallbackResponse(category, language);
+      throw new Error('Invalid response from wisdom service');
     }
 
     console.log('Got wisdom response:', data.answer.substring(0, 100) + '...');
@@ -71,8 +63,8 @@ export async function getWisdomResponse(category: string, language: Language, qu
   } catch (error) {
     console.error('Error fetching wisdom response:', error);
     toast({
-      title: "Connection error",
-      description: "We're providing offline wisdom while we restore connectivity.",
+      title: "AI Service Unavailable",
+      description: "Please check if the GEMINI_API_KEY is properly configured in Supabase Edge Function Secrets.",
     });
     return getFallbackResponse(category, language);
   }
@@ -136,11 +128,11 @@ export const fallbackWisdomResponses = {
     default: "Thank you for sharing your question. The Bhagavad Gita offers wisdom that remains remarkably relevant to our modern challenges.\n\nOne of its most powerful teachings is that we find peace not by controlling external circumstances, but by changing our relationship to them. As Krishna tells Arjuna, 'You have control over your actions alone, never over the results.'\n\nThis perspective invites us to:\n1. Focus on what we can influence rather than what we can't control\n2. Approach challenges as opportunities for growth rather than obstacles\n3. Be fully present with whatever arises, without excessive attachment to outcomes\n\nYour willingness to seek guidance shows wisdom. Trust that you have the inner resources to navigate this situation with both strength and compassion."
   },
   hindi: {
-    relationships: "मैं समझता/समझती हूँ कि रिश्ते कभी-कभी कितने चुनौतीपूर्ण हो सकते हैं। भगवद गीता यहां गहरी अंतर्दृष्टि प्रदान करती है।\n\nमूल रूप से, गीता सिखाती है कि सच्चे संबंध लगाव के बजाय निःस्वार्थ प्रेम पर आधारित होते हैं। जब हम किसी से इसलिए प्यार करते हैं कि हमें उनसे क्या मिलता है, तो हम अपने लिए कष्ट पैदा करते हैं। इसके बजाय, यह करने का प्रयास करें:\n\n1. अपने रिश्तों को केवल खुशी के स्रोत के बजाय विकास के अवसर के रूप में देखने का अभ्यास करें\n2. जब संघर्ष उत्पन्न होते हैं, तो प्रतिक्रिया देने से पहले पीछे हटें और अपनी प्रतिक्रियाओं को देखें\n3. कठिन बातचीत को ईमानदारी और करुणा दोनों के साथ करें\n\nयाद रखें, आपके रिश्तों की गुणवत्ता अक्सर अपने साथ आपके रिश्ते को दर्शाती है।",
+    relationships: "मैं समझता/समझती हूँ कि रिश्ते कभी-कभी कितने चुनौतीपूर्ण हो सकते हैं। भगवद गीता यहां गहरी अंतर्दृष्टि प्रदान करती है।\n\nमूल रूप से, गीता सिखाती है कि सच्चे संबंध लगाव के बजाय निःस्वार्थ प्रेम पर आधारित होते हैं। जब हम किसी से इसलिए प्यार करते हैं कि हम���ं उनसे क्या मिलता है, तो हम अपने लिए कष्ट पैदा करते हैं। इसके बजाय, यह करने का प्रयास करें:\n\n1. अपने रिश्तों को केवल खुशी के स्रोत के बजाय विकास के अवसर के रूप में देखने का अभ्यास करें\n2. जब संघर्ष उत्पन्न होते हैं, तो प्रतिक्रिया देने से पहले पीछे हटें और अपनी प्रतिक्रियाओं को देखें\n3. कठिन बातचीत को ईमानदारी और करुणा दोनों के साथ करें\n\nयाद रखें, आपके रिश्तों की गुणवत्ता अक्सर अपने साथ आपके रिश्ते को दर्शाती है।",
     
     career: "करियर की चुनौतियां अभिभूत करने वाली हो सकती हैं, और मैं आपकी चिंता को समझता/समझती हूं। भगवद गीता काम पर एक ताज़ा दृष्टिकोण प्रदान करती है।\n\n'कर्म योग' की अवधारणा परिणाम से अनासक्त होकर अपना काम उत्कृष्टता से करना सिखाती है। इसका मतलब यह नहीं है कि आप परवाह न करें - इसका मतलब है कि आप अपना सर्वश्रेष्ठ देते हुए परिणामों के बारे में चिंता को आप पर हावी न होने दें।\n\nइन दृष्टिकोणों को आजमाएं:\n1. मान्यता या उन्नति पर ध्यान केंद्रित करने के बजाय अपने कौशल विकसित करने और अपना सर्वश्रेष्ठ प्रयास देने पर ध्यान दें\n2. अपने काम के ऐसे पहलू खोजें जो आपके मूल्यों और ताकतों के अनुरूप हों\n3. अपने जीवन में संतुलन बनाए रखने के लिए सीमाएं निर्धारित करें\n\nआपका करियर महत्वपूर्ण है, लेकिन यह आपके संपूर्ण स्वयं का केवल एक पहलू है।",
     
-    health: "स्वास्थ्य संबंधी चिंताएं अविश्वसनीय रूप से तनावपूर्ण हो सकती हैं, और मैं आप जो कुछ भी अनुभव कर रहे हैं उसे समझता/समझती हूं। भगवद गीता हमारे शारीरिक और मानसिक कल्याण की देखभाल के बारे में ज्ञान प्रदान करती है।\n\nगीता सिखाती है कि संतुलन महत्वपूर्ण है - 'योग उसके लिए नहीं है जो बहुत अधिक या बहुत कम खाता है, बहुत अधिक या बहुत कम सोता है।' यह प्राचीन ज्ञान आधुनिक स्वास्थ्य मनोविज्ञान के साथ पूरी तरह से सहमत है।\n\nविचार करने के लिए कुछ व्यावहारिक कदम:\n1. तीव्रता के बजाय निरंतरता के साथ स्व-देखभाल का दृष्टिकोण अपनाएं - कभी-कभार के बड़े प्रयासों की तुलना में छोटी दैनिक आदतें अधिक मायने रखती हैं\n2. दर्द या असुविधा के माध्यम से धकेलने के बजाय अपने शरीर के संकेतों को सुनें\n3. याद रखें कि आपके विचार आपके शारीरिक कल्याण को महत्वपूर्ण रूप से प्रभावित करते हैं\n\nअपनी देखभाल करना स्वार्थी नहीं है - यह अपने जीवन के सभी क्षेत्रों में पूरी तरह से मौजूद होने के लिए आवश्यक है।",
+    health: "स्वास्थ्य संबंधी चिंताएं अविश्वसनीय रूप से तनावपूर्ण हो सकती हैं, और मैं आप जो कुछ भी अनुभव कर रहे हैं उसे समझता/समझती हूं। भगवद गीता हमारे शारीरिक और मानसिक कल्याण की देखभाल के बारे में ज्ञान प्रदान करती है।\n\nगीता सिखाती है कि संतुलन महत्वपूर्ण है - 'योग उसके लिए नहीं है जो बहुत अधिक या बहुत कम खाता है, बहुत अधिक या बहुत कम सोता है।' यह प्राचीन ज्ञान आधुनिक स्वास्थ्य मनोविज्ञान के साथ पूरी तरह से सहमत है।\n\nविचार करने के लिए क���छ व्यावहारिक कदम:\n1. तीव्रता के बजाय निरंतरता के साथ स्व-देखभाल का दृष्टिकोण अपनाएं - कभी-कभार के बड़े प्रयासों की तुलना में छोटी दैनिक आदतें अधिक मायने रखती हैं\n2. दर्द या असुविधा के माध्यम से धकेलने के बजाय अपने शरीर के संकेतों को सुनें\n3. याद रखें कि आपके विचार आपके शारीरिक कल्याण को महत्वपूर्ण रूप से प्रभावित करते हैं\n\nअपनी देखभाल करना स्वार्थी नहीं है - यह अपने जीवन के सभी क्षेत्रों में पूरी तरह से मौजूद होने के लिए आवश्यक है।",
     
     spirituality: "आध्यात्मिक प्रश्न कुछ सबसे गहरे प्रश्न हैं जो हम पूछ सकते हैं, और आपकी खोज मूल्यवान है। भगवद गीता आध्यात्मिक यात्रा के लिए मार्गदर्शन प्रदान करती है जो आज भी उल्लेखनीय रूप से प्रासंगिक है।\n\nइसकी मुख्य शिक्षाओं में से एक यह है कि आध्यात्मिक विकास निरंतर अभ्यास और परिणामों से अनासक्ति विकसित करने से आता है। जैसा कि कृष्ण कहते हैं, 'मन चंचल है लेकिन अभ्यास और वैराग्य के माध्यम से प्रशिक्षित किया जा सकता है।'\n\nआप विचार कर सकते हैं:\n1. एक दैनिक ध्यान अभ्यास स्थापित करना, भले ही सिर्फ 5-10 मिनट के लिए\n2. नियमित रूप से परिणामों और प्राप्तियों के प्रति अपने लगाव पर सवाल करना\n3. बिना पुरस्कार की अपेक्षा के दूसरों की सेवा करने के अवसर खोजना\n\nआपकी आध्यात्मिक यात्रा अद्वितीय रूप से आपकी है - मार्गदर्शन के लिए खुले रहते हुए अपने आंतरिक ज्ञान पर भरोसा करें।",
     
