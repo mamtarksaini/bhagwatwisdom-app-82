@@ -1,3 +1,4 @@
+
 export type Language = "english" | "hindi";
 
 export interface Verse {
@@ -22,4 +23,9 @@ export interface UserProfile {
   name?: string;
   created_at?: string;
   is_premium?: boolean;
+}
+
+// Add ThemeState interface
+export interface ThemeState {
+  isDark: boolean;
 }
