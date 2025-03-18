@@ -1,3 +1,4 @@
+
 import { supabase } from '@/lib/supabase';
 import { UserProfile } from '@/types';
 import { Profile } from '@/types/auth';

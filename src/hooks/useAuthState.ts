@@ -31,10 +31,12 @@ export const useAuthState = () => {
       } catch (error) {
         console.error("useAuthState: Error handling auth state change:", error);
         setStatus('unauthenticated');
+        setUser(null);
       }
     } else {
       console.log("useAuthState: No session user, setting unauthenticated");
       setUser(null);
+      setIsPremium(false);
       setStatus('unauthenticated');
     }
   };
@@ -51,6 +53,7 @@ export const useAuthState = () => {
       } catch (error) {
         console.error('useAuthState: Error fetching session:', error);
         setStatus('unauthenticated');
+        setUser(null);
       }
     };
 

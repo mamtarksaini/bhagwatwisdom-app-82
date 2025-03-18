@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -20,7 +20,7 @@ interface SignInFormProps {
 }
 
 export function SignInForm({ onSuccess }: SignInFormProps) {
-  const { signIn } = useAuth();
+  const { signIn, status } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -31,9 +31,18 @@ export function SignInForm({ onSuccess }: SignInFormProps) {
     },
   });
 
+  // Monitor auth status changes
+  useEffect(() => {
+    if (status === 'authenticated' && isLoading) {
+      console.log("SignInForm: User is authenticated, calling onSuccess");
+      setIsLoading(false);
+      onSuccess();
+    }
+  }, [status, isLoading, onSuccess]);
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (isLoading) {
-      console.log("Submit prevented: Already processing a request");
+      console.log("SignInForm: Submit prevented: Already processing a request");
       return;
     }
     
@@ -43,11 +52,12 @@ export function SignInForm({ onSuccess }: SignInFormProps) {
     try {
       const { error } = await signIn(values.email, values.password);
       
-      if (!error) {
-        console.log("SignInForm: Sign in successful, calling onSuccess");
-        onSuccess();
-      } else {
+      if (error) {
         console.error("SignInForm: Error returned from signIn:", error);
+        setIsLoading(false);
+      } else {
+        console.log("SignInForm: Sign in API call successful");
+        // We'll let the useEffect handle success since it listens for auth state changes
       }
     } catch (error: any) {
       console.error("SignInForm: Exception during sign in:", error);
@@ -56,8 +66,6 @@ export function SignInForm({ onSuccess }: SignInFormProps) {
         description: error?.message || "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
-    } finally {
-      console.log("SignInForm: Completed sign in process");
       setIsLoading(false);
     }
   }
