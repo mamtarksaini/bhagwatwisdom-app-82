@@ -3,8 +3,8 @@ import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Language } from "@/types";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, AlertCircle } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { RefreshCw, AlertCircle, Info } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface WisdomDisplayProps {
   solution: string;
@@ -32,6 +32,18 @@ export function WisdomDisplay({
             {language === 'hindi' 
               ? "हम वर्तमान में ऑफलाइन ज्ञान प्रदान कर रहे हैं। कृपया फिर से कोशिश करें।" 
               : "We're currently providing offline wisdom. Please retry for AI-powered insights."}
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      {isPremium && usingFallback && (
+        <Alert variant="default" className="bg-blue-500/10 border border-blue-500/30">
+          <Info className="h-4 w-4 text-blue-500" />
+          <AlertTitle>Note for premium users</AlertTitle>
+          <AlertDescription>
+            {language === 'hindi' 
+              ? "सुपाबेस एज फंक्शन या जेमिनी AI API कुंजी की समस्या के कारण AI बुद्धि प्रदान नहीं कर सकते हैं। AI उत्तर के लिए पुनः प्रयास करें।" 
+              : "We cannot provide AI wisdom due to a Supabase Edge Function or Gemini AI API key issue. Retry for AI response."}
           </AlertDescription>
         </Alert>
       )}
