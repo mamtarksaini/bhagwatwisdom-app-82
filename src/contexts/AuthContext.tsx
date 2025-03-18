@@ -15,10 +15,11 @@ interface AuthContextType {
   upgradeToPremium: () => Promise<void>;
 }
 
-// Define the profile type with is_premium
+// Define the profile type including is_premium
+// This interface is used internally within this file
 interface Profile {
   id: string;
-  name: string;
+  name: string | null;
   created_at: string;
   is_premium: boolean;
 }
@@ -170,9 +171,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       if (!user) return;
 
+      // Convert UserProfile updates to match the Supabase profile schema
+      const profileUpdates: Partial<Profile> = {
+        name: updates.name,
+        is_premium: updates.is_premium
+      };
+
       const { error } = await supabase
         .from('profiles')
-        .update(updates)
+        .update(profileUpdates)
         .eq('id', user.id);
 
       if (error) {
@@ -224,6 +231,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       setIsPremium(true);
+      setUser({ ...user, is_premium: true });
       toast({
         title: "Upgrade successful",
         description: "You now have access to premium features!",
