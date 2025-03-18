@@ -30,8 +30,8 @@ export function WisdomDisplay({
           <AlertCircle className="h-4 w-4 text-amber-500" />
           <AlertDescription>
             {language === 'hindi' 
-              ? "हम वर्तमान में ऑफलाइन ज्ञान प्रदान कर रहे हैं। AI उत्तर के लिए GEMINI_API_KEY को सेट करें।" 
-              : "Currently using offline wisdom. Please set GEMINI_API_KEY in Supabase Edge Function secrets."}
+              ? "अभी हम ऑफ़लाइन ज्ञान दिखा रहे हैं। AI उत्तर प्राप्त करने के लिए पुनः प्रयास करें।" 
+              : "Currently showing offline wisdom. Please retry for AI-powered responses."}
           </AlertDescription>
         </Alert>
       )}
@@ -39,11 +39,11 @@ export function WisdomDisplay({
       {isPremium && usingFallback && (
         <Alert variant="default" className="bg-blue-500/10 border border-blue-500/30">
           <Info className="h-4 w-4 text-blue-500" />
-          <AlertTitle>API Configuration Required</AlertTitle>
+          <AlertTitle>API Setup Check</AlertTitle>
           <AlertDescription>
             {language === 'hindi' 
-              ? "AI बुद्धि प्रदान करने के लिए, सुपाबेस एज फंक्शन सीक्रेट्स में GEMINI_API_KEY सेट करें।" 
-              : "To provide AI wisdom, please set GEMINI_API_KEY in Supabase Edge Function secrets."}
+              ? "सुनिश्चित करें कि GEMINI_API_KEY सुपाबेस एज फंक्शन सीक्रेट्स में सही तरीके से कॉन्फ़िगर किया गया है और एज फंक्शन डिप्लॉय है।" 
+              : "Ensure GEMINI_API_KEY is correctly configured in Supabase Edge Function Secrets and that the edge function is deployed."}
           </AlertDescription>
         </Alert>
       )}
@@ -79,8 +79,8 @@ export function WisdomDisplay({
             <div className="flex items-center justify-center px-4 py-2 rounded-md bg-amber-500/10 border border-amber-500/30">
               <p>
                 {language === 'hindi' 
-                  ? "AI उत्तर प्राप्त करने के लिए GEMINI_API_KEY सेटअप आवश्यक है।" 
-                  : "GEMINI_API_KEY setup required to receive AI responses."}
+                  ? "एज फंक्शन कनेक्शन सुनिश्चित करें और GEMINI_API_KEY की जांच करें। पुनः प्रयास करें।" 
+                  : "Verify edge function connection and check GEMINI_API_KEY. Try again."}
               </p>
             </div>
           ) : (

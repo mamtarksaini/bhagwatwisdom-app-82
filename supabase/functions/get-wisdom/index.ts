@@ -24,16 +24,17 @@ serve(async (req) => {
     
     console.log(`Processing request for question: "${question}", category: "${category}", language: "${language}"`);
     
-    // If Gemini API key is not available, return fallback immediately
+    // Check API key explicitly to provide better error messages
     if (!GEMINI_API_KEY) {
-      console.error('GEMINI_API_KEY is not configured in environment variables');
+      console.error('GEMINI_API_KEY is not available in environment variables');
       return new Response(
         JSON.stringify({ 
-          status: 'success',
+          status: 'error',
+          message: 'API key not configured',
           useFallback: true,
-          error: 'API key not configured'
+          error: 'GEMINI_API_KEY not found in environment variables'
         }),
-        { headers: CORS_HEADERS, status: 200 }
+        { headers: CORS_HEADERS, status: 400 }
       );
     }
     
@@ -53,12 +54,12 @@ serve(async (req) => {
     Keep your response concise (200-400 words).
     ${language === 'hindi' ? "Please respond in conversational Hindi language that's easy to understand." : ""}`
     
-    console.log('Calling Gemini API.');
+    console.log('Calling Gemini API with key length:', GEMINI_API_KEY.length);
     
     try {
       // Call Gemini API with timeout
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 second timeout for more reliability
+      const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 second timeout for more reliability
 
       // Gemini API endpoint
       const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent', {
@@ -85,8 +86,10 @@ serve(async (req) => {
       clearTimeout(timeoutId);
       
       if (!response.ok) {
-        console.error(`Gemini API returned non-200 status: ${response.status}`);
-        throw new Error(`API error: ${response.status}`);
+        console.error(`Gemini API returned status: ${response.status}`);
+        const errorText = await response.text();
+        console.error(`Gemini API error response: ${errorText}`);
+        throw new Error(`API error: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
@@ -114,18 +117,28 @@ serve(async (req) => {
         }
       );
     } catch (apiError) {
-      // Instead of returning fallback, rethrow to try again
-      throw apiError;
+      console.error('Gemini API error:', apiError.message);
+      // Return a specific error message to help with debugging
+      return new Response(
+        JSON.stringify({ 
+          status: 'error',
+          message: `Gemini API error: ${apiError.message}`,
+          retryable: true,
+          error: apiError.message
+        }),
+        { headers: CORS_HEADERS, status: 500 }
+      );
     }
   } catch (error) {
     console.error('Edge function error:', error);
     
-    // Return error status to trigger retry
+    // Return error status with more details
     return new Response(
       JSON.stringify({ 
         status: 'error',
         message: error.message || 'Request processing failed',
-        retryable: true
+        retryable: true,
+        error: error.stack
       }),
       { 
         status: 500,

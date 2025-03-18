@@ -1,3 +1,4 @@
+
 import { Language } from '@/types';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from './supabase';
@@ -9,7 +10,7 @@ export async function getWisdomResponse(category: string, language: Language, qu
     
     // Add a longer timeout for the edge function call
     const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Edge function request timed out')), 25000)
+      setTimeout(() => reject(new Error('Edge function request timed out')), 30000)
     );
     
     const functionCallPromise = supabase.functions.invoke('get-wisdom', {
@@ -34,7 +35,7 @@ export async function getWisdomResponse(category: string, language: Language, qu
     }
 
     // Add extra logging to see what's coming back
-    console.log('Response from edge function:', JSON.stringify(data).substring(0, 200) + '...');
+    console.log('Response from edge function:', JSON.stringify(data));
 
     // Handle error status from edge function
     if (data?.status === 'error') {
