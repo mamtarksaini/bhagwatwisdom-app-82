@@ -1,7 +1,8 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { AuthStatus, UserProfile } from '@/types';
-import { toast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/use-toast';
 
 interface AuthContextType {
   user: UserProfile | null;
@@ -231,16 +232,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
-      // Since we now know the column exists, we can update it directly
+      // In a real app, you would handle payment processing here
+      // For this demo, we'll just update the user's premium status
+      
+      // Use type assertion to bypass TypeScript checking
       const { error } = await supabase
         .from('profiles')
-        .update({ 
-          is_premium: true 
-        } as any) // Use type assertion to bypass TypeScript checking
+        .update({ is_premium: true } as any)
         .eq('id', user.id);
 
       if (error) {
-        console.error('Error updating premium status:', error);
         toast({
           title: "Upgrade failed",
           description: error.message,
@@ -257,11 +258,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
     } catch (error) {
       console.error('Error upgrading to premium:', error);
-      toast({
-        title: "Upgrade failed",
-        description: "An unexpected error occurred. Please try again later.",
-        variant: "destructive",
-      });
     }
   };
 
