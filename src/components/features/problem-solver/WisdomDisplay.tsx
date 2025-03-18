@@ -3,7 +3,8 @@ import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Language } from "@/types";
 import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface WisdomDisplayProps {
   solution: string;
@@ -24,6 +25,17 @@ export function WisdomDisplay({
 }: WisdomDisplayProps) {
   return (
     <div className="space-y-4">
+      {usingFallback && (
+        <Alert variant="default" className="bg-amber-500/10 border border-amber-500/30">
+          <AlertCircle className="h-4 w-4 text-amber-500" />
+          <AlertDescription>
+            {language === 'hindi' 
+              ? "हम वर्तमान में ऑफलाइन ज्ञान प्रदान कर रहे हैं। कृपया फिर से कोशिश करें।" 
+              : "We're currently providing offline wisdom. Please retry for AI-powered insights."}
+          </AlertDescription>
+        </Alert>
+      )}
+      
       <Card className="border border-gold/30 bg-card/80 backdrop-blur">
         <CardContent className="pt-6">
           <div className="prose dark:prose-invert">

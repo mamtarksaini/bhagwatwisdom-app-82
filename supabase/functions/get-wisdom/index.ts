@@ -5,6 +5,7 @@ const PERPLEXITY_API_KEY = Deno.env.get('PERPLEXITY_API_KEY')
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Content-Type': 'application/json'
 };
 
@@ -29,7 +30,8 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           status: 'success',
-          useFallback: true
+          useFallback: true,
+          error: 'API key not configured'
         }),
         { headers: CORS_HEADERS, status: 200 }
       );
@@ -56,7 +58,7 @@ serve(async (req) => {
     try {
       // Call Perplexity API with timeout
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 12000); // 12 second timeout
       
       const response = await fetch('https://api.perplexity.ai/chat/completions', {
         method: 'POST',
@@ -90,7 +92,8 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({ 
             status: 'success',
-            useFallback: true
+            useFallback: true,
+            error: `API error: ${response.status}`
           }),
           { headers: CORS_HEADERS, status: 200 }
         );
@@ -105,7 +108,8 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({ 
             status: 'success',
-            useFallback: true
+            useFallback: true,
+            error: 'Invalid API response format'
           }),
           { headers: CORS_HEADERS, status: 200 }
         );
@@ -122,7 +126,7 @@ serve(async (req) => {
           useFallback: false
         }), 
         {
-          headers: { ...CORS_HEADERS },
+          headers: CORS_HEADERS,
           status: 200
         }
       );
@@ -137,7 +141,7 @@ serve(async (req) => {
         JSON.stringify({ 
           status: 'success',
           useFallback: true,
-          error: 'API request failed or timed out'
+          error: apiError.message || 'API request failed or timed out'
         }),
         { headers: CORS_HEADERS, status: 200 }
       );
@@ -150,11 +154,11 @@ serve(async (req) => {
       JSON.stringify({ 
         status: 'success',
         useFallback: true,
-        error: 'Request processing failed'
+        error: error.message || 'Request processing failed'
       }),
       { 
         status: 200,
-        headers: { ...CORS_HEADERS }
+        headers: CORS_HEADERS
       }
     );
   }

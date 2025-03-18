@@ -10,7 +10,7 @@ export async function getWisdomResponse(category: string, language: Language, qu
     
     // Add a longer timeout for the edge function call
     const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Edge function request timed out')), 12000)
+      setTimeout(() => reject(new Error('Edge function request timed out')), 15000)
     );
     
     const functionCallPromise = supabase.functions.invoke('get-wisdom', {
@@ -38,9 +38,12 @@ export async function getWisdomResponse(category: string, language: Language, qu
       return getFallbackResponse(category, language);
     }
 
+    // Add extra logging to see what's coming back
+    console.log('Response from edge function:', JSON.stringify(data).substring(0, 200) + '...');
+
     // Check if we need to use fallback (API key missing or other server error)
     if (data?.useFallback) {
-      console.warn('Server indicated fallback should be used', data);
+      console.warn('Server indicated fallback should be used:', data);
       
       if (data?.error) {
         console.error('Server error details:', data.error);
