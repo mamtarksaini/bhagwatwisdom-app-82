@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { AuthStatus, UserProfile } from '@/types';
@@ -46,7 +47,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUser({
             id: session.user.id,
             email: session.user.email,
-            ...profile
+            name: profile?.name,
+            created_at: profile?.created_at,
+            is_premium: profile?.is_premium || false
           });
           
           setIsPremium(!!profile?.is_premium);
@@ -76,7 +79,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUser({
             id: session.user.id,
             email: session.user.email,
-            ...profile
+            name: profile?.name,
+            created_at: profile?.created_at,
+            is_premium: profile?.is_premium || false
           });
           setIsPremium(!!profile?.is_premium);
           setStatus('authenticated');
