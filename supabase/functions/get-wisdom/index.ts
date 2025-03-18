@@ -35,18 +35,28 @@ serve(async (req) => {
       );
     }
     
-    // Construct prompt
-    const prompt = `You are a wise spiritual guide who provides wisdom based on the Bhagavad Gita. 
-    The user is asking about: "${question}" which falls under the category of "${category}".
-    Please provide a thoughtful, compassionate response with references to relevant concepts from the Bhagavad Gita.
-    ${language === 'hindi' ? " Please respond in Hindi language." : ""}`
+    // Construct improved prompt for modern relevance
+    const prompt = `You are both a wise spiritual guide knowledgeable in the Bhagavad Gita AND a modern psychologist or life coach. Respond to this problem in a way that today's generation would relate to while providing authentic wisdom.
+
+    The user's problem is: "${question}" (category: ${category})
+    
+    Your response should:
+    1. Acknowledge their struggle with empathy in 1-2 sentences
+    2. Provide one or two relevant principles from the Bhagavad Gita, explaining the concept in modern language
+    3. Outline 2-3 practical steps they can take, rooted in this wisdom but presented in contemporary terms
+    4. End with a brief encouraging statement
+    
+    Use accessible language while preserving the depth of the wisdom. Avoid religious jargon that might alienate someone unfamiliar with Hindu concepts - instead, focus on the psychological insights.
+    
+    Keep your response concise (200-400 words).
+    ${language === 'hindi' ? "Please respond in conversational Hindi language that's easy to understand." : ""}`
     
     console.log('Calling Gemini API with prompt.');
     
     try {
       // Call Gemini API with timeout
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000); // Increased timeout to 8 seconds
+      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
       
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`, {
         method: 'POST',
@@ -146,4 +156,3 @@ serve(async (req) => {
     );
   }
 });
-
