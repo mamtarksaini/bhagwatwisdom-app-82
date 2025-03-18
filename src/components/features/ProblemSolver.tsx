@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,7 +19,7 @@ export function ProblemSolver({ language, isPremium = false }: ProblemSolverProp
   const [problem, setProblem] = useState("");
   const [solution, setSolution] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { isListening, transcript, startListening, stopListening, resetTranscript, error } = useSpeechRecognition(language);
+  const { isListening, transcript, startListening, stopListening, resetTranscript, error: speechError } = useSpeechRecognition(language);
   const { speak, stop, isReading } = useSpeechSynthesis(language);
 
   const handleSpeechInput = () => {
@@ -44,9 +45,11 @@ export function ProblemSolver({ language, isPremium = false }: ProblemSolverProp
     console.log('Submitting problem:', { problem, language });
     
     try {
+      // Determine the category of the problem
       const category = determineResponseCategory(problem);
       console.log('Determined category:', category);
       
+      // Get wisdom response
       const response = await getWisdomResponse(category, language, problem);
       console.log('Got wisdom response:', response);
       
@@ -131,7 +134,7 @@ export function ProblemSolver({ language, isPremium = false }: ProblemSolverProp
             </div>
           </div>
           
-          {error && <p className="text-destructive text-sm mt-2">{error}</p>}
+          {speechError && <p className="text-destructive text-sm mt-2">{speechError}</p>}
           
           <div className="mt-4 flex justify-end">
             <Button 

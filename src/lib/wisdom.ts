@@ -1,3 +1,4 @@
+
 import { Language } from '@/types';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from './supabase';
@@ -5,6 +6,8 @@ import { supabase } from './supabase';
 // Function to get wisdom from Supabase Edge Function
 export async function getWisdomResponse(category: string, language: Language, question: string) {
   try {
+    console.log('Calling get-wisdom function with:', { category, language, question });
+    
     const { data, error } = await supabase.functions.invoke('get-wisdom', {
       body: {
         question,
@@ -23,9 +26,19 @@ export async function getWisdomResponse(category: string, language: Language, qu
       return getFallbackResponse(category, language);
     }
 
+    if (!data || !data.answer) {
+      console.error('Invalid response from Supabase function:', data);
+      return getFallbackResponse(category, language);
+    }
+
     return data.answer;
   } catch (error) {
     console.error('Error fetching wisdom response:', error);
+    toast({
+      title: "Error",
+      description: "Something went wrong. Using fallback wisdom.",
+      variant: "destructive"
+    });
     return getFallbackResponse(category, language);
   }
 }

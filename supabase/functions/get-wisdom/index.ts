@@ -2,11 +2,22 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
 const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY')
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Content-Type': 'application/json'
+};
 
 serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: CORS_HEADERS });
+  }
+  
   try {
     // Validate API key
     if (!GEMINI_API_KEY) {
+      console.error('GEMINI_API_KEY is not configured in environment variables');
       throw new Error('GEMINI_API_KEY is not configured in environment variables')
     }
 
@@ -58,7 +69,7 @@ serve(async (req) => {
         status: 'success'
       }), 
       {
-        headers: { "Content-Type": "application/json" },
+        headers: { ...CORS_HEADERS },
         status: 200
       }
     )
@@ -74,7 +85,7 @@ serve(async (req) => {
       }),
       { 
         status: 500,
-        headers: { "Content-Type": "application/json" }
+        headers: { ...CORS_HEADERS }
       }
     )
   }
