@@ -53,9 +53,15 @@ export function ProblemSolver({ language, isPremium = false }: ProblemSolverProp
       const category = determineResponseCategory(problem);
       console.log('Determined category:', category);
       
-      // Get wisdom response
-      const response = await getWisdomResponse(category, language, problem);
-      console.log('Got wisdom response:', response);
+      // Get wisdom response with a timeout
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Request timed out')), 15000)
+      );
+      
+      const responsePromise = getWisdomResponse(category, language, problem);
+      
+      // Race between the response and timeout
+      const response = await Promise.race([responsePromise, timeoutPromise]) as string;
       
       if (response) {
         setSolution(response);
@@ -104,12 +110,6 @@ export function ProblemSolver({ language, isPremium = false }: ProblemSolverProp
     
     speak(solution);
   };
-
-  useEffect(() => {
-    if (isListening) {
-      setProblem(transcript);
-    }
-  }, [transcript, isListening]);
 
   // If using speech recognition, update problem with transcript
   useEffect(() => {

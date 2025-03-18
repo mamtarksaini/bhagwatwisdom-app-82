@@ -21,6 +21,8 @@ serve(async (req) => {
       throw new Error('Missing required fields')
     }
     
+    console.log(`Processing request for question: "${question}", category: "${category}", language: "${language}"`);
+    
     // If Gemini API key is not available, return fallback immediately
     if (!GEMINI_API_KEY) {
       console.error('GEMINI_API_KEY is not configured in environment variables');
@@ -39,12 +41,12 @@ serve(async (req) => {
     Please provide a thoughtful, compassionate response with references to relevant concepts from the Bhagavad Gita.
     ${language === 'hindi' ? " Please respond in Hindi language." : ""}`
     
-    console.log('Calling Gemini API with prompt:', prompt.substring(0, 100) + '...');
+    console.log('Calling Gemini API with prompt.');
     
     try {
       // Call Gemini API with timeout
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 8000); // Increased timeout to 8 seconds
       
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`, {
         method: 'POST',
@@ -70,7 +72,8 @@ serve(async (req) => {
       clearTimeout(timeoutId);
       
       if (!response.ok) {
-        console.error('Gemini API returned non-200 status:', response.status);
+        console.error(`Gemini API returned non-200 status: ${response.status}`);
+        console.error(`Response text: ${await response.text()}`);
         return new Response(
           JSON.stringify({ 
             status: 'success',
@@ -81,11 +84,11 @@ serve(async (req) => {
       }
 
       const data = await response.json();
-      console.log('Received response from Gemini API:', JSON.stringify(data).substring(0, 100) + '...');
+      console.log('Received response from Gemini API');
       
       // Validate Gemini API response
       if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
-        console.error('Invalid Gemini API response:', data);
+        console.error('Invalid Gemini API response structure:', JSON.stringify(data).substring(0, 200));
         return new Response(
           JSON.stringify({ 
             status: 'success',
@@ -97,12 +100,13 @@ serve(async (req) => {
 
       // Return successful response
       const answer = data.candidates[0].content.parts[0].text;
-      console.log('Returning answer:', answer.substring(0, 100) + '...');
+      console.log('Returning answer (truncated):', answer.substring(0, 50) + '...');
       
       return new Response(
         JSON.stringify({ 
           answer: answer,
-          status: 'success'
+          status: 'success',
+          useFallback: false
         }), 
         {
           headers: { ...CORS_HEADERS },
@@ -110,11 +114,17 @@ serve(async (req) => {
         }
       );
     } catch (apiError) {
-      console.error('Error calling Gemini API:', apiError);
+      // Handle fetch timeouts and other network errors
+      console.error('Error calling Gemini API:', typeof apiError === 'object' ? JSON.stringify(apiError) : apiError);
+      if (apiError.name === 'AbortError') {
+        console.error('Request timed out');
+      }
+      
       return new Response(
         JSON.stringify({ 
           status: 'success',
-          useFallback: true
+          useFallback: true,
+          error: 'API request failed or timed out'
         }),
         { headers: CORS_HEADERS, status: 200 }
       );
@@ -126,7 +136,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         status: 'success',
-        useFallback: true
+        useFallback: true,
+        error: 'Request processing failed'
       }),
       { 
         status: 200,
@@ -135,3 +146,4 @@ serve(async (req) => {
     );
   }
 });
+

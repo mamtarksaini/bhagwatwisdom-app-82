@@ -1,4 +1,3 @@
-
 import { Language } from '@/types';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from './supabase';
@@ -23,7 +22,7 @@ export async function getWisdomResponse(category: string, language: Language, qu
 
     // Check if we need to use fallback (API key missing or other server error)
     if (data?.useFallback) {
-      console.warn('Server indicated fallback should be used');
+      console.warn('Server indicated fallback should be used', data);
       return getFallbackResponse(category, language);
     }
 
@@ -32,7 +31,7 @@ export async function getWisdomResponse(category: string, language: Language, qu
       return getFallbackResponse(category, language);
     }
 
-    console.log('Got wisdom response:', data.answer);
+    console.log('Got wisdom response:', data.answer.substring(0, 100) + '...');
     return data.answer;
   } catch (error) {
     console.error('Error fetching wisdom response:', error);
@@ -42,6 +41,7 @@ export async function getWisdomResponse(category: string, language: Language, qu
 
 // Helper function to get fallback response
 function getFallbackResponse(category: string, language: Language) {
+  console.log('Using fallback response for category:', category, 'language:', language);
   const responses = fallbackWisdomResponses[language] || fallbackWisdomResponses.english;
   return responses[category] || responses.default;
 }
@@ -85,7 +85,7 @@ export const fallbackWisdomResponses = {
     relationships: "भगवद गीता हमें सिखाती है कि सच्चे संबंध निःस्वार्थ प्रेम और समझ पर आधारित होते हैं। जैसे कृष्ण ने अर्जुन को सलाह दी, 'जो केवल कर्म के फलों की इच्छा से प्रेरित होते हैं, वे दुखी होते हैं, क्योंकि वे लगातार अपने कार्यों के परिणामों के बारे में चिंतित रहते हैं।' रिश्तों में भी, परिणामों से जुड़ाव दुःख लाता है, जबकि निःस्वार्थ प्रेम शांति लाता है।",
     career: "भगवद गीता के अनुसार, अनासक्ति के साथ और दिव्य को समर्पित किया गया कार्य सच्ची पूर्ति लाता है। जैसा कि भगवान कृष्ण कहते हैं, 'आपको अपने निर्धारित कर्तव्यों को करने का अधिकार है, लेकिन आप अपने कर्मों के फलों के हकदार नहीं हैं।' परिणामों के बारे में चिंतित होने के बजाय, उत्कृष्टता और समर्पण के साथ अपना काम करने पर ध्यान दें।",
     health: "गीता सिखाती है कि शरीर आत्मा के लिए एक मंदिर है और इसे संतुलन के साथ बनाए रखा जाना चाहिए। भगवान कृष्ण सलाह देते हैं: 'योग उसके लिए नहीं है जो बहुत अधिक खाता है, या उसके लिए जो बहुत कम खाता है; यह उसके लिए नहीं है जो बहुत अधिक सोता है, या उसके लिए जो बहुत कम सोता है।' जीवन के सभी पहलुओं में संयम स्वास्थ्य और स्पष्टता लाता है।",
-    spirituality: "भगवद गीता के अनुसार आध्यात्मिक विकास का सार स्थिर अभ्यास और अनासक्ति में पाया जाता है। कृष्ण सिखाते हैं, 'मन चंचल और नियंत्रित करना कठिन है, लेकिन यह अभ्यास और अनासक्ति से वश में होता है।' नियमित ध्यान, आत्म-जिज्ञासा, और भक्ति धीरे-धीरे आपके सच्चे आध्यात्मिक स्वभाव को प्रकट करेंगे।",
+    spirituality: "भगवद गीता के अनुसार आध्यात्मिक विकास का सार स्थिर अभ्यास और अनासक्ति में पाय��� जाता है। कृष्ण सिखाते हैं, 'मन चंचल और नियंत्रित करना कठिन है, लेकिन यह अभ्यास और अनासक्ति से वश में होता है।' नियमित ध्यान, आत्म-जिज्ञासा, और भक्ति धीरे-धीरे आपके सच्चे आध्यात्मिक स्वभाव को प्रकट करेंगे।",
     anxiety: "भगवद गीता अध्याय 2 में सीधे चिन्ता को संबोधित करती है, जहां भगवान कृष्ण अर्जुन को शाश्वत स्वयं के ज्ञान के माध्यम से भय को दूर करना सिखाते हैं: 'आत्मा के लिए कभी जन्म नहीं है और न ही मृत्यु है। ऐसा नहीं है कि आत्मा कभी नहीं थी, अस्तित्व में आई है, या समाप्त हो जाएगी। यह अजन्मा, शाश्वत, सदा-विद्यमान, अमर और आदिकालीन है।'",
     default: "भगवद गीता का ज्ञान हमें याद दिलाता है कि जीवन की चुनौतियां विकास और आत्म-खोज के अवसर हैं। जैसे कृष्ण अर्जुन का मार्गदर्शन करते हैं, 'जो हुआ, अच्छे के लिए हुआ। जो हो रहा है, अच्छे के लिए हो रहा है। जो होगा, वह भी अच्छे के लिए होगा।' दिव्य योजना पर भरोसा करें और भक्ति के साथ अपने कर्तव्यों का पालन करें।"
   }
