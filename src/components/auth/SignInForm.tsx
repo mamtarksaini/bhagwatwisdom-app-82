@@ -8,6 +8,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -34,10 +35,31 @@ export function SignInForm({ onSuccess }: SignInFormProps) {
     setIsLoading(true);
     
     try {
+      // Add a timeout to show a loading message if sign-in takes too long
+      const timeoutId = setTimeout(() => {
+        toast({
+          title: "Still working...",
+          description: "Sign in is taking longer than expected. Please wait.",
+        });
+      }, 3000);
+
       const { error } = await signIn(values.email, values.password);
+      clearTimeout(timeoutId);
+      
       if (!error) {
+        toast({
+          title: "Sign in successful",
+          description: "Welcome back!",
+        });
         onSuccess();
       }
+    } catch (error) {
+      console.error("Sign in error:", error);
+      toast({
+        title: "Sign in failed",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }

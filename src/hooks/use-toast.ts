@@ -35,7 +35,7 @@ type ActionType = typeof actionTypes
 type Action =
   | {
       type: ActionType["ADD_TOAST"]
-      toast: Omit<ToasterToast, "id">
+      toast: Omit<ToasterToast, "id"> & { id?: string }
     }
   | {
       type: ActionType["UPDATE_TOAST"]
@@ -63,7 +63,7 @@ const reducer = (state: State, action: Action): State => {
         ...state,
         toasts: [
           ...state.toasts,
-          { ...action.toast, id: genId() },
+          { ...action.toast, id: action.toast.id || genId() },
         ].slice(-TOAST_LIMIT),
       }
 
