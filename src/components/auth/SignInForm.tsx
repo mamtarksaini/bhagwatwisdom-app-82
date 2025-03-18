@@ -8,6 +8,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -31,13 +32,45 @@ export function SignInForm({ onSuccess }: SignInFormProps) {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (isLoading) return; // Prevent multiple submissions
+    
     setIsLoading(true);
+    
+    // Show immediate feedback
+    const signInToast = toast({
+      title: "Signing in",
+      description: "Please wait...",
+    });
     
     try {
       const { error } = await signIn(values.email, values.password);
-      if (!error) {
+      
+      // Dismiss the loading toast
+      signInToast.dismiss();
+      
+      if (error) {
+        toast({
+          title: "Sign in failed",
+          description: error.message || "Please check your credentials and try again",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: "You've been signed in successfully!",
+        });
         onSuccess();
       }
+    } catch (error) {
+      // Dismiss the loading toast
+      signInToast.dismiss();
+      
+      toast({
+        title: "Sign in failed",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+      console.error("Sign in error:", error);
     } finally {
       setIsLoading(false);
     }
