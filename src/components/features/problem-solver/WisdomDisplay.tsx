@@ -1,59 +1,74 @@
 
 import React from 'react';
-import { Button } from "@/components/ui/button";
-import { Volume2, VolumeX } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Language } from "@/types";
-import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
 
 interface WisdomDisplayProps {
   solution: string;
   usingFallback: boolean;
   isPremium: boolean;
   language: Language;
+  onRetry?: () => void;
+  retryCount?: number;
 }
 
 export function WisdomDisplay({ 
   solution, 
   usingFallback, 
   isPremium,
-  language 
+  language,
+  onRetry,
+  retryCount = 0
 }: WisdomDisplayProps) {
-  const { speak, stop, isReading } = useSpeechSynthesis(language);
-
-  const handleSpeak = () => {
-    if (isReading) {
-      stop();
-      return;
-    }
-    
-    speak(solution);
-  };
-
-  if (!solution) return null;
-
   return (
-    <div className="bg-spiritual dark:bg-gray-800/40 rounded-lg p-4 border border-spiritual-dark dark:border-gray-700 animate-fade-in">
-      <div className="flex justify-between items-center mb-2">
-        <h3 className="font-heading font-medium text-lg">Bhagavad Gita Wisdom</h3>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="text-foreground/80 hover:text-foreground"
-          onClick={handleSpeak}
-        >
-          {isReading ? (
-            <VolumeX className="h-4 w-4 mr-2" />
-          ) : (
-            <Volume2 className="h-4 w-4 mr-2" />
+    <div className="space-y-4">
+      <Card className="border border-gold/30 bg-card/80 backdrop-blur">
+        <CardContent className="pt-6">
+          <div className="prose dark:prose-invert">
+            {solution.split('\n\n').map((paragraph, index) => (
+              <p key={index}>{paragraph}</p>
+            ))}
+          </div>
+          
+          {usingFallback && onRetry && (
+            <div className="mt-4 flex justify-end">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex items-center gap-2"
+                onClick={onRetry}
+                disabled={retryCount >= 3}
+              >
+                <RefreshCw className="h-4 w-4" />
+                {retryCount >= 3 ? 'Max retries reached' : 'Try AI wisdom'}
+              </Button>
+            </div>
           )}
-          {isReading ? "Stop" : "Listen"}
-        </Button>
-      </div>
-      <p className="leading-relaxed">{solution}</p>
-      {usingFallback && isPremium && (
-        <p className="text-sm text-muted-foreground mt-2 italic">
-          Note: This is a pre-written response. AI-generated personalized guidance will be available soon.
-        </p>
+        </CardContent>
+      </Card>
+      
+      {usingFallback && (
+        <div className="text-sm text-muted-foreground">
+          {isPremium ? (
+            <div className="flex items-center justify-center px-4 py-2 rounded-md bg-amber-500/10 border border-amber-500/30">
+              <p>
+                {language === 'hindi' 
+                  ? "हम वर्तमान में ऑफलाइन ज्ञान प्रदान कर रहे हैं। AI उत्तर जल्द ही उपलब्ध होंगे।" 
+                  : "We're currently providing offline wisdom. AI-powered responses will be available soon."}
+              </p>
+            </div>
+          ) : (
+            <div className="text-center">
+              <p>
+                {language === 'hindi' 
+                  ? "प्रीमियम सदस्यता के साथ AI-उत्पन्न उत्तर प्राप्त करें" 
+                  : "Get AI-generated responses with premium membership"}
+              </p>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );

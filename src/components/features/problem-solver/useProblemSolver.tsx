@@ -9,42 +9,38 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
   const [solution, setSolution] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [usingFallback, setUsingFallback] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   const handleReset = () => {
     setProblem("");
     setSolution("");
     setUsingFallback(false);
+    setRetryCount(0);
   };
 
-  const handleSubmit = async () => {
-    if (!problem.trim() || isLoading) return;
-    
-    setIsLoading(true);
-    setUsingFallback(false);
-    setSolution(""); // Clear previous solution
-    
-    // Show loading toast
-    const loadingToast = toast({
-      title: "Processing your request",
-      description: "Finding wisdom to guide you..."
-    });
-    
-    console.log('Submitting problem:', { problem, language });
-    
+  const handleRetry = async () => {
+    if (problem && !isLoading) {
+      setRetryCount(prev => prev + 1);
+      setIsLoading(true);
+      setUsingFallback(false);
+      
+      toast({
+        title: "Retrying request",
+        description: "Attempting to connect to our wisdom servers again.",
+      });
+      
+      await handleSubmitInternal();
+    }
+  };
+
+  const handleSubmitInternal = async () => {
     try {
       // Determine the category of the problem
       const category = determineResponseCategory(problem);
       console.log('Determined category:', category);
       
-      // Get wisdom response with a timeout
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Request timed out')), 15000)
-      );
-      
-      const responsePromise = getWisdomResponse(category, language, problem);
-      
-      // Race between the response and timeout
-      const response = await Promise.race([responsePromise, timeoutPromise]) as string;
+      // Get wisdom response
+      const response = await getWisdomResponse(category, language, problem);
       
       if (response) {
         setSolution(response);
@@ -95,8 +91,29 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
         description: "We're providing local wisdom while we resolve connectivity issues.",
       });
     } finally {
-      loadingToast.dismiss();
       setIsLoading(false);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!problem.trim() || isLoading) return;
+    
+    setIsLoading(true);
+    setUsingFallback(false);
+    setSolution(""); // Clear previous solution
+    
+    // Show loading toast
+    const loadingToast = toast({
+      title: "Processing your request",
+      description: "Finding wisdom to guide you..."
+    });
+    
+    console.log('Submitting problem:', { problem, language });
+    
+    try {
+      await handleSubmitInternal();
+    } finally {
+      loadingToast.dismiss();
     }
   };
 
@@ -107,6 +124,8 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
     isLoading,
     usingFallback,
     handleReset,
-    handleSubmit
+    handleSubmit,
+    handleRetry,
+    retryCount
   };
 }

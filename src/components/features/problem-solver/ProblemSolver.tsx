@@ -20,7 +20,9 @@ export function ProblemSolver({ language, isPremium = false }: ProblemSolverProp
     isLoading,
     usingFallback,
     handleReset,
-    handleSubmit
+    handleSubmit,
+    handleRetry,
+    retryCount
   } = useProblemSolver(language, isPremium);
 
   return (
@@ -45,6 +47,8 @@ export function ProblemSolver({ language, isPremium = false }: ProblemSolverProp
             usingFallback={usingFallback}
             isPremium={isPremium}
             language={language}
+            onRetry={handleRetry}
+            retryCount={retryCount}
           />
         )}
         

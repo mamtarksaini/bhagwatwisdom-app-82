@@ -1,7 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
-const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY')
+const PERPLEXITY_API_KEY = Deno.env.get('PERPLEXITY_API_KEY')
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -23,9 +23,9 @@ serve(async (req) => {
     
     console.log(`Processing request for question: "${question}", category: "${category}", language: "${language}"`);
     
-    // If Gemini API key is not available, return fallback immediately
-    if (!GEMINI_API_KEY) {
-      console.error('GEMINI_API_KEY is not configured in environment variables');
+    // If Perplexity API key is not available, return fallback immediately
+    if (!PERPLEXITY_API_KEY) {
+      console.error('PERPLEXITY_API_KEY is not configured in environment variables');
       return new Response(
         JSON.stringify({ 
           status: 'success',
@@ -35,7 +35,7 @@ serve(async (req) => {
       );
     }
     
-    // Construct improved prompt for modern relevance
+    // Construct prompt for modern relevance
     const prompt = `You are both a wise spiritual guide knowledgeable in the Bhagavad Gita AND a modern psychologist or life coach. Respond to this problem in a way that today's generation would relate to while providing authentic wisdom.
 
     The user's problem is: "${question}" (category: ${category})
@@ -51,30 +51,33 @@ serve(async (req) => {
     Keep your response concise (200-400 words).
     ${language === 'hindi' ? "Please respond in conversational Hindi language that's easy to understand." : ""}`
     
-    console.log('Calling Gemini API with prompt.');
+    console.log('Calling Perplexity API.');
     
     try {
-      // Call Gemini API with timeout
+      // Call Perplexity API with timeout
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
       
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`, {
+      const response = await fetch('https://api.perplexity.ai/chat/completions', {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${PERPLEXITY_API_KEY}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          contents: [
+          model: 'llama-3.1-sonar-small-128k-online',
+          messages: [
             {
-              parts: [
-                { text: prompt }
-              ]
+              role: 'system',
+              content: 'Be precise and concise.'
+            },
+            {
+              role: 'user',
+              content: prompt
             }
           ],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 800,
-          }
+          temperature: 0.7,
+          max_tokens: 800,
         }),
         signal: controller.signal
       });
@@ -82,7 +85,7 @@ serve(async (req) => {
       clearTimeout(timeoutId);
       
       if (!response.ok) {
-        console.error(`Gemini API returned non-200 status: ${response.status}`);
+        console.error(`Perplexity API returned non-200 status: ${response.status}`);
         console.error(`Response text: ${await response.text()}`);
         return new Response(
           JSON.stringify({ 
@@ -94,11 +97,11 @@ serve(async (req) => {
       }
 
       const data = await response.json();
-      console.log('Received response from Gemini API');
+      console.log('Received response from Perplexity API');
       
-      // Validate Gemini API response
-      if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
-        console.error('Invalid Gemini API response structure:', JSON.stringify(data).substring(0, 200));
+      // Validate Perplexity API response
+      if (!data.choices?.[0]?.message?.content) {
+        console.error('Invalid Perplexity API response structure:', JSON.stringify(data).substring(0, 200));
         return new Response(
           JSON.stringify({ 
             status: 'success',
@@ -109,7 +112,7 @@ serve(async (req) => {
       }
 
       // Return successful response
-      const answer = data.candidates[0].content.parts[0].text;
+      const answer = data.choices[0].message.content;
       console.log('Returning answer (truncated):', answer.substring(0, 50) + '...');
       
       return new Response(
@@ -125,7 +128,7 @@ serve(async (req) => {
       );
     } catch (apiError) {
       // Handle fetch timeouts and other network errors
-      console.error('Error calling Gemini API:', typeof apiError === 'object' ? JSON.stringify(apiError) : apiError);
+      console.error('Error calling Perplexity API:', typeof apiError === 'object' ? JSON.stringify(apiError) : apiError);
       if (apiError.name === 'AbortError') {
         console.error('Request timed out');
       }

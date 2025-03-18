@@ -8,27 +8,58 @@ export async function getWisdomResponse(category: string, language: Language, qu
   try {
     console.log('Calling get-wisdom function with:', { category, language, question });
     
-    const { data, error } = await supabase.functions.invoke('get-wisdom', {
+    // Add a longer timeout for the edge function call
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Edge function request timed out')), 12000)
+    );
+    
+    const functionCallPromise = supabase.functions.invoke('get-wisdom', {
       body: {
         question,
         category,
         language
       }
     });
+    
+    // Race between the response and timeout
+    const { data, error } = await Promise.race([
+      functionCallPromise,
+      timeoutPromise.then(() => { 
+        throw new Error('Edge function request timed out');
+      })
+    ]) as { data: any, error: any };
 
     if (error) {
       console.error('Error calling Supabase function:', error);
+      toast({
+        title: "Connection issue",
+        description: "We're providing offline wisdom while our AI services reconnect.",
+      });
       return getFallbackResponse(category, language);
     }
 
     // Check if we need to use fallback (API key missing or other server error)
     if (data?.useFallback) {
       console.warn('Server indicated fallback should be used', data);
+      
+      if (data?.error) {
+        console.error('Server error details:', data.error);
+      }
+      
+      toast({
+        title: "Using offline wisdom",
+        description: "We're temporarily using pre-stored wisdom while our AI services reconnect.",
+      });
+      
       return getFallbackResponse(category, language);
     }
 
     if (!data || !data.answer) {
       console.error('Invalid response from Supabase function:', data);
+      toast({
+        title: "Response error",
+        description: "We couldn't process your request. Using offline wisdom instead.",
+      });
       return getFallbackResponse(category, language);
     }
 
@@ -36,6 +67,10 @@ export async function getWisdomResponse(category: string, language: Language, qu
     return data.answer;
   } catch (error) {
     console.error('Error fetching wisdom response:', error);
+    toast({
+      title: "Connection error",
+      description: "We're providing offline wisdom while we restore connectivity.",
+    });
     return getFallbackResponse(category, language);
   }
 }
