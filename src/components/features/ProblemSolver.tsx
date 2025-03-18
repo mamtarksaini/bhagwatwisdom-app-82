@@ -45,6 +45,7 @@ export function ProblemSolver({ language, isPremium = false }: ProblemSolverProp
     
     setIsLoading(true);
     setUsingFallback(false);
+    setSolution(""); // Clear previous solution
     console.log('Submitting problem:', { problem, language });
     
     try {
@@ -65,7 +66,14 @@ export function ProblemSolver({ language, isPremium = false }: ProblemSolverProp
         
         if (response === fallbackResponse) {
           setUsingFallback(true);
-          // Don't show error toast for fallback responses
+          if (isPremium) {
+            // Only show toast for premium users
+            toast({
+              title: "Using offline guidance",
+              description: "We're currently providing wisdom from our local database. AI-generated responses will be available soon.",
+              variant: "default",
+            });
+          }
         }
       } else {
         console.error('No response received from getWisdomResponse');
@@ -99,6 +107,13 @@ export function ProblemSolver({ language, isPremium = false }: ProblemSolverProp
 
   useEffect(() => {
     if (isListening) {
+      setProblem(transcript);
+    }
+  }, [transcript, isListening]);
+
+  // If using speech recognition, update problem with transcript
+  useEffect(() => {
+    if (isListening && transcript) {
       setProblem(transcript);
     }
   }, [transcript, isListening]);
@@ -183,6 +198,11 @@ export function ProblemSolver({ language, isPremium = false }: ProblemSolverProp
               </Button>
             </div>
             <p className="leading-relaxed">{solution}</p>
+            {usingFallback && isPremium && (
+              <p className="text-sm text-muted-foreground mt-2 italic">
+                Note: This is a pre-written response. AI-generated personalized guidance will be available soon.
+              </p>
+            )}
           </div>
         )}
         
