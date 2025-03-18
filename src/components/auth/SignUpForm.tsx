@@ -8,6 +8,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
@@ -33,13 +34,35 @@ export function SignUpForm({ onSuccess }: SignUpFormProps) {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    console.log("SignUpForm: Starting sign up with:", values.email);
     setIsLoading(true);
     
     try {
       const { error } = await signUp(values.email, values.password, values.name);
-      if (!error) {
+      
+      if (error) {
+        console.error("SignUpForm: Error during sign up:", error);
+        toast({
+          title: "Sign up failed",
+          description: error.message || "An unexpected error occurred. Please try again.",
+          variant: "destructive",
+        });
+      } else {
+        console.log("SignUpForm: Sign up successful, triggering onSuccess");
+        // If signup successful, show success toast and call onSuccess
+        toast({
+          title: "Account created",
+          description: "Please check your email for a verification link.",
+        });
         onSuccess();
       }
+    } catch (error: any) {
+      console.error("SignUpForm: Exception during sign up:", error);
+      toast({
+        title: "Sign up failed",
+        description: error?.message || "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }

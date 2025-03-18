@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -32,9 +32,9 @@ export function SignInForm({ onSuccess }: SignInFormProps) {
   });
 
   // Monitor auth status changes
-  useEffect(() => {
+  React.useEffect(() => {
     if (status === 'authenticated' && isLoading) {
-      console.log("SignInForm: User is authenticated, calling onSuccess");
+      console.log("SignInForm: User authenticated, calling onSuccess callback");
       setIsLoading(false);
       onSuccess();
     }
@@ -46,8 +46,8 @@ export function SignInForm({ onSuccess }: SignInFormProps) {
       return;
     }
     
-    setIsLoading(true);
     console.log("SignInForm: Starting sign in with:", values.email);
+    setIsLoading(true);
     
     try {
       const { error } = await signIn(values.email, values.password);
@@ -55,18 +55,26 @@ export function SignInForm({ onSuccess }: SignInFormProps) {
       if (error) {
         console.error("SignInForm: Error returned from signIn:", error);
         setIsLoading(false);
+        
+        // Show toast for error (the auth context already shows one, but adding here as backup)
+        toast({
+          title: "Sign in failed",
+          description: error.message || "Invalid credentials. Please try again.",
+          variant: "destructive",
+        });
       } else {
-        console.log("SignInForm: Sign in API call successful");
+        console.log("SignInForm: Sign in API call successful, waiting for auth state to update");
         // We'll let the useEffect handle success since it listens for auth state changes
       }
     } catch (error: any) {
       console.error("SignInForm: Exception during sign in:", error);
+      setIsLoading(false);
+      
       toast({
         title: "Sign in failed",
         description: error?.message || "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
-      setIsLoading(false);
     }
   }
 
