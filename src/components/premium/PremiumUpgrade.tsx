@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Check, Crown, Lock } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { AuthModal } from "@/components/auth/AuthModal";
+import { toast } from "@/hooks/use-toast";
 
 export function PremiumUpgrade() {
   const { user, status, isPremium, upgradeToPremium } = useAuth();
@@ -17,9 +18,19 @@ export function PremiumUpgrade() {
       return;
     }
 
-    setIsUpgrading(true);
-    await upgradeToPremium();
-    setIsUpgrading(false);
+    try {
+      setIsUpgrading(true);
+      await upgradeToPremium();
+    } catch (error) {
+      console.error("Error in upgrade process:", error);
+      toast({
+        title: "Upgrade failed",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpgrading(false);
+    }
   };
 
   if (isPremium) {

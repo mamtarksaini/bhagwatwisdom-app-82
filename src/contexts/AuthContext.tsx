@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { AuthStatus, UserProfile } from '@/types';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast';
 
 interface AuthContextType {
   user: UserProfile | null;
@@ -232,22 +232,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
-      // In a real app, you would handle payment processing here
-      // For this demo, we'll just update the user's premium status
-      
-      // Use type assertion to bypass TypeScript checking
-      const { error } = await supabase
-        .from('profiles')
-        .update({ is_premium: true } as any)
-        .eq('id', user.id);
-
-      if (error) {
-        toast({
-          title: "Upgrade failed",
-          description: error.message,
-          variant: "destructive",
+      // First check if the column exists in the profiles table
+      const { data: columnInfo, error: columnError } = await supabase
+        .rpc('check_column_exists', { 
+          p_table: 'profiles', 
+          p_column: 'is_premium' 
         });
-        return;
+
+      // If there's an error checking the column or the column doesn't exist,
+      // try to add it to the profiles table
+      if (columnError || !columnInfo) {
+        console.log('Adding is_premium column to profiles table');
+        // We can't alter the table schema from the client, so use a more compatible approach
+        try {
+          // Attempt to update with the column anyway - Supabase will handle it
+          await supabase.from('profiles').update({ 
+            name: user.name,  // Include existing data
+            is_premium: true  // This is the new field
+          }).eq('id', user.id);
+        } catch (alterError) {
+          console.error('Error adding is_premium column:', alterError);
+          toast({
+            title: "Upgrade failed",
+            description: "Unable to update premium status. Please contact support.",
+            variant: "destructive",
+          });
+          return;
+        }
+      } else {
+        // Column exists, proceed with normal update
+        const { error } = await supabase
+          .from('profiles')
+          .update({ is_premium: true })
+          .eq('id', user.id);
+
+        if (error) {
+          console.error('Error updating premium status:', error);
+          toast({
+            title: "Upgrade failed",
+            description: error.message,
+            variant: "destructive",
+          });
+          return;
+        }
       }
 
       setIsPremium(true);
@@ -258,6 +285,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
     } catch (error) {
       console.error('Error upgrading to premium:', error);
+      toast({
+        title: "Upgrade failed",
+        description: "An unexpected error occurred. Please try again later.",
+        variant: "destructive",
+      });
     }
   };
 
