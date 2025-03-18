@@ -37,16 +37,16 @@ export function ProblemInput({
     if (isListening) {
       stopListening();
       if (transcript) {
-        // Safely concatenate strings
-        setProblem((prev) => {
-          const trimmedPrev = prev.trim();
-          const trimmedTranscript = transcript.trim();
-          
-          if (!trimmedPrev) return trimmedTranscript;
-          if (!trimmedTranscript) return trimmedPrev;
-          
-          return `${trimmedPrev} ${trimmedTranscript}`;
-        });
+        // Fix: Using direct string concatenation instead of a callback function
+        const trimmedPrev = problem.trim();
+        const trimmedTranscript = transcript.trim();
+        
+        if (!trimmedPrev) {
+          setProblem(trimmedTranscript);
+        } else if (trimmedTranscript) {
+          setProblem(`${trimmedPrev} ${trimmedTranscript}`);
+        }
+        
         resetTranscript();
       }
     } else {
