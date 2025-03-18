@@ -32,30 +32,14 @@ export function SignInForm({ onSuccess }: SignInFormProps) {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (isLoading) return; // Prevent multiple submissions
-    
-    setIsLoading(true);
-    
-    // Show immediate feedback
-    const signInToast = toast({
-      title: "Signing in...",
-      description: "Verifying your credentials",
-    });
-    
-    // Set a timeout for longer operations
-    const timeoutId = setTimeout(() => {
-      toast({
-        title: "Still working...",
-        description: "This is taking longer than expected. Please wait.",
-      });
-    }, 3000);
-    
     try {
+      setIsLoading(true);
+      console.log("Signing in with:", values.email);
+      
       const { error } = await signIn(values.email, values.password);
       
-      clearTimeout(timeoutId);
-      
       if (error) {
+        console.error("Sign in error:", error);
         toast({
           title: "Sign in failed",
           description: error.message || "Please check your credentials and try again.",
@@ -69,15 +53,13 @@ export function SignInForm({ onSuccess }: SignInFormProps) {
         onSuccess();
       }
     } catch (error) {
-      clearTimeout(timeoutId);
+      console.error("Sign in exception:", error);
       toast({
         title: "Sign in failed",
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
-      console.error("Sign in error:", error);
     } finally {
-      signInToast.dismiss();
       setIsLoading(false);
     }
   }
