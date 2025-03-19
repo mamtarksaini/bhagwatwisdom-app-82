@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { determineResponseCategory, fallbackWisdomResponses, getWisdomResponse } from "@/lib/wisdom";
 import { Language } from "@/types";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 
 export function useProblemSolver(language: Language, isPremium: boolean = false) {
   const [problem, setProblem] = useState("");
@@ -64,7 +64,7 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
       // Track the original direct API state before the call
       const wasDirectApiUsed = directApiUsed;
       
-      // Get wisdom response
+      // Get wisdom response - always try to use AI for everyone
       const response = await getWisdomResponse(category, language, problem);
       
       if (response.answer) {
@@ -77,29 +77,23 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
           
           if (response.isApiKeyIssue) {
             setAiServiceUnavailable(true);
-            if (isPremium) {
-              toast({
-                title: "API Key Configuration Issue",
-                description: response.errorDetails || "Please check the GEMINI_API_KEY in Supabase Edge Function secrets.",
-                variant: "destructive"
-              });
-            }
+            toast({
+              title: "API Key Configuration Issue",
+              description: response.errorDetails || "Please check the GEMINI_API_KEY in Supabase Edge Function secrets.",
+              variant: "destructive"
+            });
           } else if (response.isNetworkIssue) {
             setNetworkError(true);
-            if (isPremium) {
-              toast({
-                title: "Network Connection Issue",
-                description: "Unable to connect to wisdom services. Check Edge Function deployment.",
-                variant: "destructive"
-              });
-            }
+            toast({
+              title: "Network Connection Issue",
+              description: "Unable to connect to wisdom services. Check Edge Function deployment.",
+              variant: "destructive"
+            });
           } else {
-            if (isPremium) {
-              toast({
-                title: "Using offline guidance",
-                description: "Please ensure the Edge Function is deployed and API keys are properly configured.",
-              });
-            }
+            toast({
+              title: "Using offline guidance",
+              description: "Please ensure the Edge Function is deployed and API keys are properly configured.",
+            });
           }
         } else {
           setUsingFallback(false);

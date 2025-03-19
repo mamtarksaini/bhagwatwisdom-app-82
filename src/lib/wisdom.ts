@@ -1,6 +1,6 @@
 
 import { Language } from '@/types';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast';
 import { supabase } from './supabase';
 
 // Response type for getWisdomResponse

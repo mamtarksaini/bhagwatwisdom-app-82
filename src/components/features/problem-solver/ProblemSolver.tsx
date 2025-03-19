@@ -4,7 +4,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Language } from "@/types";
 import { ProblemInput } from './ProblemInput';
 import { WisdomDisplay } from './WisdomDisplay';
-import { PremiumBanner } from './PremiumBanner';
 import { useProblemSolver } from './useProblemSolver';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -99,8 +98,6 @@ export function ProblemSolver({ language, isPremium = false }: ProblemSolverProp
             errorDetails={errorDetails}
           />
         )}
-        
-        {!isPremium && <PremiumBanner />}
       </CardContent>
     </Card>
   );
