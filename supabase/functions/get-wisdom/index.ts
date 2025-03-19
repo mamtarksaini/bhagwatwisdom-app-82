@@ -24,15 +24,28 @@ serve(async (req) => {
     
     console.log(`Processing request for question: "${question}", category: "${category}", language: "${language}"`);
     
-    // Check API key explicitly to provide better error messages
+    // Check API key explicitly with improved error messages
     if (!GEMINI_API_KEY) {
       console.error('GEMINI_API_KEY is not available in environment variables');
       return new Response(
         JSON.stringify({ 
           status: 'error',
-          message: 'API key not configured',
+          message: 'API key not configured in Supabase Edge Function secrets',
           useFallback: true,
-          error: 'GEMINI_API_KEY not found in environment variables'
+          error: 'GEMINI_API_KEY not found in Supabase Edge Function environment variables. Please add it to your secrets.'
+        }),
+        { headers: CORS_HEADERS, status: 400 }
+      );
+    }
+    
+    if (GEMINI_API_KEY.trim() === '') {
+      console.error('GEMINI_API_KEY is empty');
+      return new Response(
+        JSON.stringify({ 
+          status: 'error',
+          message: 'API key is empty in Supabase Edge Function secrets',
+          useFallback: true,
+          error: 'GEMINI_API_KEY is empty. Please set a valid API key in your Supabase Edge Function secrets.'
         }),
         { headers: CORS_HEADERS, status: 400 }
       );
@@ -89,6 +102,32 @@ serve(async (req) => {
         console.error(`Gemini API returned status: ${response.status}`);
         const errorText = await response.text();
         console.error(`Gemini API error response: ${errorText}`);
+        
+        // Provide more specific error messages for common API issues
+        if (response.status === 403) {
+          return new Response(
+            JSON.stringify({ 
+              status: 'error',
+              message: 'Invalid or unauthorized Gemini API key',
+              retryable: false,
+              useFallback: true,
+              error: `API authentication error: The Gemini API key appears to be invalid or unauthorized. Please check your API key in Supabase Edge Function secrets.`
+            }),
+            { headers: CORS_HEADERS, status: 403 }
+          );
+        } else if (response.status === 429) {
+          return new Response(
+            JSON.stringify({ 
+              status: 'error',
+              message: 'Gemini API rate limit exceeded',
+              retryable: true,
+              useFallback: true,
+              error: `API rate limit exceeded: The Gemini API is currently rate limiting requests. Try again later.`
+            }),
+            { headers: CORS_HEADERS, status: 429 }
+          );
+        }
+        
         throw new Error(`API error: ${response.status} - ${errorText}`);
       }
 
@@ -138,6 +177,7 @@ serve(async (req) => {
           status: 'error',
           message: `Gemini API error: ${apiError.message}`,
           retryable: true,
+          useFallback: true,
           error: apiError.message
         }),
         { headers: CORS_HEADERS, status: 500 }
@@ -152,6 +192,7 @@ serve(async (req) => {
         status: 'error',
         message: error.message || 'Request processing failed',
         retryable: true,
+        useFallback: true,
         error: error.stack
       }),
       { 

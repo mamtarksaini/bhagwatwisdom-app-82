@@ -3,6 +3,15 @@ import { Language } from '@/types';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from './supabase';
 
+// Response type for getWisdomResponse
+type WisdomResponse = {
+  answer: string;
+  isFallback: boolean;
+  isNetworkIssue?: boolean;
+  isApiKeyIssue?: boolean;
+  errorDetails?: string;
+}
+
 // Helper function to make a direct API call to Gemini
 async function callGeminiDirectly(prompt: string) {
   const GEMINI_API_KEY = 'YOUR_FRONTEND_PUBLISHABLE_KEY_HERE'; // Replace with your publishable key
@@ -52,7 +61,7 @@ async function callGeminiDirectly(prompt: string) {
 }
 
 // Function to get wisdom from Supabase Edge Function or direct API call
-export async function getWisdomResponse(category: string, language: Language, question: string) {
+export async function getWisdomResponse(category: string, language: Language, question: string): Promise<WisdomResponse> {
   try {
     console.log('Calling get-wisdom function with:', { category, language, question });
     
@@ -113,6 +122,17 @@ export async function getWisdomResponse(category: string, language: Language, qu
       // Handle error status from edge function
       if (data?.status === 'error') {
         console.error('Server returned error:', data.message);
+        
+        // Check if it's an API key issue
+        const isApiKeyIssue = 
+          data.message?.includes('API key') || 
+          data.message?.includes('unauthorized') || 
+          data.message?.includes('API authentication');
+          
+        if (isApiKeyIssue) {
+          throw new Error(`AI service unavailable: API key issue - ${data.error || data.message}`);
+        }
+        
         throw new Error(data.message || 'Server error');
       }
   
@@ -124,12 +144,26 @@ export async function getWisdomResponse(category: string, language: Language, qu
           console.error('Server error details:', data.error);
         }
         
+        // Check if it looks like an API key issue
+        const isApiKeyIssue = 
+          data.error?.includes('API key') || 
+          data.error?.includes('unauthorized') || 
+          data.error?.includes('API authentication') ||
+          data.message?.includes('API key');
+          
+        if (isApiKeyIssue) {
+          throw new Error(`AI service unavailable: API key issue - ${data.error || 'check your API key'}`);
+        }
+        
         throw new Error(`AI service unavailable: ${data.error || 'Unknown reason'}`);
       }
   
       if (data && data.answer) {
         console.log('Got wisdom response from edge function:', data.answer.substring(0, 100) + '...');
-        return data.answer;
+        return {
+          answer: data.answer,
+          isFallback: false
+        };
       }
     }
     
@@ -148,38 +182,56 @@ export async function getWisdomResponse(category: string, language: Language, qu
         description: "Edge Function unavailable, using fallback connection method.",
       });
       
-      return directAnswer;
+      return {
+        answer: directAnswer,
+        isFallback: false
+      };
     }
     
     // If both methods fail, use fallback response
     console.warn('Both Edge Function and direct API call failed, using static fallback');
-    throw new Error('All wisdom services unavailable');
+    
+    // Check if the error is related to API key issues
+    const errorMessage = edgeError instanceof Error ? edgeError.message : String(edgeError);
+    const isApiKeyIssue = 
+      errorMessage.includes('API key') || 
+      errorMessage.includes('unauthorized') || 
+      errorMessage.includes('API authentication');
+      
+    throw new Error(isApiKeyIssue 
+      ? `AI service unavailable: API key issue - ${errorMessage}` 
+      : 'All wisdom services unavailable');
     
   } catch (error) {
     console.error('Error fetching wisdom response:', error);
     
-    // Check if it's a network/connection error
+    // Extract error message
     const errorMessage = error instanceof Error ? error.message : String(error);
-    if (
+    
+    // Check if it's a network/connection error
+    const isNetworkError = 
       errorMessage.includes('Failed to fetch') || 
       errorMessage.includes('NetworkError') ||
       errorMessage.includes('Failed to send a request') ||
-      errorMessage.includes('Failed to connect to wisdom service')
-    ) {
-      toast({
-        title: "Connection Error",
-        description: "Unable to connect to wisdom services. Showing offline wisdom instead.",
-        variant: "destructive"
-      });
-    } else {
-      toast({
-        title: "AI Service Unavailable",
-        description: "Please try again later. Showing offline wisdom instead.",
-        variant: "destructive"
-      });
-    }
+      errorMessage.includes('Failed to connect to wisdom service') ||
+      errorMessage.includes('timed out');
     
-    return getFallbackResponse(category, language);
+    // Check if it's an API key issue
+    const isApiKeyIssue = 
+      errorMessage.includes('API key') || 
+      errorMessage.includes('unauthorized') || 
+      errorMessage.includes('API authentication');
+    
+    // Get fallback response
+    const response = getFallbackResponse(category, language);
+    
+    return {
+      answer: response,
+      isFallback: true,
+      isNetworkIssue: isNetworkError,
+      isApiKeyIssue: isApiKeyIssue,
+      errorDetails: errorMessage
+    };
   }
 }
 

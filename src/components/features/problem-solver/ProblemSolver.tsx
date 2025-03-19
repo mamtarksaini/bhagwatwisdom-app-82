@@ -27,7 +27,8 @@ export function ProblemSolver({ language, isPremium = false }: ProblemSolverProp
     handleRetry,
     retryCount,
     directApiUsed,
-    aiServiceUnavailable
+    aiServiceUnavailable,
+    errorDetails
   } = useProblemSolver(language, isPremium);
 
   return (
@@ -53,13 +54,13 @@ export function ProblemSolver({ language, isPremium = false }: ProblemSolverProp
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>
               {language === 'hindi' 
-                ? "AI सेवा अनुपलब्ध" 
-                : "AI Service Unavailable"}
+                ? "API कुंजी समस्या" 
+                : "API Key Issue"}
             </AlertTitle>
             <AlertDescription>
               {language === 'hindi' 
-                ? "कृपया बाद में पुन: प्रयास करें। अभी ऑफलाइन ज्ञान दिखाया जा रहा है।" 
-                : "Please try again later. Showing offline wisdom instead."}
+                ? "कृपया Supabase Edge Function सीक्रेट्स में GEMINI_API_KEY की जांच करें।" 
+                : "Please check GEMINI_API_KEY in Supabase Edge Function secrets."}
             </AlertDescription>
           </Alert>
         )}
@@ -95,6 +96,7 @@ export function ProblemSolver({ language, isPremium = false }: ProblemSolverProp
             networkError={networkError}
             directApiUsed={directApiUsed}
             aiServiceUnavailable={aiServiceUnavailable}
+            errorDetails={errorDetails}
           />
         )}
         

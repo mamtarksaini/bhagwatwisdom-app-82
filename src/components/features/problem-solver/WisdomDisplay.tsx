@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Language } from "@/types";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, AlertCircle, Info, Wifi, WifiOff } from "lucide-react";
+import { RefreshCw, AlertCircle, Info, Wifi, WifiOff, Key } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface WisdomDisplayProps {
@@ -16,6 +16,7 @@ interface WisdomDisplayProps {
   networkError?: boolean;
   directApiUsed?: boolean;
   aiServiceUnavailable?: boolean;
+  errorDetails?: string;
 }
 
 export function WisdomDisplay({ 
@@ -27,7 +28,8 @@ export function WisdomDisplay({
   retryCount = 0,
   networkError = false,
   directApiUsed = false,
-  aiServiceUnavailable = false
+  aiServiceUnavailable = false,
+  errorDetails = ""
 }: WisdomDisplayProps) {
   return (
     <div className="space-y-4">
@@ -44,16 +46,21 @@ export function WisdomDisplay({
       
       {aiServiceUnavailable && (
         <Alert variant="destructive" className="bg-red-500/10 border border-red-500/30">
-          <AlertCircle className="h-4 w-4" />
+          <Key className="h-4 w-4" />
           <AlertTitle>
             {language === 'hindi' 
-              ? "AI सेवा अनुपलब्ध" 
-              : "AI Service Unavailable"}
+              ? "API कुंजी समस्या" 
+              : "API Key Issue"}
           </AlertTitle>
           <AlertDescription>
             {language === 'hindi' 
-              ? "कृपया बाद में पुन: प्रयास करें। अभी ऑफलाइन ज्ञान दिखाया जा रहा है।" 
-              : "Please try again later. Showing offline wisdom instead."}
+              ? "कृपया Supabase Edge Function सीक्रेट्स में GEMINI_API_KEY की जांच करें।" 
+              : "Please check GEMINI_API_KEY in Supabase Edge Function secrets."}
+            {isPremium && errorDetails && (
+              <div className="mt-2 text-xs opacity-80 bg-red-500/5 p-2 rounded">
+                {errorDetails}
+              </div>
+            )}
           </AlertDescription>
         </Alert>
       )}
