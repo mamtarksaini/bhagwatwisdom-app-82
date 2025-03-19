@@ -5,7 +5,7 @@ import { Language } from "@/types";
 import { ProblemInput } from './ProblemInput';
 import { WisdomDisplay } from './WisdomDisplay';
 import { useProblemSolver } from './useProblemSolver';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Info } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface ProblemSolverProps {
@@ -58,19 +58,19 @@ export function ProblemSolver({ language, isPremium = false }: ProblemSolverProp
             </AlertTitle>
             <AlertDescription>
               {language === 'hindi' 
-                ? "कृपया Supabase Edge Function सीक्रेट्स में GEMINI_API_KEY की जांच करें।" 
-                : "Please check GEMINI_API_KEY in Supabase Edge Function secrets."}
+                ? "API कुंजी के साथ समस्या। वैकल्पिक ज्ञान दिखा रहे हैं।" 
+                : "Issues with API key. Showing alternative wisdom."}
             </AlertDescription>
           </Alert>
         )}
         
-        {directApiUsed && !isLoading && (
-          <Alert variant="default" className="bg-blue-500/10 border border-blue-500/30">
-            <AlertCircle className="h-4 w-4 text-blue-500" />
+        {directApiUsed && !isLoading && !usingFallback && (
+          <Alert variant="default" className="bg-green-500/10 border border-green-500/30">
+            <Info className="h-4 w-4 text-green-500" />
             <AlertDescription>
               {language === 'hindi' 
-                ? "सीधे API कनेक्शन का उपयोग कर रहे हैं। मुख्य सेवा उपलब्ध नहीं है।" 
-                : "Using direct API connection. Primary service unavailable."}
+                ? "AI द्वारा संचालित ज्ञान आपके लिए उपलब्ध है।" 
+                : "AI-powered wisdom is available for you."}
             </AlertDescription>
           </Alert>
         )}

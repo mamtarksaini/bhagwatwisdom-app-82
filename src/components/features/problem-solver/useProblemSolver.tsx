@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { determineResponseCategory, fallbackWisdomResponses, getWisdomResponse } from "@/lib/wisdom";
 import { Language } from "@/types";
@@ -61,10 +62,7 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
       const category = determineResponseCategory(problem);
       console.log('Determined category:', category);
       
-      // Track the original direct API state before the call
-      const wasDirectApiUsed = directApiUsed;
-      
-      // Get wisdom response - always try to use AI for everyone
+      // Get wisdom response - always try direct API first for all users
       const response = await getWisdomResponse(category, language, problem);
       
       if (response.answer) {
@@ -92,16 +90,13 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
           } else {
             toast({
               title: "Using offline guidance",
-              description: "Please ensure the Edge Function is deployed and API keys are properly configured.",
+              description: "Unable to connect to AI services. Showing offline wisdom.",
+              variant: "default"
             });
           }
         } else {
           setUsingFallback(false);
-          
-          // If we were previously using directApi and still are, keep the flag
-          // otherwise, we must have successfully used the edge function, so reset the flag
-          setDirectApiUsed(directApiUsed && wasDirectApiUsed);
-          
+          setDirectApiUsed(true); // We're using direct API by default now
           setNetworkError(false);
           setAiServiceUnavailable(false);
           setErrorDetails("");

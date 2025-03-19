@@ -54,8 +54,8 @@ export function WisdomDisplay({
           </AlertTitle>
           <AlertDescription>
             {language === 'hindi' 
-              ? "कृपया Supabase Edge Function सीक्रेट्स में GEMINI_API_KEY की जांच करें।" 
-              : "Please check GEMINI_API_KEY in Supabase Edge Function secrets."}
+              ? "API कुंजी के साथ समस्या। वैकल्पिक ज्ञान दिखा रहे हैं।" 
+              : "Issues with API key. Showing alternative wisdom."}
             {isPremium && errorDetails && (
               <div className="mt-2 text-xs opacity-80 bg-red-500/5 p-2 rounded">
                 {errorDetails}
@@ -75,8 +75,8 @@ export function WisdomDisplay({
           </AlertTitle>
           <AlertDescription>
             {language === 'hindi' 
-              ? "ज्ञान सेवाओं से कनेक्ट करने में समस्या है। सुनिश्चित करें कि एज फंक्शन डिप्लॉय है।" 
-              : "Unable to connect to wisdom services. Please ensure the Edge Function is deployed."}
+              ? "ज्ञान सेवाओं से कनेक्ट करने में समस्या है। वैकल्पिक ज्ञान दिखा रहे हैं।" 
+              : "Unable to connect to wisdom services. Showing alternative wisdom."}
           </AlertDescription>
         </Alert>
       )}
@@ -86,25 +86,13 @@ export function WisdomDisplay({
           <Wifi className="h-4 w-4 text-green-500" />
           <AlertTitle>
             {language === 'hindi' 
-              ? "वैकल्पिक AI कनेक्शन का उपयोग" 
-              : "Using Alternative AI Connection"}
+              ? "AI ज्ञान उपलब्ध" 
+              : "AI Wisdom Available"}
           </AlertTitle>
           <AlertDescription>
             {language === 'hindi' 
-              ? "एज फंक्शन अनुपलब्ध है, प्रत्यक्ष API कनेक्शन का उपयोग कर रहे हैं।" 
-              : "Edge Function unavailable, using direct API connection instead."}
-          </AlertDescription>
-        </Alert>
-      )}
-      
-      {isPremium && usingFallback && (
-        <Alert variant="default" className="bg-blue-500/10 border border-blue-500/30">
-          <Info className="h-4 w-4 text-blue-500" />
-          <AlertTitle>API Setup Check</AlertTitle>
-          <AlertDescription>
-            {language === 'hindi' 
-              ? "सुनिश्चित करें कि GEMINI_API_KEY सुपाबेस एज फंक्शन सीक्रेट्स में सही तरीके से कॉन्फ़िगर किया गया है और एज फंक्शन डिप्लॉय है।" 
-              : "Ensure GEMINI_API_KEY is correctly configured in Supabase Edge Function Secrets and that the edge function is deployed."}
+              ? "AI द्वारा उत्पन्न ज्ञान आपके लिए उपलब्ध है।" 
+              : "AI-generated wisdom is available for you."}
           </AlertDescription>
         </Alert>
       )}
@@ -133,28 +121,6 @@ export function WisdomDisplay({
           )}
         </CardContent>
       </Card>
-      
-      {usingFallback && (
-        <div className="text-sm text-muted-foreground">
-          {isPremium ? (
-            <div className="flex items-center justify-center px-4 py-2 rounded-md bg-amber-500/10 border border-amber-500/30">
-              <p>
-                {language === 'hindi' 
-                  ? "ज्ञान सेवाओं से कनेक्शन सुनिश्चित करें। पुनः प्रयास करें या बाद में फिर से कोशिश करें।" 
-                  : "Verify connection to wisdom services. Try again or check back later."}
-              </p>
-            </div>
-          ) : (
-            <div className="text-center">
-              <p>
-                {language === 'hindi' 
-                  ? "प्रीमियम सदस्यता के साथ AI-उत्पन्न उत्तर प्राप्त करें" 
-                  : "Get AI-generated responses with premium membership"}
-              </p>
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 }
