@@ -11,6 +11,7 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
   const [retryCount, setRetryCount] = useState(0);
   const [networkError, setNetworkError] = useState(false);
   const [directApiUsed, setDirectApiUsed] = useState(false);
+  const [aiServiceUnavailable, setAiServiceUnavailable] = useState(false);
 
   const handleReset = () => {
     setProblem("");
@@ -19,6 +20,7 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
     setRetryCount(0);
     setNetworkError(false);
     setDirectApiUsed(false);
+    setAiServiceUnavailable(false);
   };
 
   const handleRetry = async () => {
@@ -28,6 +30,7 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
       setUsingFallback(false);
       setNetworkError(false);
       setDirectApiUsed(false);
+      setAiServiceUnavailable(false);
       
       toast({
         title: "Retrying AI connection",
@@ -85,6 +88,7 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
           setDirectApiUsed(directApiUsed && wasDirectApiUsed);
           
           setNetworkError(false);
+          setAiServiceUnavailable(false);
           
           if (!isRetry) {
             toast({
@@ -115,7 +119,14 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
         error.message?.includes('Failed to connect to wisdom service') ||
         error.message?.includes('Failed to send a request');
       
+      // Check for AI service unavailable specifically
+      const isAiServiceUnavailable = 
+        error.message?.includes('AI service unavailable') || 
+        error.message?.includes('All wisdom services unavailable') ||
+        error.message?.includes('API error');
+      
       setNetworkError(isNetworkError);
+      setAiServiceUnavailable(isAiServiceUnavailable);
       
       const responses = fallbackWisdomResponses[language] || fallbackWisdomResponses.english;
       const category = determineResponseCategory(problem);
@@ -127,10 +138,12 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
       // Don't show redundant toasts during retries
       if (!isRetry) {
         toast({
-          title: isNetworkError ? "Connection Error" : "AI Service Unavailable",
-          description: isNetworkError 
-            ? "Unable to connect to wisdom services. Showing offline wisdom."
-            : "Please try again later. Showing offline wisdom.",
+          title: isAiServiceUnavailable ? "AI Service Unavailable" : (isNetworkError ? "Connection Error" : "Service Error"),
+          description: isAiServiceUnavailable 
+            ? "Please try again later. Showing offline wisdom."
+            : (isNetworkError 
+              ? "Unable to connect to wisdom services. Showing offline wisdom."
+              : "An error occurred. Showing offline wisdom."),
           variant: "destructive"
         });
       }
@@ -143,6 +156,7 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
     setIsLoading(true);
     setUsingFallback(false);
     setNetworkError(false);
+    setAiServiceUnavailable(false);
     setSolution(""); // Clear previous solution
     
     // Show loading toast
@@ -169,6 +183,7 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
     usingFallback,
     networkError,
     directApiUsed,
+    aiServiceUnavailable,
     handleReset,
     handleSubmit,
     handleRetry,

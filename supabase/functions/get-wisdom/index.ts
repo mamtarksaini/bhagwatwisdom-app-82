@@ -118,6 +118,20 @@ serve(async (req) => {
       );
     } catch (apiError) {
       console.error('Gemini API error:', apiError.message);
+      
+      // Check if it's an abort error (timeout)
+      if (apiError.name === 'AbortError') {
+        return new Response(
+          JSON.stringify({ 
+            status: 'error',
+            message: 'Gemini API request timed out after 25 seconds',
+            retryable: true,
+            error: apiError.message
+          }),
+          { headers: CORS_HEADERS, status: 504 }
+        );
+      }
+      
       // Return a specific error message to help with debugging
       return new Response(
         JSON.stringify({ 

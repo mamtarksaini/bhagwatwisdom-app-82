@@ -7,7 +7,7 @@ import { WisdomDisplay } from './WisdomDisplay';
 import { PremiumBanner } from './PremiumBanner';
 import { useProblemSolver } from './useProblemSolver';
 import { AlertCircle } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface ProblemSolverProps {
   language: Language;
@@ -26,7 +26,8 @@ export function ProblemSolver({ language, isPremium = false }: ProblemSolverProp
     handleSubmit,
     handleRetry,
     retryCount,
-    directApiUsed
+    directApiUsed,
+    aiServiceUnavailable
   } = useProblemSolver(language, isPremium);
 
   return (
@@ -43,6 +44,22 @@ export function ProblemSolver({ language, isPremium = false }: ProblemSolverProp
               {language === 'hindi' 
                 ? "एज फंक्शन कनेक्शन में समस्या। प्रश्न उत्तर के लिए अतिरिक्त विकल्पों का उपयोग किया जा रहा है।" 
                 : "Edge Function connection issues. Using alternative methods for responses."}
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {aiServiceUnavailable && !isLoading && (
+          <Alert variant="destructive" className="bg-red-500/10 border border-red-500/30">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>
+              {language === 'hindi' 
+                ? "AI सेवा अनुपलब्ध" 
+                : "AI Service Unavailable"}
+            </AlertTitle>
+            <AlertDescription>
+              {language === 'hindi' 
+                ? "कृपया बाद में पुन: प्रयास करें। अभी ऑफलाइन ज्ञान दिखाया जा रहा है।" 
+                : "Please try again later. Showing offline wisdom instead."}
             </AlertDescription>
           </Alert>
         )}
@@ -77,6 +94,7 @@ export function ProblemSolver({ language, isPremium = false }: ProblemSolverProp
             retryCount={retryCount}
             networkError={networkError}
             directApiUsed={directApiUsed}
+            aiServiceUnavailable={aiServiceUnavailable}
           />
         )}
         

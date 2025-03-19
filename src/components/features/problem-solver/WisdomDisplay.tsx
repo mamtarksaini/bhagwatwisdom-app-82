@@ -15,6 +15,7 @@ interface WisdomDisplayProps {
   retryCount?: number;
   networkError?: boolean;
   directApiUsed?: boolean;
+  aiServiceUnavailable?: boolean;
 }
 
 export function WisdomDisplay({ 
@@ -25,17 +26,34 @@ export function WisdomDisplay({
   onRetry,
   retryCount = 0,
   networkError = false,
-  directApiUsed = false
+  directApiUsed = false,
+  aiServiceUnavailable = false
 }: WisdomDisplayProps) {
   return (
     <div className="space-y-4">
-      {usingFallback && (
+      {usingFallback && !aiServiceUnavailable && !networkError && (
         <Alert variant="default" className="bg-amber-500/10 border border-amber-500/30">
           <AlertCircle className="h-4 w-4 text-amber-500" />
           <AlertDescription>
             {language === 'hindi' 
               ? "अभी हम ऑफ़लाइन ज्ञान दिखा रहे हैं। AI उत्तर प्राप्त करने के लिए पुनः प्रयास करें।" 
               : "Currently showing offline wisdom. Please retry for AI-powered responses."}
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      {aiServiceUnavailable && (
+        <Alert variant="destructive" className="bg-red-500/10 border border-red-500/30">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>
+            {language === 'hindi' 
+              ? "AI सेवा अनुपलब्ध" 
+              : "AI Service Unavailable"}
+          </AlertTitle>
+          <AlertDescription>
+            {language === 'hindi' 
+              ? "कृपया बाद में पुन: प्रयास करें। अभी ऑफलाइन ज्ञान दिखाया जा रहा है।" 
+              : "Please try again later. Showing offline wisdom instead."}
           </AlertDescription>
         </Alert>
       )}
