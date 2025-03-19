@@ -39,6 +39,7 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
       toast({
         title: "Retrying AI connection",
         description: "Attempting to connect to wisdom services again.",
+        variant: "default"
       });
       
       try {
@@ -80,7 +81,7 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
               description: response.errorDetails || "Please check the GEMINI_API_KEY in Supabase Edge Function secrets.",
               variant: "destructive"
             });
-          } else if (response.isNetworkIssue) { // Changed from isNetworkError to isNetworkIssue
+          } else if (response.isNetworkIssue) {
             setNetworkError(true);
             toast({
               title: "Network Connection Issue",
@@ -199,7 +200,8 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
     // Show loading toast
     const loadingToast = toast({
       title: "Processing your request",
-      description: "Finding wisdom to guide you..."
+      description: "Finding wisdom to guide you...",
+      variant: "default"
     });
     
     console.log('Submitting problem:', { problem, language });

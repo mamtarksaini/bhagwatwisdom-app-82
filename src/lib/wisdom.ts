@@ -7,7 +7,7 @@ import { supabase } from './supabase';
 type WisdomResponse = {
   answer: string;
   isFallback: boolean;
-  isNetworkIssue?: boolean;  // Use isNetworkIssue consistently
+  isNetworkIssue?: boolean;
   isApiKeyIssue?: boolean;
   errorDetails?: string;
 }
@@ -16,19 +16,21 @@ type WisdomResponse = {
 async function callGeminiDirectly(prompt: string) {
   // Using a simple API key that's safe to expose in client-side code
   // This is the publishable key that can be used from the frontend
-  const GEMINI_API_KEY = 'AIzaSyBPo_7UPrxT4b8Ir-qyIgHj-L9D6wM2u3E'; 
+  const DIRECT_GEMINI_API_KEY = 'AIzaSyDWJdxoQ5YQCpYQBK9TYNxlQc_jjiKkvjc'; 
   
-  if (!GEMINI_API_KEY) {
+  if (!DIRECT_GEMINI_API_KEY) {
     console.warn('No direct Gemini API key provided for fallback');
     return null;
   }
   
   try {
+    console.log('Attempting direct Gemini API call with client-side key');
+    
     const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-goog-api-key': GEMINI_API_KEY,
+        'x-goog-api-key': DIRECT_GEMINI_API_KEY,
       },
       body: JSON.stringify({
         contents: [

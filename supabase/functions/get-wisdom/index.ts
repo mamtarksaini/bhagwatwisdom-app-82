@@ -18,8 +18,7 @@ serve(async (req) => {
     // Get the API key from environment variables
     const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
     
-    // Log that we're looking for the API key (will be helpful for debugging)
-    console.log('Looking for GEMINI_API_KEY in environment variables, exists:', !!GEMINI_API_KEY);
+    console.log('Looking for GEMINI_API_KEY in environment variables');
     
     // Validate request
     const { question, category, language } = await req.json();
@@ -44,19 +43,6 @@ serve(async (req) => {
       );
     }
     
-    if (GEMINI_API_KEY.trim() === '') {
-      console.error('GEMINI_API_KEY is empty');
-      return new Response(
-        JSON.stringify({ 
-          status: 'error',
-          message: 'API key is empty in Supabase Edge Function secrets',
-          useFallback: true,
-          error: 'GEMINI_API_KEY is empty. Please set a valid API key in your Supabase Edge Function secrets.'
-        }),
-        { headers: CORS_HEADERS, status: 400 }
-      );
-    }
-    
     // Construct prompt for modern relevance
     const prompt = `You are both a wise spiritual guide knowledgeable in the Bhagavad Gita AND a modern psychologist or life coach. Respond to this problem in a way that today's generation would relate to while providing authentic wisdom.
 
@@ -73,15 +59,18 @@ serve(async (req) => {
     Keep your response concise (200-400 words).
     ${language === 'hindi' ? "Please respond in conversational Hindi language that's easy to understand." : ""}`;
     
-    console.log('Calling Gemini API with key length:', GEMINI_API_KEY.length);
+    console.log('Calling Gemini API');
     
     try {
       // Call Gemini API with timeout
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 second timeout for more reliability
+      const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 second timeout
+      
+      const apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
+      console.log(`Using API URL: ${apiUrl}`);
 
       // Gemini API endpoint
-      const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent', {
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -104,12 +93,13 @@ serve(async (req) => {
       
       clearTimeout(timeoutId);
       
+      // Log the response status
+      console.log(`Gemini API response status: ${response.status}`);
+      
       if (!response.ok) {
-        console.error(`Gemini API returned status: ${response.status}`);
         const errorText = await response.text();
         console.error(`Gemini API error response: ${errorText}`);
         
-        // Provide more specific error messages for common API issues
         if (response.status === 403) {
           return new Response(
             JSON.stringify({ 
@@ -117,7 +107,7 @@ serve(async (req) => {
               message: 'Invalid or unauthorized Gemini API key',
               retryable: false,
               useFallback: true,
-              error: `API authentication error: The Gemini API key appears to be invalid or unauthorized. Please check your API key in Supabase Edge Function secrets.`
+              error: `API authentication error: The Gemini API key appears to be invalid or unauthorized.`
             }),
             { headers: CORS_HEADERS, status: 403 }
           );
@@ -128,7 +118,7 @@ serve(async (req) => {
               message: 'Gemini API rate limit exceeded',
               retryable: true,
               useFallback: true,
-              error: `API rate limit exceeded: The Gemini API is currently rate limiting requests. Try again later.`
+              error: `API rate limit exceeded`
             }),
             { headers: CORS_HEADERS, status: 429 }
           );
@@ -142,7 +132,7 @@ serve(async (req) => {
       
       // Validate Gemini API response
       if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
-        console.error('Invalid Gemini API response structure:', JSON.stringify(data).substring(0, 200));
+        console.error('Invalid Gemini API response structure');
         throw new Error('Invalid API response format');
       }
 
