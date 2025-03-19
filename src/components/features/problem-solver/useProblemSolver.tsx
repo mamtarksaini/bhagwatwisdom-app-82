@@ -80,7 +80,7 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
               description: response.errorDetails || "Please check the GEMINI_API_KEY in Supabase Edge Function secrets.",
               variant: "destructive"
             });
-          } else if (response.isNetworkIssue) {
+          } else if (response.isNetworkIssue) { // Changed from isNetworkError to isNetworkIssue
             setNetworkError(true);
             toast({
               title: "Network Connection Issue",
