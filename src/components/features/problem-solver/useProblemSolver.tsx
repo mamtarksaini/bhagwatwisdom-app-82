@@ -62,7 +62,7 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
       const category = determineResponseCategory(problem);
       console.log('Determined category:', category);
       
-      // Get wisdom response - always try direct API first for all users
+      // Get wisdom response - try edge function first, then direct API
       const response = await getWisdomResponse(category, language, problem);
       
       if (response.answer) {
@@ -96,7 +96,7 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
           }
         } else {
           setUsingFallback(false);
-          setDirectApiUsed(true); // We're using direct API by default now
+          setDirectApiUsed(true);
           setNetworkError(false);
           setAiServiceUnavailable(false);
           setErrorDetails("");
@@ -131,7 +131,7 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
         error.message?.includes('API authentication');
       
       // Check for network error specifically
-      const isNetworkError = 
+      const isNetworkIssue = 
         error.message?.includes('Failed to fetch') || 
         error.message?.includes('Network Error') ||
         error.message?.includes('Failed to connect to wisdom service') ||
@@ -144,7 +144,7 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
         error.message?.includes('API error') ||
         isApiKeyIssue;
       
-      setNetworkError(isNetworkError);
+      setNetworkError(isNetworkIssue);
       setAiServiceUnavailable(isAiServiceUnavailable);
       setErrorDetails(error.message || "Unknown error occurred");
       
@@ -169,7 +169,7 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
             description: "Please try again later. Showing offline wisdom.",
             variant: "destructive"
           });
-        } else if (isNetworkError) {
+        } else if (isNetworkIssue) {
           toast({
             title: "Connection Error",
             description: "Unable to connect to wisdom services. Showing offline wisdom.",

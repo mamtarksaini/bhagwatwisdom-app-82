@@ -1,7 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
-const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY') 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -16,10 +15,17 @@ serve(async (req) => {
   }
   
   try {
+    // Get the API key from environment variables
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+    
+    // Log that we're looking for the API key (will be helpful for debugging)
+    console.log('Looking for GEMINI_API_KEY in environment variables, exists:', !!GEMINI_API_KEY);
+    
     // Validate request
-    const { question, category, language } = await req.json()
+    const { question, category, language } = await req.json();
+    
     if (!question || !category || !language) {
-      throw new Error('Missing required fields')
+      throw new Error('Missing required fields');
     }
     
     console.log(`Processing request for question: "${question}", category: "${category}", language: "${language}"`);
@@ -65,7 +71,7 @@ serve(async (req) => {
     Use accessible language while preserving the depth of the wisdom. Avoid religious jargon that might alienate someone unfamiliar with Hindu concepts - instead, focus on the psychological insights.
     
     Keep your response concise (200-400 words).
-    ${language === 'hindi' ? "Please respond in conversational Hindi language that's easy to understand." : ""}`
+    ${language === 'hindi' ? "Please respond in conversational Hindi language that's easy to understand." : ""}`;
     
     console.log('Calling Gemini API with key length:', GEMINI_API_KEY.length);
     

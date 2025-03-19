@@ -1,3 +1,4 @@
+
 import { Language } from '@/types';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from './supabase';
@@ -6,7 +7,7 @@ import { supabase } from './supabase';
 type WisdomResponse = {
   answer: string;
   isFallback: boolean;
-  isNetworkIssue?: boolean;
+  isNetworkIssue?: boolean;  // Use isNetworkIssue consistently
   isApiKeyIssue?: boolean;
   errorDetails?: string;
 }
@@ -82,21 +83,8 @@ export async function getWisdomResponse(category: string, language: Language, qu
     Keep your response concise (200-400 words).
     ${language === 'hindi' ? "Please respond in conversational Hindi language that's easy to understand." : ""}`;
     
-    // First, try direct API call as our primary method
-    console.log('Trying direct API call first');
-    const directAnswer = await callGeminiDirectly(prompt);
-    
-    if (directAnswer) {
-      console.log('Got wisdom response from direct API call:', directAnswer.substring(0, 100) + '...');
-      
-      return {
-        answer: directAnswer,
-        isFallback: false
-      };
-    }
-    
-    // If direct API fails, try edge function as backup
-    console.log('Direct API call failed, trying edge function');
+    // First, try Supabase Edge Function as our primary method
+    console.log('Trying edge function first');
     
     // Add a longer timeout for the edge function call
     const timeoutPromise = new Promise((_, reject) => 
@@ -107,7 +95,7 @@ export async function getWisdomResponse(category: string, language: Language, qu
     let edgeError = null;
     
     try {
-      // Try to call the Edge Function as backup
+      // Try to call the Edge Function as primary method
       const functionCallPromise = supabase.functions.invoke('get-wisdom', {
         body: {
           question,
@@ -184,8 +172,21 @@ export async function getWisdomResponse(category: string, language: Language, qu
       }
     }
     
+    // If edge function fails, try direct API as fallback
+    console.warn('Edge Function failed, trying direct API');
+    const directAnswer = await callGeminiDirectly(prompt);
+    
+    if (directAnswer) {
+      console.log('Got wisdom response from direct API call:', directAnswer.substring(0, 100) + '...');
+      
+      return {
+        answer: directAnswer,
+        isFallback: false
+      };
+    }
+    
     // If both methods fail, use fallback response
-    console.warn('Both Direct API and Edge Function failed, using static fallback');
+    console.warn('Both Edge Function and Direct API failed, using static fallback');
     
     // Check if the error is related to API key issues
     const errorMessage = edgeError instanceof Error ? edgeError.message : String(edgeError);
