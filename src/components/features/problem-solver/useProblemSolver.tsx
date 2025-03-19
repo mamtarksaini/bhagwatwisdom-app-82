@@ -64,7 +64,9 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
       console.log('Determined category:', category);
       
       // Get wisdom response - try edge function first, then direct API
+      console.log('Calling getWisdomResponse with problem:', problem.substring(0, 30) + '...');
       const response = await getWisdomResponse(category, language, problem);
+      console.log('Response from getWisdomResponse:', response);
       
       if (response.answer) {
         setSolution(response.answer);
@@ -78,7 +80,7 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
             setAiServiceUnavailable(true);
             toast({
               title: "API Key Configuration Issue",
-              description: response.errorDetails || "Please check the GEMINI_API_KEY in Supabase Edge Function secrets.",
+              description: "Please check the GEMINI_API_KEY in Supabase Edge Function secrets.",
               variant: "destructive"
             });
           } else if (response.isNetworkIssue) {
@@ -97,7 +99,7 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
           }
         } else {
           setUsingFallback(false);
-          setDirectApiUsed(true);
+          setDirectApiUsed(response.isDirectApiUsed || false);
           setNetworkError(false);
           setAiServiceUnavailable(false);
           setErrorDetails("");

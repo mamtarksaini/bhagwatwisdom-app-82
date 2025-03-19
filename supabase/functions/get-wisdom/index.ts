@@ -15,10 +15,11 @@ serve(async (req) => {
   }
   
   try {
-    // Get the API key from environment variables
+    // Get the API key from environment variables and log status
     const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
     
-    console.log('Looking for GEMINI_API_KEY in environment variables');
+    // Log the beginning of the function execution with timestamp
+    console.log(`[${new Date().toISOString()}] Edge function started`);
     
     // Validate request
     const { question, category, language } = await req.json();
@@ -31,7 +32,7 @@ serve(async (req) => {
     
     // Check API key explicitly with improved error messages
     if (!GEMINI_API_KEY) {
-      console.error('GEMINI_API_KEY is not available in environment variables');
+      console.error('[ERROR] GEMINI_API_KEY is not available in environment variables');
       return new Response(
         JSON.stringify({ 
           status: 'error',
@@ -42,6 +43,22 @@ serve(async (req) => {
         { headers: CORS_HEADERS, status: 400 }
       );
     }
+    
+    // Verify that the API key is not empty or malformed
+    if (GEMINI_API_KEY.trim() === '' || GEMINI_API_KEY === 'undefined') {
+      console.error('[ERROR] GEMINI_API_KEY is empty or malformed');
+      return new Response(
+        JSON.stringify({ 
+          status: 'error',
+          message: 'Invalid API key format',
+          useFallback: true,
+          error: 'GEMINI_API_KEY is empty or malformed. Please check your Supabase secret.'
+        }),
+        { headers: CORS_HEADERS, status: 400 }
+      );
+    }
+    
+    console.log(`API key found. First 4 chars: ${GEMINI_API_KEY.substring(0, 4)}...`);
     
     // Construct prompt for modern relevance
     const prompt = `You are both a wise spiritual guide knowledgeable in the Bhagavad Gita AND a modern psychologist or life coach. Respond to this problem in a way that today's generation would relate to while providing authentic wisdom.
@@ -59,15 +76,29 @@ serve(async (req) => {
     Keep your response concise (200-400 words).
     ${language === 'hindi' ? "Please respond in conversational Hindi language that's easy to understand." : ""}`;
     
-    console.log('Calling Gemini API with key:', GEMINI_API_KEY.substring(0, 3) + '...' + GEMINI_API_KEY.substring(GEMINI_API_KEY.length - 3));
-    
     try {
-      // Call Gemini API with timeout
+      // Call Gemini API with improved timeout handling
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 second timeout (reduced from 25s)
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout (reduced from 20s)
       
       const apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
       console.log(`Using API URL: ${apiUrl}`);
+
+      // Log exact request details for debugging
+      const requestBody = {
+        contents: [
+          {
+            role: 'user',
+            parts: [{ text: prompt }]
+          }
+        ],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 800,
+        }
+      };
+      
+      console.log('Sending request to Gemini API...');
 
       // Gemini API endpoint
       const response = await fetch(apiUrl, {
@@ -76,18 +107,7 @@ serve(async (req) => {
           'Content-Type': 'application/json',
           'x-goog-api-key': GEMINI_API_KEY,
         },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: 'user',
-              parts: [{ text: prompt }]
-            }
-          ],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 800,
-          }
-        }),
+        body: JSON.stringify(requestBody),
         signal: controller.signal
       });
       
@@ -98,7 +118,7 @@ serve(async (req) => {
       
       if (!response.ok) {
         const errorText = await response.text();
-        console.error(`Gemini API error response: ${errorText}`);
+        console.error(`[ERROR] Gemini API error response: ${errorText}`);
         
         if (response.status === 403) {
           return new Response(
@@ -130,15 +150,16 @@ serve(async (req) => {
       const data = await response.json();
       console.log('Received response from Gemini API');
       
-      // Validate Gemini API response
+      // Validate Gemini API response structure
       if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
-        console.error('Invalid Gemini API response structure');
+        console.error('[ERROR] Invalid Gemini API response structure');
+        console.error('Response data:', JSON.stringify(data));
         throw new Error('Invalid API response format');
       }
 
       // Return successful response
       const answer = data.candidates[0].content.parts[0].text;
-      console.log('Returning answer (truncated):', answer.substring(0, 50) + '...');
+      console.log(`Returning answer (truncated): ${answer.substring(0, 50)}...`);
       
       return new Response(
         JSON.stringify({ 
@@ -152,16 +173,17 @@ serve(async (req) => {
         }
       );
     } catch (apiError) {
-      console.error('Gemini API error:', apiError.message);
+      console.error('[ERROR] Gemini API error:', apiError.message);
       
       // Check if it's an abort error (timeout)
       if (apiError.name === 'AbortError') {
         return new Response(
           JSON.stringify({ 
             status: 'error',
-            message: 'Gemini API request timed out after 20 seconds',
+            message: 'Gemini API request timed out after 15 seconds',
             retryable: true,
-            error: apiError.message
+            error: apiError.message,
+            useFallback: true
           }),
           { headers: CORS_HEADERS, status: 504 }
         );
@@ -180,7 +202,7 @@ serve(async (req) => {
       );
     }
   } catch (error) {
-    console.error('Edge function error:', error);
+    console.error('[ERROR] Edge function error:', error);
     
     // Return error status with more details
     return new Response(
