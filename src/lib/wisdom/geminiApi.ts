@@ -1,7 +1,8 @@
 
 // Helper function to make a direct API call to Gemini
 export async function callGeminiDirectly(prompt: string) {
-  // Use a valid API key - this one should be replaced with your own
+  // Replace with your Gemini API key - for development and testing only
+  // In production, use Supabase Edge Functions with secured API keys
   const DIRECT_GEMINI_API_KEY = 'YOUR_ACTUAL_GEMINI_API_KEY'; 
   
   if (!DIRECT_GEMINI_API_KEY || DIRECT_GEMINI_API_KEY === 'YOUR_ACTUAL_GEMINI_API_KEY') {
