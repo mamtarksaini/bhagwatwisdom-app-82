@@ -22,6 +22,7 @@ export function useSpeechSynthesis(language: Language = "english"): SpeechSynthe
   const [isReading, setIsReading] = useState<boolean>(false);
   const [isSpeechSupported, setIsSpeechSupported] = useState<boolean>(false);
   const [currentUtterance, setCurrentUtterance] = useState<SpeechSynthesisUtterance | null>(null);
+  const [speechSynthesisInitialized, setSpeechSynthesisInitialized] = useState<boolean>(false);
 
   // Cleanup function to properly stop and reset speech synthesis
   const cleanupSpeech = useCallback(() => {
@@ -43,6 +44,7 @@ export function useSpeechSynthesis(language: Language = "english"): SpeechSynthe
         if (availableVoices.length > 0) {
           setVoices(availableVoices);
           console.log("Available voices loaded:", availableVoices.length);
+          setSpeechSynthesisInitialized(true);
         }
       };
 
@@ -122,6 +124,26 @@ export function useSpeechSynthesis(language: Language = "english"): SpeechSynthe
     [voices, language]
   );
 
+  // Function to safely initialize speech synthesis
+  const initSpeechSynthesis = useCallback(() => {
+    try {
+      // Check if speechSynthesis exists and has been paused
+      if (window.speechSynthesis && window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
+      }
+
+      // Safety reset - cancel any ongoing speech
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+      
+      return true;
+    } catch (error) {
+      console.error("Failed to initialize speech synthesis:", error);
+      return false;
+    }
+  }, []);
+
   const speak = useCallback(
     (text: string) => {
       if (!isSpeechSupported) {
@@ -134,13 +156,35 @@ export function useSpeechSynthesis(language: Language = "english"): SpeechSynthe
         return;
       }
 
-      // Cancel any ongoing speech
-      window.speechSynthesis.cancel();
-      setIsReading(false);
+      // Make sure we have initialized properly
+      if (!speechSynthesisInitialized) {
+        console.warn("Speech synthesis not fully initialized yet");
+        toast({
+          title: "Speech Not Ready",
+          description: "Text-to-speech system is still initializing. Please try again in a moment.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Initialize speech synthesis
+      if (!initSpeechSynthesis()) {
+        console.error("Failed to initialize speech synthesis");
+        toast({
+          title: "Speech Error",
+          description: "Failed to initialize speech system. Falling back to text-only mode.",
+          variant: "destructive"
+        });
+        return;
+      }
 
       console.log("Starting speech synthesis");
       
       try {
+        // Cancel any ongoing speech
+        window.speechSynthesis.cancel();
+        setIsReading(false);
+
         // Check if the SpeechSynthesis API is available and not in a broken state
         if (!window.speechSynthesis) {
           throw new Error("Speech synthesis API not available");
@@ -191,11 +235,6 @@ export function useSpeechSynthesis(language: Language = "english"): SpeechSynthe
         // Set the current utterance 
         setCurrentUtterance(utterance);
         
-        // Chrome bug fix: Sometimes speechSynthesis gets into a paused state
-        if (window.speechSynthesis.paused) {
-          window.speechSynthesis.resume();
-        }
-        
         // Fix for some browsers - reset the speech synthesis before speaking
         window.speechSynthesis.cancel();
         
@@ -242,7 +281,7 @@ export function useSpeechSynthesis(language: Language = "english"): SpeechSynthe
         setIsReading(false);
       }
     },
-    [isSpeechSupported, getBestVoice, language, currentUtterance]
+    [isSpeechSupported, getBestVoice, language, currentUtterance, initSpeechSynthesis, speechSynthesisInitialized]
   );
 
   const stop = useCallback(() => {

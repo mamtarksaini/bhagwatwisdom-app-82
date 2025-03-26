@@ -25,6 +25,7 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [useTextOnly, setUseTextOnly] = useState(false);
   const [callTime, setCallTime] = useState(0);
+  const [speechInitFailed, setSpeechInitFailed] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastTranscriptRef = useRef<string>("");
@@ -99,6 +100,36 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
       }
     };
   }, [isListening, isProcessing, speechSynthesis.isReading, callTime]);
+
+  // Check for speech synthesis support and capability on initial load
+  useEffect(() => {
+    // Detect if speech synthesis is properly working
+    const checkSpeechSupport = () => {
+      try {
+        if (!speechSynthesis.isSpeechSupported) {
+          console.warn("Speech synthesis not supported in this browser");
+          setUseTextOnly(true);
+          setSpeechInitFailed(true);
+          return;
+        }
+        
+        // If supported but no voices, speech might not work well
+        if (speechSynthesis.voices.length === 0) {
+          console.warn("No voices available for speech synthesis");
+          setUseTextOnly(true);
+          setSpeechInitFailed(true);
+        }
+      } catch (error) {
+        console.error("Error checking speech synthesis support:", error);
+        setUseTextOnly(true);
+        setSpeechInitFailed(true);
+      }
+    };
+    
+    // Short delay to give voices time to load
+    const timer = setTimeout(checkSpeechSupport, 2000);
+    return () => clearTimeout(timer);
+  }, [speechSynthesis.isSpeechSupported, speechSynthesis.voices]);
   
   const startListening = () => {
     // In testing mode, we always allow listening without restrictions
@@ -148,7 +179,8 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
       // Check if user specifically requested text-only mode
       if (input.toLowerCase().includes("give me text") || 
           input.toLowerCase().includes("text only") || 
-          input.toLowerCase().includes("show text")) {
+          input.toLowerCase().includes("show text") ||
+          speechInitFailed) {
         setUseTextOnly(true);
       }
       
@@ -164,7 +196,7 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
         setAiResponse(response);
         
         // Only trigger speech if not in text-only mode
-        if (!useTextOnly && speechSynthesis.isSpeechSupported) {
+        if (!useTextOnly && speechSynthesis.isSpeechSupported && !speechInitFailed) {
           // Auto-play the response using speech synthesis
           setTimeout(() => {
             try {
@@ -275,7 +307,7 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
             
             {aiResponse && !isListening && (
               <div className="absolute bottom-0 w-full text-center max-h-24 overflow-y-auto">
-                <p className={`text-white/90 mb-2 ${useTextOnly || !speechSynthesis.isSpeechSupported ? 'block' : 'hidden'}`}>
+                <p className={`text-white/90 mb-2 ${useTextOnly || !speechSynthesis.isSpeechSupported || speechInitFailed ? 'block' : 'hidden'}`}>
                   {aiResponse}
                 </p>
               </div>
@@ -287,6 +319,11 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
               {(isListening || isProcessing || speechSynthesis.isReading) && 
                 `On call with AI Assistant • ${formatTime(callTime)}`}
             </p>
+            {speechInitFailed && !isListening && !isProcessing && !speechSynthesis.isReading && (
+              <p className="text-amber-400/80 text-xs mt-1">
+                Speech synthesis unavailable. Using text-only mode.
+              </p>
+            )}
           </div>
         </CardContent>
       
@@ -310,7 +347,7 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
               </Button>
             )}
             
-            {aiResponse && (
+            {aiResponse && !speechInitFailed && (
               <Button
                 variant="outline"
                 className="rounded-full h-12 w-12 border-[#33C3F0]/50 text-[#33C3F0] hover:bg-[#33C3F0]/10"
