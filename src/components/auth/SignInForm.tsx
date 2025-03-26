@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -33,7 +34,7 @@ export function SignInForm({ onSuccess }: SignInFormProps) {
   });
 
   // Monitor auth status changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (status === 'authenticated' && isLoading) {
       console.log("SignInForm: User authenticated, redirecting to home page");
       setIsLoading(false);
@@ -41,6 +42,29 @@ export function SignInForm({ onSuccess }: SignInFormProps) {
       navigate('/');
     }
   }, [status, isLoading, onSuccess, navigate]);
+
+  // Add a timeout to prevent infinite loading state
+  useEffect(() => {
+    let timeoutId: number;
+    
+    if (isLoading) {
+      timeoutId = window.setTimeout(() => {
+        if (isLoading) {
+          console.log("SignInForm: Sign-in timeout reached, resetting state");
+          setIsLoading(false);
+          toast({
+            title: "Sign in timeout",
+            description: "The sign-in process took too long. Please try again.",
+            variant: "destructive",
+          });
+        }
+      }, 10000); // 10-second timeout
+    }
+    
+    return () => {
+      if (timeoutId) window.clearTimeout(timeoutId);
+    };
+  }, [isLoading]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (isLoading) {
@@ -58,7 +82,6 @@ export function SignInForm({ onSuccess }: SignInFormProps) {
         console.error("SignInForm: Error returned from signIn:", error);
         setIsLoading(false);
         
-        // Show toast for error (the auth context already shows one, but adding here as backup)
         toast({
           title: "Sign in failed",
           description: error.message || "Invalid credentials. Please try again.",
@@ -67,6 +90,17 @@ export function SignInForm({ onSuccess }: SignInFormProps) {
       } else {
         console.log("SignInForm: Sign in API call successful, waiting for auth state to update");
         // We'll let the useEffect handle success since it listens for auth state changes
+        
+        // Add a safety check in case the auth state doesn't update
+        setTimeout(() => {
+          if (isLoading && status !== 'authenticated') {
+            console.log("SignInForm: Auth state did not update after successful API call");
+            setIsLoading(false);
+            
+            // Attempt to refresh the page to reset state
+            window.location.reload();
+          }
+        }, 5000); // 5-second safety check
       }
     } catch (error: any) {
       console.error("SignInForm: Exception during sign in:", error);
@@ -111,7 +145,20 @@ export function SignInForm({ onSuccess }: SignInFormProps) {
           )}
         />
         
-        <Button type="submit" className="w-full button-gradient" disabled={isLoading}>
+        <Button 
+          type="submit" 
+          className="w-full button-gradient" 
+          disabled={isLoading}
+          onClick={() => {
+            if (isLoading) {
+              // Allow force-click if stuck in loading state for over 5 seconds
+              const forceReset = window.confirm("Sign-in seems to be taking a while. Do you want to reset and try again?");
+              if (forceReset) {
+                setIsLoading(false);
+              }
+            }
+          }}
+        >
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />

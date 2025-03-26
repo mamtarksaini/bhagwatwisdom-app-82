@@ -8,9 +8,17 @@ export const useAuthState = () => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [status, setStatus] = useState<AuthStatus>('loading');
   const [isPremium, setIsPremium] = useState<boolean>(false); // Set to false to start with basic plan
+  const [isProcessing, setIsProcessing] = useState<boolean>(false); // Track if auth state change is being processed
 
   const handleAuthStateChange = async (session: any) => {
     console.log("useAuthState: Auth state change detected, session:", session ? "exists" : "null");
+    
+    if (isProcessing) {
+      console.log("useAuthState: Already processing auth state change, skipping...");
+      return;
+    }
+    
+    setIsProcessing(true);
     
     if (session?.user) {
       try {
@@ -57,18 +65,29 @@ export const useAuthState = () => {
         setUser(fallbackUser);
         setIsPremium(false); // Default to false
         setStatus('authenticated');
+      } finally {
+        setIsProcessing(false);
       }
     } else {
       console.log("useAuthState: No session, setting to unauthenticated");
       setUser(null);
       setIsPremium(false); // Set to false for anonymous users
       setStatus('unauthenticated');
+      setIsProcessing(false);
     }
   };
 
   useEffect(() => {
     console.log("useAuthState: Initializing auth state");
     let authSubscription: { data: { subscription: { unsubscribe: () => void } } };
+    
+    // Add a timeout to prevent being stuck in loading state
+    const loadingTimeout = setTimeout(() => {
+      if (status === 'loading') {
+        console.log("useAuthState: Timeout reached while loading, setting to unauthenticated");
+        setStatus('unauthenticated');
+      }
+    }, 5000); // 5-second timeout
     
     const initialize = async () => {
       try {
@@ -96,6 +115,7 @@ export const useAuthState = () => {
 
     return () => {
       console.log("useAuthState: Cleaning up auth subscription");
+      clearTimeout(loadingTimeout);
       if (authSubscription?.data?.subscription) {
         authSubscription.data.subscription.unsubscribe();
       }
