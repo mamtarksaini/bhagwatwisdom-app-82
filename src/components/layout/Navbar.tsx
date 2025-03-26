@@ -1,14 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Moon, Sun, Menu, X, Book, User, Settings, LogOut, Volume2, MessageSquare, Globe } from 'lucide-react';
+import { Moon, Sun, Menu, X, Book, User, Settings, LogOut, MessageSquare, Globe } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/components/ui/ThemeProvider';
 import { Separator } from '@/components/ui/separator';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { LanguageSelector } from '@/components/ui/LanguageSelector';
-import { LanguagePicker } from '@/components/features/LanguagePicker';
 import { Language } from '@/types';
 import {
   DropdownMenu,
@@ -80,39 +79,11 @@ export function Navbar() {
           </div>
 
           <div className="flex items-center space-x-4">
-            <div className="hidden md:block">
-              <Button 
-                variant="outline" 
-                className="flex items-center gap-2 bg-background border-border"
-                onClick={() => {
-                  // For the dropdown to be shown in a more controlled way, you could implement a custom dropdown here
-                }}
-              >
-                <Globe className="h-5 w-5" />
-                <span>{language === "english" ? "English" : "हिंदी"}</span>
-                <svg 
-                  width="12" 
-                  height="12" 
-                  viewBox="0 0 12 12" 
-                  fill="none" 
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="opacity-70"
-                >
-                  <path d="M6 8.5L10 4.5H2L6 8.5Z" fill="currentColor" />
-                </svg>
-              </Button>
-              
-              <LanguagePicker 
-                value={language} 
-                onValueChange={handleLanguageChange}
-              />
-            </div>
-            
             <LanguageSelector 
               value={language} 
               onChange={handleLanguageChange} 
-              variant="minimal" 
-              className="mr-1 md:hidden"
+              variant={isMobile ? "minimal" : "default"} 
+              className="mr-1"
             />
             
             <Button variant="ghost" size="icon" onClick={toggleTheme}>
@@ -180,16 +151,6 @@ export function Navbar() {
             <Link to="/affirmations" className="font-medium flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
               Affirmations
             </Link>
-            <Separator />
-            
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Language</span>
-              <LanguagePicker 
-                value={language} 
-                onValueChange={handleLanguageChange}
-              />
-            </div>
-            
             <Separator />
             
             {user ? (
