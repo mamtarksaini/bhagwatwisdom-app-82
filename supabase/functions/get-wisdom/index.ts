@@ -1,4 +1,3 @@
-
 // Follow this setup guide to integrate the Deno runtime into your application:
 // https://deno.land/manual/examples/deployment
 
@@ -64,20 +63,43 @@ serve(async (req) => {
     
     console.log(`API key found. First 4 chars: ${GEMINI_API_KEY.substring(0, 4)}...`);
     
-    // Construct prompt for modern relevance with formal tone guidance
-    let prompt = `You are both a wise spiritual guide knowledgeable in the Bhagavad Gita AND a modern psychologist or life coach. Respond to this problem in a way that today's generation would relate to while providing authentic wisdom.
+    // Construct different prompt types based on the category
+    let prompt = '';
+    
+    if (category === 'mantra' || category === 'mood_mantra') {
+      // Enhanced prompt specifically for mantras based on mood
+      prompt = `You are a wise spiritual guide deeply knowledgeable in ancient mantras from Hindu, Buddhist, and Vedic traditions. 
+      
+      Generate a spiritually resonant and authentic mantra for someone feeling "${question}".
 
-    The user's problem is: "${question}" (category: ${category})
-    
-    Your response should:
-    1. Acknowledge their struggle with empathy in 1-2 sentences
-    2. Provide one or two relevant principles from the Bhagavad Gita, explaining the concept in modern language
-    3. Outline 2-3 practical steps they can take, rooted in this wisdom but presented in contemporary terms
-    4. End with a brief encouraging statement
-    
-    Use accessible language while preserving the depth of the wisdom. Avoid religious jargon that might alienate someone unfamiliar with Hindu concepts - instead, focus on the psychological insights.
-    
-    Keep your response concise (200-400 words).`;
+      Your response should include:
+      1. A short, memorable Sanskrit or traditional mantra text (3-10 words) that genuinely addresses this emotional state
+      2. A meaningful explanation that connects this mantra to:
+         - The emotional/mental state of "${question}"
+         - A relevant teaching from the Bhagavad Gita or Vedic wisdom
+         - How this mantra can help transform or work with this specific feeling
+
+      The mantra should feel authentic and not manufactured - if there's a traditional mantra that addresses this feeling, use that rather than creating something new.
+      
+      Include proper pronunciation guidance if the mantra contains Sanskrit words.
+      
+      Keep your response concise (150-250 words).`;
+    } else {
+      // Original prompt for other wisdom categories
+      prompt = `You are both a wise spiritual guide knowledgeable in the Bhagavad Gita AND a modern psychologist or life coach. Respond to this problem in a way that today's generation would relate to while providing authentic wisdom.
+
+      The user's problem is: "${question}" (category: ${category})
+      
+      Your response should:
+      1. Acknowledge their struggle with empathy in 1-2 sentences
+      2. Provide one or two relevant principles from the Bhagavad Gita, explaining the concept in modern language
+      3. Outline 2-3 practical steps they can take, rooted in this wisdom but presented in contemporary terms
+      4. End with a brief encouraging statement
+      
+      Use accessible language while preserving the depth of the wisdom. Avoid religious jargon that might alienate someone unfamiliar with Hindu concepts - instead, focus on the psychological insights.
+      
+      Keep your response concise (200-400 words).`;
+    }
     
     // Add language-specific instructions for formality
     if (language === 'hindi') {

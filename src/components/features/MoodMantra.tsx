@@ -171,10 +171,19 @@ export function MoodMantra({ language, isPremium = false }: MoodMantraProps) {
       // using the GEMINI_API_KEY from edge function
       // For now, we'll simulate an API call
       
-      const prompt = `Generate a spiritual mantra based on the user's mood: "${customMood}". 
-      Include both the mantra text and a meaning that references concepts from the Bhagavad Gita. 
-      Keep the mantra short and memorable. 
-      ${language === 'hindi' ? "Please provide the response in Hindi language." : ""}`;
+      // Create an improved prompt that guides the AI to generate more authentic mantras
+      const prompt = `Generate a spiritually resonant and authentic mantra for someone feeling "${customMood}".
+
+The response should include:
+1. A short, memorable Sanskrit or traditional mantra text (3-10 words) that genuinely addresses this emotional state
+2. A meaningful explanation that connects this mantra to:
+   - The emotional/mental state of "${customMood}"
+   - A relevant teaching from ancient wisdom traditions (preferably Bhagavad Gita)
+   - How this mantra can help transform or work with this specific feeling
+
+The mantra should feel authentic and not manufactured - if there's a traditional mantra that addresses this feeling, use that rather than creating something new.
+
+${language === 'hindi' ? "कृपया अपना उत्तर हिंदी भाषा में दें, औपचारिक और सम्मानजनक शैली में।" : "Please provide your response in English."}`;
       
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 2000));
