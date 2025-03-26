@@ -19,30 +19,16 @@ serve(async (req) => {
 
   try {
     // Get the API key from environment variable (set in edge function secrets)
-    const apiKey = Deno.env.get("GEMINI_API_KEY");
+    const apiKey = Deno.env.get("GEMINI_API_KEY") || 'AIzaSyAVMRO-un8D1oBBXR9U6azkf1ZSQB6wVi0';
     
     console.log(`[${new Date().toISOString()}] get_gemini_key function called`);
     
     // Validate the API key with improved logging
-    if (!apiKey) {
-      console.error("CRITICAL ERROR: GEMINI_API_KEY is not set in environment variables");
+    if (!apiKey || apiKey.trim() === '' || apiKey === 'undefined') {
+      console.error("CRITICAL ERROR: GEMINI_API_KEY is not set, empty, or invalid");
       return new Response(
         JSON.stringify({ 
-          error: "GEMINI_API_KEY is not set in environment variables",
-          status: "error" 
-        }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 500,
-        },
-      );
-    }
-    
-    if (apiKey.trim() === '' || apiKey === 'undefined') {
-      console.error("CRITICAL ERROR: GEMINI_API_KEY is empty or invalid");
-      return new Response(
-        JSON.stringify({ 
-          error: "GEMINI_API_KEY is empty or invalid",
+          error: "GEMINI_API_KEY is not properly configured",
           status: "error" 
         }),
         {
@@ -59,7 +45,7 @@ serve(async (req) => {
     // Return the API key with success status
     return new Response(
       JSON.stringify({ 
-        apiKey,
+        data: { apiKey },
         status: "success" 
       }),
       {

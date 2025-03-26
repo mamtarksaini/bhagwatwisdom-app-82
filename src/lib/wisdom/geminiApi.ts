@@ -17,7 +17,7 @@ export async function callGeminiDirectly(prompt: string) {
     
     // Add a timeout for the edge function call
     const timeoutPromise = new Promise<never>((_, reject) => 
-      setTimeout(() => reject(new Error('Edge function request timed out')), 8000)
+      setTimeout(() => reject(new Error('Edge function request timed out')), 10000)
     );
     
     const functionCallPromise = supabase.functions.invoke('get_gemini_key');
@@ -36,8 +36,8 @@ export async function callGeminiDirectly(prompt: string) {
       // Fall back to the hardcoded key if the edge function fails
       console.warn('Using fallback API key');
       
-      // Updated API key (make sure this is a valid Gemini API key)
-      const FALLBACK_API_KEY = 'AIzaSyDFgEV8YgD7CHtKlINtHE2YeAGiNJzCGe4'; 
+      // Updated API key for Gemini - replace with a valid key
+      const FALLBACK_API_KEY = 'AIzaSyAVMRO-un8D1oBBXR9U6azkf1ZSQB6wVi0'; 
       
       if (!FALLBACK_API_KEY) {
         console.error('No fallback API key available');
@@ -57,7 +57,7 @@ export async function callGeminiDirectly(prompt: string) {
     
     // Fall back to the hardcoded key if any error occurs
     console.warn('Using fallback API key due to error');
-    const FALLBACK_API_KEY = 'AIzaSyDFgEV8YgD7CHtKlINtHE2YeAGiNJzCGe4';
+    const FALLBACK_API_KEY = 'AIzaSyAVMRO-un8D1oBBXR9U6azkf1ZSQB6wVi0';
     
     if (!FALLBACK_API_KEY) {
       console.error('No fallback API key available');
@@ -77,8 +77,7 @@ async function makeGeminiApiCall(prompt: string, apiKey: string) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
     
-    // FIXED: Use the correct API URL for Gemini model
-    // Changed from v1/models/gemini-pro:generateContent to v1/models/gemini-1.5-pro:generateContent
+    // Use the correct API URL for Gemini model
     const response = await fetch('https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent', {
       method: 'POST',
       headers: {

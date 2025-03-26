@@ -42,7 +42,8 @@ export function isApiKeyError(errorMsg: string): boolean {
   return errorMsg.includes('API key') || 
          errorMsg.includes('unauthorized') || 
          errorMsg.includes('API authentication') ||
-         errorMsg.includes('403');
+         errorMsg.includes('403') ||
+         errorMsg.includes('INVALID_ARGUMENT');
 }
 
 // Helper function to check if the error is network related
