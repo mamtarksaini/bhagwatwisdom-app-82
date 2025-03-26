@@ -5,6 +5,8 @@ import { Loader2 } from 'lucide-react';
 import { createPaymentOrder, verifyPayment } from '@/services/paymentService';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabase';
+import { useNavigate } from 'react-router-dom';
 
 interface RazorpayButtonProps {
   planId: string;
@@ -22,7 +24,30 @@ declare global {
 export function RazorpayButton({ planId, text = 'Pay with Razorpay', className }: RazorpayButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isScriptLoaded, setIsScriptLoaded] = useState(false);
+  const [isAuthChecking, setIsAuthChecking] = useState(true);
   const { user, status } = useAuth();
+  const navigate = useNavigate();
+
+  // Check authentication status on mount and when status changes
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        // Double-check session state with Supabase directly
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('RazorpayButton: Session check error:', error);
+        }
+        
+        setIsAuthChecking(false);
+      } catch (error) {
+        console.error('RazorpayButton: Error checking authentication:', error);
+        setIsAuthChecking(false);
+      }
+    };
+    
+    checkAuth();
+  }, [status]);
 
   // Load Razorpay script
   useEffect(() => {
@@ -55,14 +80,31 @@ export function RazorpayButton({ planId, text = 'Pay with Razorpay', className }
   }, []);
 
   const handleClick = async () => {
-    // Check user authentication status more explicitly
-    if (!user || status !== 'authenticated') {
+    // Comprehensive auth check
+    if (isAuthChecking) {
       toast({
-        title: "Authentication required",
-        description: "Please sign in to continue with your purchase.",
+        title: "Please wait",
+        description: "Checking authentication status...",
         variant: "default"
       });
       return;
+    }
+    
+    if (!user || status !== 'authenticated') {
+      // Direct check with Supabase as a last resort
+      const { data, error } = await supabase.auth.getSession();
+      
+      if (error || !data.session) {
+        toast({
+          title: "Authentication required",
+          description: "Please sign in to continue with your purchase.",
+          variant: "destructive"
+        });
+        
+        // Redirect to auth page
+        navigate('/auth');
+        return;
+      }
     }
     
     if (!isScriptLoaded) {
@@ -76,6 +118,8 @@ export function RazorpayButton({ planId, text = 'Pay with Razorpay', className }
     
     try {
       setIsLoading(true);
+      
+      console.log('RazorpayButton: Creating payment order for plan:', planId);
       
       // Create a Razorpay order
       const orderData = await createPaymentOrder(planId, 'razorpay');
@@ -124,8 +168,8 @@ export function RazorpayButton({ planId, text = 'Pay with Razorpay', className }
           }
         },
         prefill: {
-          email: user.email,
-          name: user.name || '',
+          email: user?.email,
+          name: user?.name || '',
         },
         theme: {
           color: '#3399cc',
@@ -150,7 +194,7 @@ export function RazorpayButton({ planId, text = 'Pay with Razorpay', className }
   return (
     <Button
       onClick={handleClick}
-      disabled={isLoading || !isScriptLoaded}
+      disabled={isLoading || !isScriptLoaded || isAuthChecking}
       className={className}
       variant="outline"
     >

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { createPaymentOrder, verifyPayment } from '@/services/paymentService';
@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabase';
 
 interface PayPalButtonProps {
   planId: string;
@@ -16,12 +17,34 @@ interface PayPalButtonProps {
 
 export function PayPalButton({ planId, text = 'Pay with PayPal', className }: PayPalButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [isAuthChecking, setIsAuthChecking] = useState(true);
   const { user, status } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
+  // Check authentication status on mount and when status changes
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        // Double-check session state with Supabase directly
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('PayPalButton: Session check error:', error);
+        }
+        
+        setIsAuthChecking(false);
+      } catch (error) {
+        console.error('PayPalButton: Error checking authentication:', error);
+        setIsAuthChecking(false);
+      }
+    };
+    
+    checkAuth();
+  }, [status]);
+
   // Handle the PayPal redirection callback
-  React.useEffect(() => {
+  useEffect(() => {
     const status = searchParams.get('status');
     const provider = searchParams.get('provider');
     const token = searchParams.get('token');
@@ -74,18 +97,37 @@ export function PayPalButton({ planId, text = 'Pay with PayPal', className }: Pa
   };
 
   const handleClick = async () => {
-    // Check user authentication status more explicitly
-    if (!user || status !== 'authenticated') {
+    // Comprehensive auth check
+    if (isAuthChecking) {
       toast({
-        title: "Authentication required",
-        description: "Please sign in to continue with your purchase.",
+        title: "Please wait",
+        description: "Checking authentication status...",
         variant: "default"
       });
       return;
     }
     
+    if (!user || status !== 'authenticated') {
+      // Direct check with Supabase as a last resort
+      const { data, error } = await supabase.auth.getSession();
+      
+      if (error || !data.session) {
+        toast({
+          title: "Authentication required",
+          description: "Please sign in to continue with your purchase.",
+          variant: "destructive"
+        });
+        
+        // Redirect to auth page
+        navigate('/auth');
+        return;
+      }
+    }
+    
     try {
       setIsLoading(true);
+      
+      console.log('PayPalButton: Creating payment order for plan:', planId);
       
       // Create a PayPal order
       const order = await createPaymentOrder(planId, 'paypal');
@@ -115,7 +157,7 @@ export function PayPalButton({ planId, text = 'Pay with PayPal', className }: Pa
   return (
     <Button
       onClick={handleClick}
-      disabled={isLoading}
+      disabled={isLoading || isAuthChecking}
       className={className}
       variant="outline"
     >

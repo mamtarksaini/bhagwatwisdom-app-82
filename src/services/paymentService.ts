@@ -28,18 +28,20 @@ export async function createPaymentOrder(
   provider: PaymentProvider
 ): Promise<PaymentOrder> {
   try {
-    // Get the user's session with more robust error handling
-    const { data, error } = await supabase.auth.getSession();
+    // Check if we have an active session first
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
     
-    if (error) {
-      console.error('Session error:', error.message);
-      throw new Error('Authentication error: ' + error.message);
+    if (sessionError) {
+      console.error('Session error:', sessionError.message);
+      throw new Error('Authentication error: ' + sessionError.message);
     }
     
-    if (!data?.session) {
+    if (!sessionData?.session) {
       console.error('No active session found');
       throw new Error('User not authenticated');
     }
+    
+    console.log('Payment service: Creating order with active session for user:', sessionData.session.user.id);
     
     // Call the Supabase Edge Function to create an order
     const { data: responseData, error: invokeError } = await supabase.functions.invoke('process-payment', {
@@ -50,7 +52,7 @@ export async function createPaymentOrder(
       },
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${data.session.access_token}`,
+        Authorization: `Bearer ${sessionData.session.access_token}`,
       },
     });
     
@@ -82,25 +84,30 @@ export async function verifyPayment(
   paymentDetails: any
 ): Promise<PaymentVerification> {
   try {
-    // Get the user's session
-    const { data: { session } } = await supabase.auth.getSession();
+    // Check if we have an active session first
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
     
-    if (!session) {
+    if (sessionError) {
+      console.error('Session error:', sessionError.message);
+      throw new Error('Authentication error: ' + sessionError.message);
+    }
+    
+    if (!sessionData?.session) {
+      console.error('No active session found');
       throw new Error('User not authenticated');
     }
     
     // Call the Supabase Edge Function to verify the payment
-    // Fixed: Removed 'path' property as it doesn't exist in FunctionInvokeOptions
     const { data, error } = await supabase.functions.invoke('process-payment', {
       body: {
         provider,
         planId,
-        action: 'verify-payment', // Added action parameter instead of using path
+        action: 'verify-payment',
         ...paymentDetails,
       },
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${session.access_token}`,
+        Authorization: `Bearer ${sessionData.session.access_token}`,
       },
     });
     
