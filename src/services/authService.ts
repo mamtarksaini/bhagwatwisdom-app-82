@@ -36,8 +36,10 @@ export async function createUserProfile(userId: string, email: string, name?: st
   try {
     console.log('authService: Creating profile for user:', userId, 'with email:', email);
     
-    // Insert the profile record with numeric ID converted from UUID
-    const numericId = parseInt(userId, 10);
+    // Generate a secure numeric ID instead of trying to convert UUID
+    // This is a more reliable approach than trying to convert UUID to numeric ID
+    const numericId = Math.floor(Math.random() * 1000000000);
+    
     const { error } = await supabase.from('profiles').insert({
       id: numericId,
       email: email,
@@ -51,7 +53,7 @@ export async function createUserProfile(userId: string, email: string, name?: st
       throw error;
     }
     
-    console.log('authService: Profile created successfully');
+    console.log('authService: Profile created successfully with numeric ID:', numericId);
   } catch (error) {
     console.error('authService: Error creating profile:', error);
     throw error;
@@ -130,20 +132,14 @@ export async function signUpWithEmail(email: string, password: string, name: str
       
       try {
         // Create the user profile after successful signup
-        // Convert UUID to a numeric ID
-        const numericId = parseInt(data.user.id, 10);
-        if (isNaN(numericId)) {
-          console.error('authService: Failed to convert UUID to numeric ID');
-          return { error: new Error('Failed to convert UUID to numeric ID') };
-        }
-        
-        // Create the user profile after successful signup
+        // Use a random numeric ID instead of trying to convert UUID
         await createUserProfile(data.user.id, email, name);
         console.log('authService: User profile created successfully');
       } catch (profileError) {
         console.error('authService: Error creating user profile after signup:', profileError);
         // We'll continue since the user was created successfully
         // The profile can be created later when needed
+        return { error: profileError as Error };
       }
     } else {
       console.log('authService: User data not available after signup');
