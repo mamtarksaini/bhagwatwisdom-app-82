@@ -2,73 +2,100 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { CheckCircle, XCircle, AlertCircle, Loader2 } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { toast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useAuth } from '@/contexts/AuthContext';
+import { verifyPayment } from '@/services/paymentService';
 
 export function PaymentStatus() {
   const [searchParams] = useSearchParams();
-  const [shouldShow, setShouldShow] = useState(false);
-  
-  const status = searchParams.get('status');
-  const message = searchParams.get('message');
-  
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [statusType, setStatusType] = useState<'success' | 'error' | 'processing' | null>(null);
+  const { user, upgradeToPremium } = useAuth();
+
   useEffect(() => {
-    // Only show the component if a status is present
-    if (status) {
-      setShouldShow(true);
-      
-      // Auto-hide after 10 seconds
-      const timer = setTimeout(() => {
-        setShouldShow(false);
-      }, 10000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [status]);
-  
-  if (!shouldShow) {
+    const status = searchParams.get('status');
+    const paypalToken = searchParams.get('token');
+    const provider = searchParams.get('provider');
+    const planId = searchParams.get('planId');
+
+    const processPayment = async () => {
+      if (status === 'success' && provider === 'paypal' && paypalToken && planId && user) {
+        setIsProcessing(true);
+        setStatusType('processing');
+        setStatusMessage('Verifying your payment...');
+
+        try {
+          const result = await verifyPayment('paypal', planId, { orderId: paypalToken });
+
+          if (result.success) {
+            setStatusType('success');
+            setStatusMessage('Payment successful! Your subscription has been activated.');
+            toast({
+              title: "Payment successful!",
+              description: "Your subscription has been activated.",
+              variant: "success"
+            });
+            
+            // Give the database a moment to update
+            setTimeout(() => {
+              window.location.reload();
+            }, 2000);
+          } else {
+            setStatusType('error');
+            setStatusMessage('Payment verification failed. Please try again or contact support.');
+            toast({
+              title: "Payment verification failed",
+              description: "Please try again or contact support.",
+              variant: "destructive"
+            });
+          }
+        } catch (error) {
+          console.error('Error verifying payment:', error);
+          setStatusType('error');
+          setStatusMessage('An error occurred while verifying your payment. Please try again.');
+          toast({
+            title: "Payment verification error",
+            description: "An error occurred while verifying your payment.",
+            variant: "destructive"
+          });
+        } finally {
+          setIsProcessing(false);
+        }
+      } else if (status === 'cancelled') {
+        setStatusType('error');
+        setStatusMessage('Payment was cancelled. You can try again whenever you\'re ready.');
+      } else if (status === 'error') {
+        const errorMessage = searchParams.get('message');
+        setStatusType('error');
+        setStatusMessage(errorMessage || 'An error occurred during payment processing.');
+      }
+    };
+
+    processPayment();
+  }, [searchParams, user, upgradeToPremium]);
+
+  if (!statusType || !statusMessage) {
     return null;
   }
-  
-  const renderContent = () => {
-    switch (status) {
-      case 'success':
-        return (
-          <div className="flex items-center space-x-2 text-green-600">
-            <CheckCircle className="h-5 w-5" />
-            <p>Payment successful! Your subscription has been activated.</p>
-          </div>
-        );
-      case 'processing':
-        return (
-          <div className="flex items-center space-x-2 text-blue-600">
-            <Loader2 className="h-5 w-5 animate-spin" />
-            <p>Processing your payment. Please wait...</p>
-          </div>
-        );
-      case 'cancelled':
-        return (
-          <div className="flex items-center space-x-2 text-yellow-600">
-            <AlertCircle className="h-5 w-5" />
-            <p>Payment cancelled. Your subscription has not been activated.</p>
-          </div>
-        );
-      case 'error':
-        return (
-          <div className="flex items-center space-x-2 text-red-600">
-            <XCircle className="h-5 w-5" />
-            <p>{message || 'An error occurred during payment. Please try again.'}</p>
-          </div>
-        );
-      default:
-        return null;
-    }
-  };
-  
+
   return (
-    <Card className="mb-8 border-2 border-muted shadow-md">
-      <CardContent className="p-4">
-        {renderContent()}
-      </CardContent>
-    </Card>
+    <Alert
+      variant={statusType === 'success' ? 'default' : statusType === 'error' ? 'destructive' : 'default'}
+      className="mb-6"
+    >
+      {statusType === 'success' && <CheckCircle className="h-5 w-5" />}
+      {statusType === 'error' && <XCircle className="h-5 w-5" />}
+      {statusType === 'processing' && <Loader2 className="h-5 w-5 animate-spin" />}
+      
+      <AlertTitle>
+        {statusType === 'success' && 'Payment Successful'}
+        {statusType === 'error' && 'Payment Failed'}
+        {statusType === 'processing' && 'Processing Payment'}
+      </AlertTitle>
+      
+      <AlertDescription>{statusMessage}</AlertDescription>
+    </Alert>
   );
 }

@@ -9,6 +9,7 @@ export const useAuthState = () => {
   const [status, setStatus] = useState<AuthStatus>('loading');
   const [isPremium, setIsPremium] = useState<boolean>(false); // Set to false to start with basic plan
   const [isProcessing, setIsProcessing] = useState<boolean>(false); // Track if auth state change is being processed
+  const [timeoutId, setTimeoutId] = useState<number | null>(null); // Track timeout ID
 
   const handleAuthStateChange = async (session: any) => {
     console.log("useAuthState: Auth state change detected, session:", session ? "exists" : "null");
@@ -19,6 +20,12 @@ export const useAuthState = () => {
     }
     
     setIsProcessing(true);
+    
+    // Clear any existing timeout
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+      setTimeoutId(null);
+    }
     
     if (session?.user) {
       try {
@@ -82,12 +89,15 @@ export const useAuthState = () => {
     let authSubscription: { data: { subscription: { unsubscribe: () => void } } };
     
     // Add a timeout to prevent being stuck in loading state
-    const loadingTimeout = setTimeout(() => {
+    const newTimeoutId = window.setTimeout(() => {
       if (status === 'loading') {
         console.log("useAuthState: Timeout reached while loading, setting to unauthenticated");
         setStatus('unauthenticated');
+        setIsProcessing(false);
       }
     }, 5000); // 5-second timeout
+    
+    setTimeoutId(newTimeoutId);
     
     const initialize = async () => {
       try {
@@ -108,6 +118,7 @@ export const useAuthState = () => {
       } catch (error) {
         console.error("useAuthState: Error during initialization:", error);
         setStatus('unauthenticated');
+        setIsProcessing(false);
       }
     };
 
@@ -115,7 +126,9 @@ export const useAuthState = () => {
 
     return () => {
       console.log("useAuthState: Cleaning up auth subscription");
-      clearTimeout(loadingTimeout);
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
       if (authSubscription?.data?.subscription) {
         authSubscription.data.subscription.unsubscribe();
       }

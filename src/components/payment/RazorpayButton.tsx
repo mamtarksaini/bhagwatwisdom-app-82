@@ -12,6 +12,8 @@ interface RazorpayButtonProps {
   planId: string;
   text?: string;
   className?: string;
+  onProcessingStart?: () => void;
+  onProcessingEnd?: () => void;
 }
 
 // Define Razorpay global type
@@ -21,7 +23,13 @@ declare global {
   }
 }
 
-export function RazorpayButton({ planId, text = 'Pay with Razorpay', className }: RazorpayButtonProps) {
+export function RazorpayButton({ 
+  planId, 
+  text = 'Pay with Razorpay', 
+  className,
+  onProcessingStart,
+  onProcessingEnd
+}: RazorpayButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isScriptLoaded, setIsScriptLoaded] = useState(false);
   const [isAuthChecking, setIsAuthChecking] = useState(true);
@@ -75,9 +83,12 @@ export function RazorpayButton({ planId, text = 'Pay with Razorpay', className }
     loadRazorpayScript();
     
     return () => {
-      // No need to remove the script on unmount as it might be used elsewhere
+      // Clean up any ongoing loading state on unmount
+      if (isLoading && onProcessingEnd) {
+        onProcessingEnd();
+      }
     };
-  }, []);
+  }, [isLoading, onProcessingEnd]);
 
   const handleClick = async () => {
     // Comprehensive auth check
@@ -118,6 +129,7 @@ export function RazorpayButton({ planId, text = 'Pay with Razorpay', className }
     
     try {
       setIsLoading(true);
+      if (onProcessingStart) onProcessingStart();
       
       console.log('RazorpayButton: Creating payment order for plan:', planId);
       
@@ -165,6 +177,9 @@ export function RazorpayButton({ planId, text = 'Pay with Razorpay', className }
               description: error.message || "An error occurred processing your payment.",
               variant: "destructive"
             });
+          } finally {
+            setIsLoading(false);
+            if (onProcessingEnd) onProcessingEnd();
           }
         },
         prefill: {
@@ -174,6 +189,12 @@ export function RazorpayButton({ planId, text = 'Pay with Razorpay', className }
         theme: {
           color: '#3399cc',
         },
+        modal: {
+          ondismiss: function() {
+            setIsLoading(false);
+            if (onProcessingEnd) onProcessingEnd();
+          }
+        }
       };
       
       const razorpay = new window.Razorpay(options);
@@ -181,13 +202,14 @@ export function RazorpayButton({ planId, text = 'Pay with Razorpay', className }
       
     } catch (error) {
       console.error('Error initiating Razorpay payment:', error);
+      setIsLoading(false);
+      if (onProcessingEnd) onProcessingEnd();
+      
       toast({
         title: "Payment error",
         description: error.message || "An error occurred initiating your payment.",
         variant: "destructive"
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
