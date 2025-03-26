@@ -211,6 +211,7 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
       speechSynthesis.stop();
     } else if (aiResponse) {
       try {
+        setUseTextOnly(false); // Reset text-only mode when manually playing speech
         speechSynthesis.speak(aiResponse);
       } catch (error) {
         console.error("Error playing speech:", error);

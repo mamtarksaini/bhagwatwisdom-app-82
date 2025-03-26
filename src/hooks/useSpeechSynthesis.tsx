@@ -141,6 +141,11 @@ export function useSpeechSynthesis(language: Language = "english"): SpeechSynthe
       console.log("Starting speech synthesis");
       
       try {
+        // Check if the SpeechSynthesis API is available and not in a broken state
+        if (!window.speechSynthesis) {
+          throw new Error("Speech synthesis API not available");
+        }
+
         // Create a new utterance
         const utterance = new SpeechSynthesisUtterance(text);
         const voice = getBestVoice(text);
@@ -191,25 +196,42 @@ export function useSpeechSynthesis(language: Language = "english"): SpeechSynthe
           window.speechSynthesis.resume();
         }
         
-        // Safari fix: create a dummy speak utterance first
-        if (/^((?!chrome|android).)*safari/i.test(navigator.userAgent)) {
-          console.log("Safari detected, applying fix");
-          window.speechSynthesis.speak(new SpeechSynthesisUtterance(''));
-        }
+        // Fix for some browsers - reset the speech synthesis before speaking
+        window.speechSynthesis.cancel();
         
-        // Actually speak the text
-        window.speechSynthesis.speak(utterance);
-        
-        // Chrome bug fix: if speech doesn't start after 1 second, try again
+        // Small delay to ensure synthesis is reset properly
         setTimeout(() => {
-          if (window.speechSynthesis.speaking === false && utterance === currentUtterance) {
-            console.log("Speech didn't start, trying again");
-            if (window.speechSynthesis.paused) {
-              window.speechSynthesis.resume();
+          try {
+            // Safari fix: create a dummy speak utterance first
+            if (/^((?!chrome|android).)*safari/i.test(navigator.userAgent)) {
+              console.log("Safari detected, applying fix");
+              window.speechSynthesis.speak(new SpeechSynthesisUtterance(''));
             }
+            
+            // Actually speak the text
             window.speechSynthesis.speak(utterance);
+            
+            // Chrome bug fix: if speech doesn't start after 1 second, try again
+            setTimeout(() => {
+              if (window.speechSynthesis.speaking === false && utterance === currentUtterance) {
+                console.log("Speech didn't start, trying again");
+                if (window.speechSynthesis.paused) {
+                  window.speechSynthesis.resume();
+                }
+                window.speechSynthesis.speak(utterance);
+              }
+            }, 1000);
+          } catch (innerError) {
+            console.error("Secondary speech synthesis error:", innerError);
+            setIsReading(false);
+            setCurrentUtterance(null);
+            toast({
+              title: "Speech Error",
+              description: "There was an error playing the voice. Falling back to text-only mode.",
+              variant: "destructive"
+            });
           }
-        }, 1000);
+        }, 100);
       } catch (error) {
         console.error("Exception in speech synthesis:", error);
         toast({
