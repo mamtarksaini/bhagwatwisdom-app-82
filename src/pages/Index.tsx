@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { useTheme } from "@/components/ui/ThemeProvider";
 import { LanguagePicker } from "@/components/features/LanguagePicker";
+import { Footer } from "@/components/layout/Footer";
 
 const affirmationsData = {
   english: [
@@ -372,26 +372,7 @@ const Index = () => {
         </div>
       </section>
 
-      <footer className="w-full py-8 bg-secondary/20 border-t border-border">
-        <div className="container px-4 md:px-6 mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-center md:text-left">
-            {footerLinks.map((link) => (
-              <Link 
-                key={link.path}
-                to={link.path}
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </div>
-          <div className="mt-8 pt-8 border-t border-border text-center">
-            <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} Bhagwat Wisdom. All rights reserved.
-            </p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
 
       <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
     </div>
