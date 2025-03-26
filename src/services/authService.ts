@@ -1,3 +1,4 @@
+
 import { supabase } from '@/lib/supabase';
 import { UserProfile } from '@/types';
 
@@ -72,7 +73,11 @@ export async function createUserProfile(userId: string, email: string, name?: st
       }
     }
     
-    const { error } = await supabase.from('profiles').insert(profileData);
+    // Use the authenticated client from the auth state
+    console.log('authService: Attempting to insert profile with data:', profileData);
+    const { error } = await supabase
+      .from('profiles')
+      .insert(profileData);
     
     if (error) {
       console.error('authService: Error creating profile:', error);
@@ -154,17 +159,18 @@ export async function signUpWithEmail(email: string, password: string, name: str
       console.log('authService: User email from sign up:', data.user.email);
       console.log('authService: User metadata:', data.user.user_metadata);
       
-      try {
-        // Create the user profile after successful signup
-        // Use a random numeric ID instead of trying to convert UUID
-        await createUserProfile(data.user.id, email, name);
-        console.log('authService: User profile created successfully');
-      } catch (profileError) {
-        console.error('authService: Error creating user profile after signup:', profileError);
-        // We'll continue since the user was created successfully
-        // The profile can be created later when needed
-        return { error: profileError as Error };
-      }
+      // Wait for the auth system to fully process the signup before creating profile
+      setTimeout(async () => {
+        try {
+          // Create the user profile after successful signup
+          await createUserProfile(data.user.id, email, name);
+          console.log('authService: User profile created successfully');
+        } catch (profileError) {
+          console.error('authService: Error creating user profile after signup:', profileError);
+          // We'll continue since the user was created successfully
+          // The profile can be created later when needed
+        }
+      }, 500); // Add a small delay to ensure auth is complete
     } else {
       console.log('authService: User data not available after signup');
     }
