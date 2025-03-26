@@ -6,10 +6,24 @@ export async function callGeminiDirectly(prompt: string) {
   try {
     // First attempt to get the API key from the edge function
     console.log('Fetching API key from edge function...');
-    const { data, error } = await supabase.functions.invoke('get_gemini_key');
     
-    if (error || !data?.apiKey) {
-      console.error('Failed to get API key from edge function:', error || 'No API key returned');
+    // Add a timeout for the edge function call
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Edge function request timed out')), 8000)
+    );
+    
+    const functionCallPromise = supabase.functions.invoke('get_gemini_key');
+    
+    // Race between the response and timeout
+    const edgeFunctionResponse = await Promise.race([
+      functionCallPromise,
+      timeoutPromise
+    ]);
+    
+    console.log('Edge function response:', edgeFunctionResponse);
+    
+    if (edgeFunctionResponse.error || !edgeFunctionResponse.data?.apiKey) {
+      console.error('Failed to get API key from edge function:', edgeFunctionResponse.error || 'No API key returned');
       
       // Fall back to the hardcoded key if the edge function fails
       console.warn('Using fallback API key');
@@ -28,11 +42,21 @@ export async function callGeminiDirectly(prompt: string) {
     }
     
     console.log('Successfully retrieved API key from edge function');
-    return await makeGeminiApiCall(prompt, data.apiKey);
+    return await makeGeminiApiCall(prompt, edgeFunctionResponse.data.apiKey);
     
   } catch (error) {
     console.error('Error in callGeminiDirectly:', error);
-    return null;
+    
+    // Fall back to the hardcoded key if any error occurs
+    console.warn('Using fallback API key due to error');
+    const FALLBACK_API_KEY = 'AIzaSyDFgEV8YgD7CHtKlINtHE2YeAGiNJzCGe4';
+    
+    if (!FALLBACK_API_KEY) {
+      console.error('No fallback API key available');
+      return null;
+    }
+    
+    return await makeGeminiApiCall(prompt, FALLBACK_API_KEY);
   }
 }
 

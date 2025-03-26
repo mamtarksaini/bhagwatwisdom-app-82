@@ -23,9 +23,9 @@ serve(async (req) => {
     
     console.log(`[${new Date().toISOString()}] get_gemini_key function called`);
     
-    // Validate the API key
+    // Validate the API key with improved logging
     if (!apiKey) {
-      console.error("GEMINI_API_KEY is not set in environment variables");
+      console.error("CRITICAL ERROR: GEMINI_API_KEY is not set in environment variables");
       return new Response(
         JSON.stringify({ 
           error: "GEMINI_API_KEY is not set in environment variables",
@@ -39,7 +39,7 @@ serve(async (req) => {
     }
     
     if (apiKey.trim() === '' || apiKey === 'undefined') {
-      console.error("GEMINI_API_KEY is empty or invalid");
+      console.error("CRITICAL ERROR: GEMINI_API_KEY is empty or invalid");
       return new Response(
         JSON.stringify({ 
           error: "GEMINI_API_KEY is empty or invalid",
@@ -52,9 +52,11 @@ serve(async (req) => {
       );
     }
     
-    console.log(`API key found and valid. First 4 chars: ${apiKey.substring(0, 4)}...`);
+    // Log that we found a valid API key (mask most of it for security)
+    const maskedKey = apiKey.substring(0, 4) + "..." + apiKey.substring(apiKey.length - 4);
+    console.log(`API key found and valid. Masked key: ${maskedKey}`);
 
-    // Return the API key
+    // Return the API key with success status
     return new Response(
       JSON.stringify({ 
         apiKey,
@@ -67,9 +69,12 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error(`Error in get_gemini_key function: ${error.message}`);
+    console.error(`Error stack: ${error.stack}`);
+    
     return new Response(
       JSON.stringify({ 
         error: error.message,
+        stack: error.stack,
         status: "error"
       }),
       {
