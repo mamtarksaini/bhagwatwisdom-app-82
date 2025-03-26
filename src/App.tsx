@@ -53,7 +53,6 @@ const App = () => (
               <Route path="/mantras" element={<MoodMantraPage />} />
               <Route path="/affirmations" element={<AffirmationsPage />} />
               <Route path="/sitemap" element={<SitemapPage />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THIS LINE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

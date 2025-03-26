@@ -26,6 +26,7 @@ export function MoodMantraPage() {
 
   // Get page title based on route
   const getPageTitle = () => {
+    console.log("Current route for page title:", location.pathname);
     return location.pathname === "/mantras" ? "Mantras" : "Mood Mantra";
   };
 
