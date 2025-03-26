@@ -17,11 +17,11 @@ export interface Verse {
 export type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
 
 export type UserProfile = {
-  id: string;
-  email?: string;
+  id: number;
+  email?: string | null;
   name: string | null;
   created_at: string;
-  is_premium: boolean;
+  is_premium: boolean | null;
 };
 
 export interface ThemeState {

@@ -6,10 +6,12 @@ export async function fetchUserProfile(userId: string): Promise<UserProfile | nu
   try {
     console.log('authService: Fetching profile for user:', userId);
     
+    // Convert the UUID string to a number if needed for the profiles table
+    // For now, we'll query by string ID and handle the conversion if needed
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
-      .eq('id', userId)
+      .eq('id', parseInt(userId, 10))
       .maybeSingle();
     
     if (error) {
@@ -19,7 +21,7 @@ export async function fetchUserProfile(userId: string): Promise<UserProfile | nu
     
     // Return the profile data
     if (data) {
-      return data as UserProfile;
+      return data as unknown as UserProfile;
     }
     
     return null;
@@ -34,9 +36,10 @@ export async function createUserProfile(userId: string, email: string, name?: st
   try {
     console.log('authService: Creating profile for user:', userId, 'with email:', email);
     
-    // Insert the profile record with UUID
+    // Insert the profile record with numeric ID converted from UUID
+    const numericId = parseInt(userId, 10);
     const { error } = await supabase.from('profiles').insert({
-      id: userId,
+      id: numericId,
       email: email,
       name: name || null,
       created_at: new Date().toISOString(),
@@ -63,7 +66,7 @@ export async function updateUserProfile(userId: string, updates: Partial<UserPro
     const { error } = await supabase
       .from('profiles')
       .update(updateData)
-      .eq('id', userId);
+      .eq('id', parseInt(userId, 10));
     
     if (error) {
       console.error('authService: Error updating profile:', error);
@@ -127,6 +130,14 @@ export async function signUpWithEmail(email: string, password: string, name: str
       
       try {
         // Create the user profile after successful signup
+        // Convert UUID to a numeric ID
+        const numericId = parseInt(data.user.id, 10);
+        if (isNaN(numericId)) {
+          console.error('authService: Failed to convert UUID to numeric ID');
+          return { error: new Error('Failed to convert UUID to numeric ID') };
+        }
+        
+        // Create the user profile after successful signup
         await createUserProfile(data.user.id, email, name);
         console.log('authService: User profile created successfully');
       } catch (profileError) {
@@ -169,7 +180,7 @@ export async function upgradeUserToPremium(userId: string): Promise<{ error: Err
     const { error } = await supabase
       .from('profiles')
       .update({ is_premium: true })
-      .eq('id', userId);
+      .eq('id', parseInt(userId, 10));
     
     if (error) {
       console.error('authService: Error upgrading to premium:', error);

@@ -24,8 +24,10 @@ export const useAuthState = () => {
         } else {
           console.log("useAuthState: No profile found, creating basic user object");
           // If no profile found, create a basic user object with data from the session
-          const fallbackUser = {
-            id: session.user.id,
+          const numericId = parseInt(session.user.id, 10);
+          
+          const fallbackUser: UserProfile = {
+            id: numericId,
             email: session.user.email,
             name: session.user.user_metadata?.name || null,
             created_at: new Date().toISOString(),
@@ -41,8 +43,10 @@ export const useAuthState = () => {
         console.error("useAuthState: Error handling auth state change:", error);
         // Even if profile fetch fails, we still have basic user info from session
         // This allows app to function without crashing
-        const fallbackUser = {
-          id: session.user.id,
+        const numericId = parseInt(session.user.id, 10);
+        
+        const fallbackUser: UserProfile = {
+          id: numericId,
           email: session.user.email,
           name: session.user.user_metadata?.name || null,
           created_at: new Date().toISOString(),
