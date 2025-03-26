@@ -1,65 +1,67 @@
-
 import React from 'react';
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
-import Index from "./pages/Index";
-import Profile from "./pages/Profile";
-import NotFound from "./pages/NotFound";
-import ContactPage from "./pages/ContactPage";
-import TermsPage from "./pages/TermsPage";
-import PrivacyPage from "./pages/PrivacyPage";
-import RefundPage from "./pages/RefundPage";
-import AboutPage from "./pages/AboutPage";
-import FAQPage from "./pages/FAQPage";
-import BlogPage from "./pages/BlogPage";
-import SupportPage from "./pages/SupportPage";
-import DocumentationPage from "./pages/DocumentationPage";
-import { ThemeProvider } from "@/components/ui/ThemeProvider";
-import { ProblemSolverPage } from "./pages/ProblemSolverPage";
-import { DreamInterpreterPage } from "./pages/DreamInterpreterPage";
-import { MoodMantraPage } from "./pages/MoodMantraPage";
-import { AffirmationsPage } from "./pages/AffirmationsPage";
-import { SitemapPage } from "./pages/SitemapPage";
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Index } from '@/pages/Index';
+import { AboutPage } from '@/pages/AboutPage';
+import { FAQPage } from '@/pages/FAQPage';
+import { ProblemSolverPage } from '@/pages/ProblemSolverPage';
+import { DreamInterpreterPage } from '@/pages/DreamInterpreterPage';
+import { VoiceAgentPage } from '@/pages/VoiceAgentPage'; // New import
+import { MoodMantraPage } from '@/pages/MoodMantraPage';
+import { AffirmationsPage } from '@/pages/AffirmationsPage';
+import { Profile } from '@/pages/Profile';
+import { ContactPage } from '@/pages/ContactPage';
+import { TermsPage } from '@/pages/TermsPage';
+import { PrivacyPage } from '@/pages/PrivacyPage';
+import { RefundPage } from '@/pages/RefundPage';
+import { SupportPage } from '@/pages/SupportPage';
+import { SitemapPage } from '@/pages/SitemapPage';
+import { BlogPage } from '@/pages/BlogPage';
+import { DocumentationPage } from '@/pages/DocumentationPage';
+import { NotFound } from '@/pages/NotFound';
+import { ThemeProvider } from '@/components/ui/ThemeProvider';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { Toaster } from '@/components/ui/toaster';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
+import './App.css';
+
+// Initialize QueryClient for React Query
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider defaultTheme="light">
-      <TooltipProvider>
+function App() {
+  return (
+    <div className="App">
+      <ThemeProvider>
         <AuthProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/contact" element={<ContactPage />} />
-              <Route path="/terms" element={<TermsPage />} />
-              <Route path="/privacy" element={<PrivacyPage />} />
-              <Route path="/refund" element={<RefundPage />} />
-              <Route path="/about" element={<AboutPage />} />
-              <Route path="/faq" element={<FAQPage />} />
-              <Route path="/blog" element={<BlogPage />} />
-              <Route path="/support" element={<SupportPage />} />
-              <Route path="/documentation" element={<DocumentationPage />} />
-              <Route path="/problem-solver" element={<ProblemSolverPage />} />
-              <Route path="/dream-interpreter" element={<DreamInterpreterPage />} />
-              <Route path="/mood-mantra" element={<MoodMantraPage />} />
-              <Route path="/mantras" element={<MoodMantraPage />} />
-              <Route path="/affirmations" element={<AffirmationsPage />} />
-              <Route path="/sitemap" element={<SitemapPage />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
+          <QueryClientProvider client={queryClient}>
+            <Router>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/about" element={<AboutPage />} />
+                <Route path="/faq" element={<FAQPage />} />
+                <Route path="/problem-solver" element={<ProblemSolverPage />} />
+                <Route path="/dream-interpreter" element={<DreamInterpreterPage />} />
+                <Route path="/voice-agent" element={<VoiceAgentPage />} /> {/* New route */}
+                <Route path="/mood-mantra" element={<MoodMantraPage />} />
+                <Route path="/affirmations" element={<AffirmationsPage />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/contact" element={<ContactPage />} />
+                <Route path="/terms" element={<TermsPage />} />
+                <Route path="/privacy" element={<PrivacyPage />} />
+                <Route path="/refund" element={<RefundPage />} />
+                <Route path="/support" element={<SupportPage />} />
+                <Route path="/sitemap" element={<SitemapPage />} />
+                <Route path="/blog" element={<BlogPage />} />
+                <Route path="/documentation" element={<DocumentationPage />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+              <Toaster />
+            </Router>
+          </QueryClientProvider>
         </AuthProvider>
-      </TooltipProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
-);
+      </ThemeProvider>
+    </div>
+  );
+}
 
 export default App;

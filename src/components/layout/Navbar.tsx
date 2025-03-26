@@ -1,290 +1,150 @@
-
-import { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { LanguageSelector } from "@/components/ui/LanguageSelector";
-import { Language } from "@/types";
-import { useTheme } from "@/components/ui/ThemeProvider";
-import { PREMIUM_PRICE } from "@/utils/constants";
-import { Menu, Moon, Sun, X } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { Moon, Sun, Menu, X, Book, User, Settings, LogOut, Volume2 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/button';
+import { useTheme } from '@/components/ui/ThemeProvider';
+import { Separator } from '@/components/ui/separator';
+import { useMobile } from '@/hooks/use-mobile';
 import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from "@/components/ui/navigation-menu";
-import { cn } from "@/lib/utils";
-
-const links = [
-  { href: "/", label: "Home" },
-  { href: "/problem-solver", label: "Problem Solver" },
-  { href: "/dream-interpreter", label: "Dream Interpreter" },
-  { href: "/mantras", label: "Mantras" },
-  { href: "/affirmations", label: "Affirmations" },
-];
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 export function Navbar() {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [language, setLanguage] = useState<Language>("english");
-  const { isDark, toggleTheme } = useTheme();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, signOut } = useAuth();
+  const { theme, setTheme } = useTheme();
   const location = useLocation();
+  const isMobile = useMobile();
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  useEffect(() => {
-    // Close mobile menu when route changes
-    setIsMobileMenuOpen(false);
+    setIsMenuOpen(false);
   }, [location]);
 
-  const handleLanguageChange = (newLanguage: Language) => {
-    setLanguage(newLanguage);
-    // Would typically update a global state or context here
+  const toggleTheme = () => {
+    setTheme(theme === "light" ? "dark" : "light");
   };
 
-  // Resources dropdown items
-  const resourceItems = [
-    { href: "/blog", label: "Blog" },
-    { href: "/faq", label: "FAQ" },
-    { href: "/documentation", label: "Documentation" },
-    { href: "/support", label: "Support" },
-  ];
-
-  // Company dropdown items
-  const companyItems = [
-    { href: "/about", label: "About Us" },
-    { href: "/contact", label: "Contact" },
-    { href: "/terms", label: "Terms" },
-    { href: "/privacy", label: "Privacy Policy" },
-    { href: "/refund", label: "Refund Policy" },
-  ];
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
 
   return (
-    <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled
-          ? "bg-white/80 dark:bg-gray-900/80 backdrop-blur-medium shadow-sm"
-          : "bg-transparent"
-      }`}
-    >
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link 
-            to="/" 
-            className="flex items-center gap-2 font-heading text-xl sm:text-2xl font-bold text-gradient animate-pulse-gentle"
-          >
-            <img 
-              src="/lovable-uploads/c3d9b365-6fc8-4cba-bd7b-ea9317db1356.png" 
-              alt="Bhagwat Wisdom" 
-              className="w-8 h-8 object-contain"
-            />
-            Bhagwat Wisdom
-          </Link>
+    <header className="bg-background sticky top-0 z-50 border-b">
+      <div className="container flex items-center justify-between py-4">
+        <nav className="flex items-center justify-between w-full">
+          <div className="flex">
+            <Link to="/" className="font-bold text-2xl flex items-center gap-2">
+              <Book className="h-6 w-6" />
+              Bhagavad Wisdom
+            </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-1">
-            <NavigationMenu>
-              <NavigationMenuList>
-                {/* Main links */}
-                {links.map((link) => (
-                  <NavigationMenuItem key={link.href}>
-                    <Link
-                      to={link.href}
-                      className={`px-3 py-2 text-sm font-medium transition-all-200 rounded-md ${
-                        location.pathname === link.href
-                          ? "text-gold-dark"
-                          : "text-foreground/80 hover:text-foreground hover:bg-secondary"
-                      }`}
-                    >
-                      {link.label}
-                    </Link>
-                  </NavigationMenuItem>
-                ))}
-
-                {/* Resources Dropdown */}
-                <NavigationMenuItem>
-                  <NavigationMenuTrigger className="text-sm font-medium">Resources</NavigationMenuTrigger>
-                  <NavigationMenuContent>
-                    <ul className="grid gap-3 p-4 w-[200px]">
-                      {resourceItems.map((item) => (
-                        <li key={item.href}>
-                          <NavigationMenuLink asChild>
-                            <Link
-                              to={item.href}
-                              className={cn(
-                                "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground",
-                                location.pathname === item.href && "bg-accent"
-                              )}
-                            >
-                              <div className="text-sm font-medium">{item.label}</div>
-                            </Link>
-                          </NavigationMenuLink>
-                        </li>
-                      ))}
-                    </ul>
-                  </NavigationMenuContent>
-                </NavigationMenuItem>
-
-                {/* Company Dropdown */}
-                <NavigationMenuItem>
-                  <NavigationMenuTrigger className="text-sm font-medium">Company</NavigationMenuTrigger>
-                  <NavigationMenuContent>
-                    <ul className="grid gap-3 p-4 w-[200px]">
-                      {companyItems.map((item) => (
-                        <li key={item.href}>
-                          <NavigationMenuLink asChild>
-                            <Link
-                              to={item.href}
-                              className={cn(
-                                "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground",
-                                location.pathname === item.href && "bg-accent"
-                              )}
-                            >
-                              <div className="text-sm font-medium">{item.label}</div>
-                            </Link>
-                          </NavigationMenuLink>
-                        </li>
-                      ))}
-                    </ul>
-                  </NavigationMenuContent>
-                </NavigationMenuItem>
-              </NavigationMenuList>
-            </NavigationMenu>
+            <div className="hidden md:flex items-center space-x-6 ml-8">
+              <Link to="/problem-solver" className="font-medium flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
+                Problem Solver
+              </Link>
+              <Link to="/dream-interpreter" className="font-medium flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
+                Dream Interpreter
+              </Link>
+              <Link to="/voice-agent" className="font-medium flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
+                <Volume2 className="h-4 w-4" />
+                Voice Agent
+              </Link>
+              <Link to="/mood-mantra" className="font-medium flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
+                Mood Mantras
+              </Link>
+              <Link to="/affirmations" className="font-medium flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
+                Affirmations
+              </Link>
+            </div>
           </div>
 
-          {/* Right side with language selector, theme toggle, login */}
-          <div className="flex items-center space-x-2">
-            <LanguageSelector
-              value={language}
-              onChange={handleLanguageChange}
-              variant="minimal"
-              className="hidden sm:flex"
-            />
-            
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleTheme}
-              className="rounded-full"
-            >
-              {isDark ? (
-                <Sun className="h-5 w-5" />
-              ) : (
-                <Moon className="h-5 w-5" />
-              )}
+          <div className="flex items-center space-x-4">
+            <Button variant="ghost" size="icon" onClick={toggleTheme}>
+              <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+              <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
               <span className="sr-only">Toggle theme</span>
             </Button>
 
-            <div className="hidden sm:block">
-              <Link to="/premium">
-                <Button className="button-gradient">
-                  Premium {PREMIUM_PRICE}
-                </Button>
-              </Link>
-            </div>
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                    <User className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuItem onClick={() => { window.location.href = '/profile'; }}>
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Profile</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => { window.location.href = '/settings'; }}>
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Settings</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={signOut}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button variant="default" onClick={() => { window.location.href = '/profile'; }}>
+                Sign In
+              </Button>
+            )}
 
-            <div className="hidden sm:block ml-2">
-              <Link to="/login">
-                <Button variant="outline">Login</Button>
-              </Link>
-            </div>
-
-            {/* Mobile menu button */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            >
-              {isMobileMenuOpen ? (
-                <X className="h-6 w-6" />
-              ) : (
-                <Menu className="h-6 w-6" />
-              )}
-            </Button>
+            {isMobile && (
+              <Button variant="ghost" size="icon" onClick={toggleMenu}>
+                {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              </Button>
+            )}
           </div>
-        </div>
+        </nav>
       </div>
 
-      {/* Mobile menu */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden bg-background dark:bg-gray-900 animate-slide-in">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            {links.map((link) => (
-              <Link
-                key={link.href}
-                to={link.href}
-                className={`block px-3 py-2 rounded-md text-base font-medium ${
-                  location.pathname === link.href
-                    ? "bg-secondary text-foreground"
-                    : "text-foreground/70 hover:bg-secondary hover:text-foreground"
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
-            
-            {/* Resources section in mobile menu */}
-            <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-              <p className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Resources
-              </p>
-              {resourceItems.map((item) => (
-                <Link
-                  key={item.href}
-                  to={item.href}
-                  className="block px-3 py-2 rounded-md text-base font-medium text-foreground/70 hover:bg-secondary hover:text-foreground"
-                >
-                  {item.label}
+      {isMobile && isMenuOpen && (
+        <div className="py-4 bg-background border-t">
+          <div className="container flex flex-col space-y-4">
+            <Link to="/problem-solver" className="font-medium flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
+              Problem Solver
+            </Link>
+            <Link to="/dream-interpreter" className="font-medium flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
+              Dream Interpreter
+            </Link>
+            <Link to="/voice-agent" className="font-medium flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
+              <Volume2 className="h-4 w-4" />
+              Voice Agent
+            </Link>
+            <Link to="/mood-mantra" className="font-medium flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
+              Mood Mantras
+            </Link>
+            <Link to="/affirmations" className="font-medium flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
+              Affirmations
+            </Link>
+            <Separator />
+            {user ? (
+              <>
+                <Link to="/profile" className="font-medium flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
+                  Profile
                 </Link>
-              ))}
-            </div>
-            
-            {/* Company section in mobile menu */}
-            <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-              <p className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Company
-              </p>
-              {companyItems.map((item) => (
-                <Link
-                  key={item.href}
-                  to={item.href}
-                  className="block px-3 py-2 rounded-md text-base font-medium text-foreground/70 hover:bg-secondary hover:text-foreground"
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-            
-            <div className="pt-4 flex items-center justify-between">
-              <LanguageSelector
-                value={language}
-                onChange={handleLanguageChange}
-                className="w-full"
-              />
-            </div>
-            <div className="pt-2 pb-3 flex flex-col space-y-2">
-              <Link to="/premium" className="w-full">
-                <Button className="w-full button-gradient">
-                  Premium {PREMIUM_PRICE}
+                <Button variant="destructive" onClick={signOut}>
+                  Sign Out
                 </Button>
-              </Link>
-              <Link to="/login" className="w-full">
-                <Button variant="outline" className="w-full">
-                  Login
-                </Button>
-              </Link>
-            </div>
+              </>
+            ) : (
+              <Button variant="default" onClick={() => { window.location.href = '/profile'; }}>
+                Sign In
+              </Button>
+            )}
           </div>
         </div>
       )}
