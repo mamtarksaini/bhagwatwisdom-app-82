@@ -107,18 +107,7 @@ serve(async (req) => {
           'Content-Type': 'application/json',
           'x-goog-api-key': GEMINI_API_KEY,
         },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: 'user',
-              parts: [{ text: prompt }]
-            }
-          ],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 800,
-          }
-        }),
+        body: JSON.stringify(requestBody),
         signal: controller.signal
       });
       

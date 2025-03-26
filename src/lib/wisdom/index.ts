@@ -47,6 +47,8 @@ export async function getWisdomResponse(category: string, language: Language, qu
         })
       ]);
       
+      console.log('Edge function response:', edgeFunctionResponse);
+      
     } catch (error) {
       console.error('Edge function error:', error);
       edgeError = error;
@@ -99,6 +101,8 @@ export async function getWisdomResponse(category: string, language: Language, qu
     
     // If edge function fails, try direct API as fallback
     console.warn('Edge Function failed, trying direct API');
+    console.log('Calling Gemini directly with prompt');
+    
     const directAnswer = await callGeminiDirectly(prompt);
     
     if (directAnswer) {
