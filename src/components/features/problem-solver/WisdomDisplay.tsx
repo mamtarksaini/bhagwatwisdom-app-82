@@ -1,8 +1,8 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, Volume2, VolumeX, RefreshCw } from "lucide-react";
+import { AlertCircle, Volume2, VolumeX, RefreshCw, FileText } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Language } from "@/types";
 import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis";
@@ -33,8 +33,14 @@ export function WisdomDisplay({
   aiServiceUnavailable = false,
   errorDetails
 }: WisdomDisplayProps) {
-  const { speak, stop, isReading } = useSpeechSynthesis(language);
+  const { speak, stop, isReading, isSpeechSupported } = useSpeechSynthesis(language);
   const [showDetails, setShowDetails] = useState(false);
+  const [textOnlyMode, setTextOnlyMode] = useState(false);
+  
+  // Reset text-only mode when solution changes
+  useEffect(() => {
+    setTextOnlyMode(false);
+  }, [solution]);
   
   const handleSpeak = () => {
     if (isReading) {
@@ -42,7 +48,26 @@ export function WisdomDisplay({
       return;
     }
     
-    speak(solution);
+    if (textOnlyMode) {
+      toast({
+        title: "Text-Only Mode Active",
+        description: "Speech is currently disabled. Please try again later.",
+        variant: "default"
+      });
+      return;
+    }
+    
+    try {
+      speak(solution);
+    } catch (error) {
+      console.error("Error initiating speech:", error);
+      setTextOnlyMode(true);
+      toast({
+        title: "Speech Error",
+        description: "There was an error playing the voice. Falling back to text-only mode.",
+        variant: "destructive"
+      });
+    }
   };
   
   const handleRetryWithToast = () => {
@@ -58,6 +83,16 @@ export function WisdomDisplay({
   const toggleDetails = () => {
     setShowDetails(!showDetails);
   };
+  
+  const activateTextOnlyMode = () => {
+    setTextOnlyMode(true);
+    stop(); // Stop any ongoing speech
+    toast({
+      title: "Text-Only Mode Activated",
+      description: "Speech synthesis has been disabled.",
+      variant: "default"
+    });
+  };
 
   return (
     <div className="bg-spiritual dark:bg-gray-800/40 rounded-lg p-4 border border-spiritual-dark dark:border-gray-700 animate-fade-in">
@@ -65,19 +100,33 @@ export function WisdomDisplay({
         <h3 className="font-heading font-medium text-lg">
           {usingFallback ? "Spiritual Wisdom (Offline)" : "AI Spiritual Wisdom"}
         </h3>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="text-foreground/80 hover:text-foreground"
-          onClick={handleSpeak}
-        >
-          {isReading ? (
-            <VolumeX className="h-4 w-4 mr-2" />
-          ) : (
-            <Volume2 className="h-4 w-4 mr-2" />
+        <div className="flex gap-2">
+          {textOnlyMode && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-amber-500 hover:text-amber-600 hover:bg-amber-500/10"
+              title="Text-only mode is active due to speech errors"
+            >
+              <FileText className="h-4 w-4 mr-1" />
+              Text-Only
+            </Button>
           )}
-          {isReading ? "Stop" : "Listen"}
-        </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className={`text-foreground/80 hover:text-foreground ${textOnlyMode ? 'opacity-50' : ''}`}
+            onClick={handleSpeak}
+            disabled={textOnlyMode && !isReading}
+          >
+            {isReading ? (
+              <VolumeX className="h-4 w-4 mr-2" />
+            ) : (
+              <Volume2 className="h-4 w-4 mr-2" />
+            )}
+            {isReading ? "Stop" : "Listen"}
+          </Button>
+        </div>
       </div>
       <p className="leading-relaxed">{solution}</p>
       
@@ -132,6 +181,15 @@ export function WisdomDisplay({
             </Alert>
           )}
         </div>
+      )}
+      
+      {!textOnlyMode && !isSpeechSupported && (
+        <Alert className="mt-4 bg-amber-500/10 border border-amber-500/30">
+          <AlertCircle className="h-4 w-4 text-amber-500" />
+          <AlertDescription className="text-amber-700/80 dark:text-amber-400/80">
+            Speech synthesis is not supported in this browser. Using text-only mode.
+          </AlertDescription>
+        </Alert>
       )}
     </div>
   );
