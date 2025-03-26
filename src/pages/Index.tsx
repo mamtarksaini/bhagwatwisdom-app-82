@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +7,7 @@ import { DreamInterpreter } from "@/components/features/DreamInterpreter";
 import { MoodMantra } from "@/components/features/MoodMantra";
 import { DailyVerse } from "@/components/features/DailyVerse";
 import { LanguagePicker } from "@/components/features/LanguagePicker";
-import { BookOpen, Moon, Sun, Heart, Globe, User, LogIn, Crown, Menu, X } from "lucide-react";
+import { BookOpen, Moon, Sun, Heart, Globe, User, LogIn, Crown, Menu, X, MessageSquare } from "lucide-react";
 import { Language } from "@/types";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -20,7 +19,6 @@ const Index = () => {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Navigation links
   const mainLinks = [
     { path: "/", label: "Home" },
     { path: "/about", label: "About" },
@@ -37,7 +35,6 @@ const Index = () => {
     { path: "/documentation", label: "Documentation" },
   ];
 
-  // Devotee data with the requested names
   const devotees = [
     { id: 1, name: "Manish", role: "Spiritual Seeker" },
     { id: 2, name: "Rita", role: "Spiritual Seeker" },
@@ -46,12 +43,10 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background w-full">
-      {/* Navigation */}
       <nav className="w-full py-4 px-4 md:px-6 flex justify-between items-center border-b border-border">
         <div className="flex items-center">
           <Link to="/" className="text-xl font-heading font-bold text-gradient mr-8">Bhagwat Wisdom</Link>
           
-          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-1">
             {mainLinks.map((link) => (
               <Link 
@@ -86,7 +81,6 @@ const Index = () => {
             </Button>
           )}
           
-          {/* Mobile menu button */}
           <Button 
             variant="ghost" 
             size="icon" 
@@ -98,7 +92,6 @@ const Index = () => {
         </div>
       </nav>
       
-      {/* Mobile menu */}
       {mobileMenuOpen && (
         <div className="md:hidden bg-background p-4 border-b border-border">
           <div className="flex flex-col space-y-2">
@@ -128,7 +121,6 @@ const Index = () => {
         </div>
       )}
 
-      {/* Hero Section */}
       <section className="w-full py-12 md:py-24 lg:py-32 flex flex-col items-center justify-center text-center px-4">
         <div className="container px-4 md:px-6">
           <div className="flex flex-col items-center space-y-4 text-center">
@@ -142,7 +134,6 @@ const Index = () => {
             </div>
             <div className="space-x-4">
               <Button className="button-gradient" onClick={() => {
-                // Scroll to features section
                 document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
               }}>Get Started</Button>
               {!user && (
@@ -153,7 +144,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Language Selector */}
       <section className="w-full pb-8">
         <div className="container px-4 md:px-6 flex justify-center">
           <div className="w-full max-w-xs">
@@ -166,7 +156,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Features Tabs */}
       <section id="features" className="w-full py-12 md:py-24">
         <div className="container px-4 md:px-6">
           <div className="flex flex-col items-center space-y-4 text-center mb-10">
@@ -179,7 +168,7 @@ const Index = () => {
           </div>
           
           <Tabs defaultValue="daily-verse" className="w-full max-w-4xl mx-auto">
-            <TabsList className="grid grid-cols-4 w-full mb-6">
+            <TabsList className="grid grid-cols-5 w-full mb-6">
               <TabsTrigger value="daily-verse" className="flex items-center gap-2">
                 <BookOpen className="h-4 w-4" />
                 <span className="hidden sm:inline">Daily Verse</span>
@@ -191,6 +180,10 @@ const Index = () => {
               <TabsTrigger value="dream" className="flex items-center gap-2">
                 <Moon className="h-4 w-4" />
                 <span className="hidden sm:inline">Dream Interpretation</span>
+              </TabsTrigger>
+              <TabsTrigger value="chat-agent" className="flex items-center gap-2">
+                <MessageSquare className="h-4 w-4" />
+                <span className="hidden sm:inline">Chat Agent</span>
               </TabsTrigger>
               <TabsTrigger value="mantra" className="flex items-center gap-2">
                 <Heart className="h-4 w-4" />
@@ -235,6 +228,27 @@ const Index = () => {
                 </Card>
               </TabsContent>
               
+              <TabsContent value="chat-agent" className="mt-0">
+                <Card className="border-0 shadow-none">
+                  <CardHeader>
+                    <CardTitle>Chat Agent</CardTitle>
+                    <CardDescription>Have a conversation with an AI guide inspired by the Bhagavad Gita</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-col space-y-4">
+                      <div className="p-4 bg-secondary/20 rounded-lg">
+                        <p className="text-center">Ask questions about life, spirituality, or seek guidance based on Bhagavad Gita's teachings.</p>
+                      </div>
+                      <Button asChild className="w-full">
+                        <Link to="/chat-agent">
+                          Start Conversation
+                        </Link>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
               <TabsContent value="mantra" className="mt-0">
                 <Card className="border-0 shadow-none">
                   <CardHeader>
@@ -251,7 +265,6 @@ const Index = () => {
         </div>
       </section>
       
-      {/* Testimonials Section */}
       <section className="w-full py-12 md:py-24 bg-secondary/50">
         <div className="container px-4 md:px-6">
           <div className="flex flex-col items-center space-y-4 text-center mb-10">
@@ -288,7 +301,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Simple Footer */}
       <footer className="w-full py-8 bg-secondary/20 border-t border-border">
         <div className="container px-4 md:px-6 mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-center md:text-left">
@@ -310,7 +322,6 @@ const Index = () => {
         </div>
       </footer>
 
-      {/* Auth Modal */}
       <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
     </div>
   );

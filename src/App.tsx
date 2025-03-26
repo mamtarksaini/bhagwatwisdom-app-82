@@ -7,6 +7,7 @@ import FAQPage from '@/pages/FAQPage';
 import { ProblemSolverPage } from '@/pages/ProblemSolverPage';
 import { DreamInterpreterPage } from '@/pages/DreamInterpreterPage';
 import { VoiceAgentPage } from '@/pages/VoiceAgentPage';
+import { ChatAgentPage } from '@/pages/ChatAgentPage';
 import { MoodMantraPage } from '@/pages/MoodMantraPage';
 import { AffirmationsPage } from '@/pages/AffirmationsPage';
 import Profile from '@/pages/Profile';
@@ -43,6 +44,7 @@ function App() {
                 <Route path="/problem-solver" element={<ProblemSolverPage />} />
                 <Route path="/dream-interpreter" element={<DreamInterpreterPage />} />
                 <Route path="/voice-agent" element={<VoiceAgentPage />} />
+                <Route path="/chat-agent" element={<ChatAgentPage />} />
                 <Route path="/mood-mantra" element={<MoodMantraPage />} />
                 <Route path="/affirmations" element={<AffirmationsPage />} />
                 <Route path="/profile" element={<Profile />} />

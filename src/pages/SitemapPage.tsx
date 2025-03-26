@@ -22,6 +22,8 @@ export function SitemapPage() {
       links: [
         { name: "Problem Solver", path: "/problem-solver" },
         { name: "Dream Interpreter", path: "/dream-interpreter" },
+        { name: "Chat Agent", path: "/chat-agent" },
+        { name: "Voice Agent", path: "/voice-agent" },
         { name: "Mood Mantra", path: "/mood-mantra" },
         { name: "Affirmations", path: "/affirmations" },
       ]

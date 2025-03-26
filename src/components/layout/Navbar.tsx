@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Moon, Sun, Menu, X, Book, User, Settings, LogOut, Volume2 } from 'lucide-react';
+import { Moon, Sun, Menu, X, Book, User, Settings, LogOut, Volume2, MessageSquare } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/components/ui/ThemeProvider';
@@ -47,6 +47,10 @@ export function Navbar() {
               </Link>
               <Link to="/dream-interpreter" className="font-medium flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
                 Dream Interpreter
+              </Link>
+              <Link to="/chat-agent" className="font-medium flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
+                <MessageSquare className="h-4 w-4" />
+                Chat Agent
               </Link>
               <Link to="/voice-agent" className="font-medium flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
                 <Volume2 className="h-4 w-4" />
@@ -116,6 +120,10 @@ export function Navbar() {
             </Link>
             <Link to="/dream-interpreter" className="font-medium flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
               Dream Interpreter
+            </Link>
+            <Link to="/chat-agent" className="font-medium flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
+              <MessageSquare className="h-4 w-4" />
+              Chat Agent
             </Link>
             <Link to="/voice-agent" className="font-medium flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
               <Volume2 className="h-4 w-4" />
