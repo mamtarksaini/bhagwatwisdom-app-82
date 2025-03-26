@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { PageLayout } from "@/components/layout/PageLayout";
 import { Language } from "@/types";
@@ -11,9 +10,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useConversation } from "@11labs/react";
 import { toast } from "@/components/ui/use-toast";
 import { AudioVisualizer } from "@/components/features/problem-solver/AudioVisualizer";
-
-// Import types from @11labs/react to ensure compatibility
-import type { OnMessageProps } from '@11labs/react';
 
 // Define local types for message handling
 type Role = 'user' | 'assistant' | 'system' | 'ai';
@@ -59,9 +55,9 @@ export function VoiceAgentPage() {
     isSpeaking,
     setVolume
   } = useConversation({
-    onMessage: (message: OnMessageProps) => {
+    onMessage: (message: any) => {
       // Cast to our union type for easier handling
-      const msg = message as unknown as ElevenLabsMessage;
+      const msg = message as ElevenLabsMessage;
       
       // Handle legacy message format
       if ('message' in msg && 'source' in msg) {
