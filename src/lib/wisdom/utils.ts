@@ -31,7 +31,8 @@ export function constructPrompt(question: string, category: string, language: La
 export function isApiKeyError(errorMsg: string): boolean {
   return errorMsg.includes('API key') || 
          errorMsg.includes('unauthorized') || 
-         errorMsg.includes('API authentication');
+         errorMsg.includes('API authentication') ||
+         errorMsg.includes('403');
 }
 
 // Helper function to check if the error is network related
@@ -40,5 +41,8 @@ export function isNetworkError(errorMsg: string): boolean {
          errorMsg.includes('NetworkError') ||
          errorMsg.includes('Failed to send a request') ||
          errorMsg.includes('Failed to connect to wisdom service') ||
-         errorMsg.includes('timed out');
+         errorMsg.includes('timed out') ||
+         errorMsg.includes('ECONNREFUSED') ||
+         errorMsg.includes('Network request failed') ||
+         errorMsg.includes('AbortError');
 }

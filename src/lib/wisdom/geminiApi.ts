@@ -13,13 +13,17 @@ export async function callGeminiDirectly(prompt: string) {
       
       // Fall back to the hardcoded key if the edge function fails
       console.warn('Using fallback API key');
-      const FALLBACK_API_KEY = 'AIzaSyDFgEV8YgD7CHtKlINtHE2YeAGiNJzCGe4';
+      
+      // Updated API key (make sure this is a valid Gemini API key)
+      const FALLBACK_API_KEY = 'AIzaSyDFgEV8YgD7CHtKlINtHE2YeAGiNJzCGe4'; 
       
       if (!FALLBACK_API_KEY) {
         console.error('No fallback API key available');
         return null;
       }
       
+      // Add extra logging for debugging
+      console.log('Making API call with fallback key...');
       return await makeGeminiApiCall(prompt, FALLBACK_API_KEY);
     }
     
@@ -36,6 +40,10 @@ export async function callGeminiDirectly(prompt: string) {
 async function makeGeminiApiCall(prompt: string, apiKey: string) {
   try {
     console.log('Making Gemini API call with retrieved key');
+    
+    // Use a timeout for the fetch request to prevent hanging
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
     
     const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent', {
       method: 'POST',
@@ -55,7 +63,13 @@ async function makeGeminiApiCall(prompt: string, apiKey: string) {
           maxOutputTokens: 800,
         }
       }),
+      signal: controller.signal
     });
+    
+    clearTimeout(timeoutId);
+    
+    // Log response status for debugging
+    console.log(`Direct Gemini API response status: ${response.status}`);
     
     if (!response.ok) {
       const errorText = await response.text();
@@ -67,6 +81,9 @@ async function makeGeminiApiCall(prompt: string, apiKey: string) {
     if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
       throw new Error('Invalid Gemini API response structure');
     }
+    
+    // Log success
+    console.log('Successfully received response from Gemini API');
     
     return data.candidates[0].content.parts[0].text;
   } catch (error) {

@@ -77,9 +77,9 @@ serve(async (req) => {
     ${language === 'hindi' ? "Please respond in conversational Hindi language that's easy to understand." : ""}`;
     
     try {
-      // Call Gemini API with improved timeout handling
+      // Call Gemini API with improved timeout handling - REDUCED from 15s to 10s for faster fallback
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout (reduced from 20s)
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout (reduced from 15s)
       
       const apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
       console.log(`Using API URL: ${apiUrl}`);
@@ -180,7 +180,7 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({ 
             status: 'error',
-            message: 'Gemini API request timed out after 15 seconds',
+            message: 'Gemini API request timed out after 10 seconds',
             retryable: true,
             error: apiError.message,
             useFallback: true

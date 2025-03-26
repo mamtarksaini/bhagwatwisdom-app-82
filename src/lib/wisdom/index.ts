@@ -21,9 +21,9 @@ export async function getWisdomResponse(category: string, language: Language, qu
     // First, try Supabase Edge Function as our primary method
     console.log('Trying edge function first');
     
-    // Add a reasonable timeout for the edge function call
+    // Add a reasonable timeout for the edge function call - REDUCED to 15 seconds for faster fallback
     const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Edge function request timed out')), 25000)
+      setTimeout(() => reject(new Error('Edge function request timed out')), 15000)
     );
     
     let edgeFunctionResponse;
