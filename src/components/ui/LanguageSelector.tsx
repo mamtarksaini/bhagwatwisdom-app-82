@@ -49,7 +49,7 @@ export function LanguageSelector({
             <span className="sr-only">Select language</span>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56 animate-slide-in">
+        <DropdownMenuContent align="end" className="w-56 animate-slide-in bg-popover">
           {LANGUAGES.map((language) => (
             <DropdownMenuItem
               key={language.id}
@@ -83,7 +83,7 @@ export function LanguageSelector({
           <ChevronDown className="h-4 w-4 opacity-50" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56 animate-slide-in">
+      <DropdownMenuContent align="end" className="w-56 animate-slide-in bg-popover">
         {LANGUAGES.map((language) => (
           <DropdownMenuItem
             key={language.id}
