@@ -31,7 +31,7 @@ export function PricingCard({ plan, isCurrentPlan, isUpgrading, onUpgradeClick }
       </div>
       
       <div className="mb-4">
-        <span className="text-3xl font-bold">${plan.price}</span>
+        <span className="text-3xl font-bold">{plan.currency || '$'}{plan.price}</span>
         <span className="text-muted-foreground">/month</span>
       </div>
       

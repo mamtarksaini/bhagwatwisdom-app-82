@@ -37,7 +37,7 @@ export function PricingTable({
                     <span className="font-bold">{plan.name}</span>
                   </div>
                   <div>
-                    <span className="text-2xl font-bold">${plan.price}</span>
+                    <span className="text-2xl font-bold">{plan.currency || '$'}{plan.price}</span>
                     <span className="text-muted-foreground">/month</span>
                   </div>
                   {plan.popular && (

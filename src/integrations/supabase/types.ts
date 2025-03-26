@@ -9,6 +9,50 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      payment_history: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          payment_id: string
+          payment_provider: string
+          status: string
+          subscription_id: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency: string
+          id?: string
+          payment_id: string
+          payment_provider: string
+          status: string
+          subscription_id?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          payment_id?: string
+          payment_provider?: string
+          status?: string
+          subscription_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_history_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "user_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -29,6 +73,83 @@ export type Database = {
           name?: string | null
         }
         Relationships: []
+      }
+      subscription_plans: {
+        Row: {
+          created_at: string
+          currency: string
+          features: Json
+          id: string
+          interval: string
+          name: string
+          price: number
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          features: Json
+          id?: string
+          interval: string
+          name: string
+          price: number
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          features?: Json
+          id?: string
+          interval?: string
+          name?: string
+          price?: number
+        }
+        Relationships: []
+      }
+      user_subscriptions: {
+        Row: {
+          created_at: string
+          current_period_end: string
+          current_period_start: string
+          id: string
+          payment_id: string
+          payment_provider: string
+          plan_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_period_end: string
+          current_period_start: string
+          id?: string
+          payment_id: string
+          payment_provider: string
+          plan_id: string
+          status: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_period_end?: string
+          current_period_start?: string
+          id?: string
+          payment_id?: string
+          payment_provider?: string
+          plan_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       voice_agent_usage: {
         Row: {
