@@ -87,7 +87,7 @@ export function useSignIn({ onSuccess }: UseSignInProps) {
             setShowRetry(true);
             setIsLoading(false);
           }
-        }, 8000); // Shorter 8-second timeout for better UX
+        }, 5000); // Shorter 5-second timeout for better UX
       }
     } catch (error: any) {
       console.error("SignInForm: Exception during sign in:", error);

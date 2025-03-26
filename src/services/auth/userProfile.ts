@@ -6,10 +6,32 @@ export async function fetchUserProfile(userId: string): Promise<UserProfile | nu
   try {
     console.log('authService: Fetching profile for user:', userId);
     
+    // First try to parse userId as an integer
+    let parsedId: number;
+    
+    try {
+      parsedId = parseInt(userId, 10);
+    } catch (e) {
+      console.error('authService: Error parsing userId as integer:', e);
+      // If parse fails, try direct lookup
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
+      
+      if (error) {
+        console.error('authService: Error fetching profile with string ID:', error);
+        return null;
+      }
+      
+      return data as unknown as UserProfile;
+    }
+    
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
-      .eq('id', parseInt(userId, 10))
+      .eq('id', parsedId)
       .maybeSingle();
     
     if (error) {
@@ -35,39 +57,26 @@ export async function createUserProfile(userId: string, email: string, name?: st
     // Generate a secure numeric ID
     const numericId = Math.floor(Math.random() * 1000000000);
     
-    // First check if the table structure has the columns we need
-    const { data: columnsCheck, error: columnsError } = await supabase
+    // First check if a profile already exists for this user
+    const { data: existingProfile } = await supabase
       .from('profiles')
       .select('*')
-      .limit(1);
+      .eq('email', email)
+      .maybeSingle();
     
-    if (columnsError) {
-      console.error('authService: Error checking table structure:', columnsError);
-      throw columnsError;
+    if (existingProfile) {
+      console.log('authService: Profile already exists for this email:', email);
+      return;
     }
     
-    // Create the profile object with only the fields that exist in the table
-    const profileData: any = {
+    // Create the profile object
+    const profileData = {
       id: numericId,
+      email,
+      name: name || null,
       created_at: new Date().toISOString(),
+      is_premium: false
     };
-    
-    // Add optional fields if they exist in the table structure
-    if (columnsCheck && columnsCheck.length > 0) {
-      const sampleRow = columnsCheck[0];
-      
-      if ('name' in sampleRow) {
-        profileData.name = name || null;
-      }
-      
-      if ('email' in sampleRow) {
-        profileData.email = email;
-      }
-      
-      if ('is_premium' in sampleRow) {
-        profileData.is_premium = false; // Default to false for new users
-      }
-    }
     
     console.log('authService: Attempting to insert profile with data:', profileData);
     const { error } = await supabase
@@ -91,10 +100,17 @@ export async function updateUserProfile(userId: string, updates: Partial<UserPro
     // Remove id from updates if present, as we shouldn't be updating the primary key
     const { id, ...updateData } = updates;
     
+    let parsedId: number;
+    try {
+      parsedId = parseInt(userId, 10);
+    } catch (e) {
+      return { error: new Error('Invalid user ID format') };
+    }
+    
     const { error } = await supabase
       .from('profiles')
       .update(updateData)
-      .eq('id', parseInt(userId, 10));
+      .eq('id', parsedId);
     
     if (error) {
       console.error('authService: Error updating profile:', error);

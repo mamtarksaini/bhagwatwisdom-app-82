@@ -34,6 +34,8 @@ import './App.css';
 const queryClient = new QueryClient();
 
 function App() {
+  console.log("App: Rendering Application");
+  
   return (
     <div className="App">
       <ThemeProvider>

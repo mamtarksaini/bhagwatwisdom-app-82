@@ -20,6 +20,11 @@ export async function signInWithEmail(email: string, password: string): Promise<
     
     console.log('authService: Sign in successful, session:', data?.session ? 'exists' : 'null');
     
+    if (!data?.session) {
+      console.error('authService: Sign in succeeded but no session was returned');
+      return { error: new Error('Authentication succeeded but no session was created') };
+    }
+    
     // Return user data with the response to avoid needing a separate fetch
     return { 
       error: null,
