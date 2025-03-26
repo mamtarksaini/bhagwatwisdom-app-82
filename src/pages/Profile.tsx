@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { PremiumUpgrade } from "@/components/premium/PremiumUpgrade";
-import { Loader2, LogOut, User, Home } from "lucide-react";
+import { Loader2, LogOut, User, Home, CreditCard } from "lucide-react";
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthModal } from "@/components/auth/AuthModal";
 
@@ -58,6 +58,10 @@ const Profile = () => {
             <Button variant="outline" onClick={() => navigate('/')} className="flex items-center gap-2">
               <Home className="h-4 w-4" />
               Return to Home
+            </Button>
+            <Button variant="outline" onClick={() => navigate('/pricing')} className="flex items-center gap-2">
+              <CreditCard className="h-4 w-4" />
+              View Pricing Plans
             </Button>
           </div>
 

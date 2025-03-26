@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Check, Crown, Lock } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { AuthModal } from "@/components/auth/AuthModal";
+import { Link } from "react-router-dom";
 
 export function PremiumUpgrade() {
   const { user, status, isPremium, upgradeToPremium } = useAuth();
@@ -76,7 +77,7 @@ export function PremiumUpgrade() {
             ))}
           </ul>
         </CardContent>
-        <CardFooter>
+        <CardFooter className="flex flex-col gap-2">
           <Button 
             onClick={handleUpgradeClick} 
             className="w-full button-gradient"
@@ -84,6 +85,9 @@ export function PremiumUpgrade() {
           >
             {isUpgrading ? "Processing..." : "Upgrade Now"}
           </Button>
+          <Link to="/pricing" className="text-xs text-center w-full text-muted-foreground hover:text-foreground">
+            View pricing plans
+          </Link>
         </CardFooter>
       </Card>
       

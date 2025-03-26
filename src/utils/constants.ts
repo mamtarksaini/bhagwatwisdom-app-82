@@ -49,3 +49,39 @@ export const PLACEHOLDER_VERSE = {
 };
 
 export const PREMIUM_PRICE = "$7/month";
+
+// Pricing Plans
+export const PRICING_PLANS = {
+  basic: {
+    name: "Basic",
+    price: "$0",
+    interactions: 5,
+    features: ["Basic wisdom responses"]
+  },
+  pro: {
+    name: "Pro",
+    price: "$10",
+    interactions: 250,
+    features: [
+      "Basic wisdom responses",
+      "Personalized mantras",
+      "Multiple languages",
+      "Voice input and output",
+      "Ad-free experience"
+    ]
+  },
+  enterprise: {
+    name: "Enterprise", 
+    price: "$20",
+    interactions: "Unlimited",
+    features: [
+      "Basic wisdom responses",
+      "Personalized mantras",
+      "Multiple languages",
+      "Voice input and output",
+      "Ad-free experience",
+      "Priority customer support",
+      "Save wisdom history"
+    ]
+  }
+};
