@@ -6,11 +6,12 @@ export async function fetchUserProfile(userId: string): Promise<UserProfile | nu
   try {
     console.log('authService: Fetching profile for user:', userId);
     
-    // Ensure we're using the full UUID for the query
+    // Convert string ID to number for database query
+    // Ensure we're using the proper type for the query
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
-      .eq('id', userId)
+      .eq('id', Number(userId))
       .maybeSingle();
     
     if (error) {
@@ -36,9 +37,9 @@ export async function fetchUserProfile(userId: string): Promise<UserProfile | nu
 
 export async function createUserProfile(userId: string, email: string, name?: string): Promise<void> {
   try {
-    // Convert the string userId to a number if needed for database insertion
+    // Convert the string userId to a number for database insertion
     const { error } = await supabase.from('profiles').insert({
-      id: userId,
+      id: Number(userId),
       email,
       name: name || null,
       created_at: new Date().toISOString(),
@@ -62,7 +63,7 @@ export async function updateUserProfile(userId: string, updates: Partial<UserPro
     const { error } = await supabase
       .from('profiles')
       .update(updateData)
-      .eq('id', userId);
+      .eq('id', Number(userId));
     
     if (error) {
       console.error('authService: Error updating profile:', error);
@@ -158,7 +159,7 @@ export async function upgradeUserToPremium(userId: string): Promise<{ error: Err
     const { error } = await supabase
       .from('profiles')
       .update({ is_premium: true })
-      .eq('id', userId);
+      .eq('id', Number(userId));
     
     if (error) {
       console.error('authService: Error upgrading to premium:', error);
