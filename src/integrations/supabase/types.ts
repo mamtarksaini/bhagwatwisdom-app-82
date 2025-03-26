@@ -9,44 +9,23 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      palm_readings: {
-        Row: {
-          created_at: string
-          id: string
-          image_url: string
-          results: Json | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          image_url: string
-          results?: Json | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          image_url?: string
-          results?: Json | null
-          user_id?: string
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
           created_at: string
-          id: string
+          id: number
+          is_premium: boolean | null
           name: string | null
         }
         Insert: {
           created_at?: string
-          id: string
+          id?: number
+          is_premium?: boolean | null
           name?: string | null
         }
         Update: {
           created_at?: string
-          id?: string
+          id?: number
+          is_premium?: boolean | null
           name?: string | null
         }
         Relationships: []
