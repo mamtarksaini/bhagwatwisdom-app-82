@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { UserProfile, AuthStatus } from '@/types';
 import { fetchUserProfile } from '@/services/authService';
