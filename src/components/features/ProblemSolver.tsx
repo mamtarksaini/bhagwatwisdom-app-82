@@ -1,3 +1,5 @@
 
 import { ProblemSolver } from './problem-solver/ProblemSolver';
-export { ProblemSolver };
+import { VoiceAgent } from './problem-solver/VoiceAgent';
+
+export { ProblemSolver, VoiceAgent };
