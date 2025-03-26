@@ -11,7 +11,7 @@ export function getFallbackResponse(category: string, language: Language) {
 
 // Helper function to construct the prompt for the AI
 export function constructPrompt(question: string, category: string, language: Language) {
-  return `You are both a wise spiritual guide knowledgeable in the Bhagavad Gita AND a modern psychologist or life coach. Respond to this problem in a way that today's generation would relate to while providing authentic wisdom.
+  let prompt = `You are both a wise spiritual guide knowledgeable in the Bhagavad Gita AND a modern psychologist or life coach. Respond to this problem in a way that today's generation would relate to while providing authentic wisdom.
 
     The user's problem is: "${question}" (category: ${category})
     
@@ -23,8 +23,18 @@ export function constructPrompt(question: string, category: string, language: La
     
     Use accessible language while preserving the depth of the wisdom. Avoid religious jargon that might alienate someone unfamiliar with Hindu concepts - instead, focus on the psychological insights.
     
-    Keep your response concise (200-400 words).
-    ${language === 'hindi' ? "Please respond in conversational Hindi language that's easy to understand." : ""}`;
+    Keep your response concise (200-400 words).`;
+  
+  // Add specific instructions for Hindi to maintain formal, respectful language
+  if (language === 'hindi') {
+    prompt += `
+    
+    पूरे उत्तर को सम्मानजनक, औपचारिक हिंदी में लिखें। "यार", "अरे", जैसे अनौपचारिक शब्दों का प्रयोग न करें। आध्यात्मिक मार्गदर्शन के लिए उपयुक्त सम्मानजनक भाषा का प्रयोग करें। हिंदी भाषा सहज और समझने योग्य होनी चाहिए, लेकिन अनौपचारिक या बेहद आम बोलचाल वाली नहीं।`;
+  } else {
+    prompt += "\nPlease respond in conversational English that's easy to understand while maintaining a respectful tone.";
+  }
+  
+  return prompt;
 }
 
 // Helper function to check if the error is API key related

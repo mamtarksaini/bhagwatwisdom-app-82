@@ -60,8 +60,8 @@ serve(async (req) => {
     
     console.log(`API key found. First 4 chars: ${GEMINI_API_KEY.substring(0, 4)}...`);
     
-    // Construct prompt for modern relevance
-    const prompt = `You are both a wise spiritual guide knowledgeable in the Bhagavad Gita AND a modern psychologist or life coach. Respond to this problem in a way that today's generation would relate to while providing authentic wisdom.
+    // Construct prompt for modern relevance with formal tone guidance
+    let prompt = `You are both a wise spiritual guide knowledgeable in the Bhagavad Gita AND a modern psychologist or life coach. Respond to this problem in a way that today's generation would relate to while providing authentic wisdom.
 
     The user's problem is: "${question}" (category: ${category})
     
@@ -73,8 +73,14 @@ serve(async (req) => {
     
     Use accessible language while preserving the depth of the wisdom. Avoid religious jargon that might alienate someone unfamiliar with Hindu concepts - instead, focus on the psychological insights.
     
-    Keep your response concise (200-400 words).
-    ${language === 'hindi' ? "Please respond in conversational Hindi language that's easy to understand." : ""}`;
+    Keep your response concise (200-400 words).`;
+    
+    // Add language-specific instructions for formality
+    if (language === 'hindi') {
+      prompt += `
+      
+      पूरे उत्तर को सम्मानजनक, औपचारिक हिंदी में लिखें। "यार", "अरे", जैसे अनौपचारिक शब्दों का प्रयोग न करें। आध्यात्मिक मार्गदर्शन के लिए उपयुक्त सम्मानजनक भाषा का प्रयोग करें। हिंदी भाषा सहज और समझने योग्य होनी चाहिए, लेकिन अनौपचारिक या बेहद आम बोलचाल वाली नहीं।`;
+    }
     
     try {
       // Call Gemini API with improved timeout handling - REDUCED from 15s to 10s for faster fallback

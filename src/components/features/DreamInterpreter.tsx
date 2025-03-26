@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -61,8 +60,16 @@ export function DreamInterpreter({ language, isPremium = false }: DreamInterpret
     });
     
     try {
-      // Create a prompt specifically for dream interpretation
-      const dreamPrompt = `Interpret this dream through the lens of Bhagavad Gita and spiritual wisdom: "${dream}"`;
+      // Create a prompt specifically for dream interpretation using formal, respectful language
+      const dreamPrompt = `Interpret this dream through the lens of Bhagavad Gita and spiritual wisdom in a formal, respectful tone: "${dream}"
+      
+      ${language === 'hindi' ? "Important: Please use formal, respectful Hindi language. Avoid casual expressions like 'यार'. Maintain a tone appropriate for spiritual guidance." : ""}
+      
+      Provide an interpretation that is:
+      1. Respectful and dignified in tone
+      2. Spiritually insightful
+      3. Connects to authentic Bhagavad Gita teachings when appropriate
+      4. Offers practical wisdom without casual language`;
       
       // Use the wisdom API to get an AI-generated interpretation
       const response = await getWisdomResponse('spirituality', language, dreamPrompt);
