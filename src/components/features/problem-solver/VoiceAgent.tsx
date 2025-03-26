@@ -29,7 +29,7 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
   const [speechInitFailed, setSpeechInitFailed] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
-  const [showTextResponse, setShowTextResponse] = useState(false);
+  const [showTextResponse, setShowTextResponse] = useState(true); // Default to showing text
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastTranscriptRef = useRef<string>("");
@@ -142,7 +142,6 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
     // Reset any previous errors
     setApiError(null);
     
-    // In testing mode, we always allow listening without restrictions
     setIsListening(true);
     speechRecognition.startListening();
     toast({
@@ -184,7 +183,6 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
     // Reset any previous errors
     setApiError(null);
     
-    // In testing mode, we always allow voice requests without restrictions
     setIsProcessing(true);
     setAiResponse("");
     
@@ -215,21 +213,18 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
         setAiResponse(response);
         setRetryCount(0); // Reset retry count on success
         
-        // Only trigger speech if not in text-only mode
-        if (!useTextOnly && speechSynthesis.isSpeechSupported && !speechInitFailed) {
+        // Always show text response
+        setShowTextResponse(true);
+        
+        // Only trigger speech if not in text-only mode and speech is supported
+        if (!useTextOnly && !speechInitFailed && speechSynthesis.isSpeechSupported) {
           // Auto-play the response using speech synthesis
           setTimeout(() => {
             try {
               speechSynthesis.speak(response);
-              
-              // Always show text response as a fallback after a short delay
-              setTimeout(() => {
-                setShowTextResponse(true);
-              }, 1000);
-              
             } catch (error) {
               console.error("Error speaking response:", error);
-              // If speech fails, show the text version
+              // If speech fails, ensure text-only mode is active
               setUseTextOnly(true);
               setShowTextResponse(true);
               toast({
@@ -238,11 +233,7 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
                 variant: "destructive"
               });
             }
-          }, 500);
-        } else {
-          // If we're in text-only mode (either by user choice or as a fallback)
-          setUseTextOnly(true);
-          setShowTextResponse(true);
+          }, 300);
         }
       } else {
         // Handle API failure with retry logic
