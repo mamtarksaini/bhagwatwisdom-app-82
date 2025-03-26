@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Mic, MicOff, Volume2, VolumeX, Crown, X, Send } from "lucide-react";
+import { Mic, MicOff, Volume2, VolumeX, Crown, X } from "lucide-react";
 import { Language } from "@/types";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis";
@@ -13,7 +13,6 @@ import { canUseVoiceAgent, getRemainingFreeResponses, incrementVoiceAgentUsage }
 import { PremiumUpgrade } from "@/components/premium/PremiumUpgrade";
 import { AudioVisualizer } from "./AudioVisualizer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
 
 interface VoiceAgentProps {
   language: Language;
@@ -24,7 +23,6 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
   const { user, isPremium } = useAuth();
   const [isListening, setIsListening] = useState(false);
   const [userInput, setUserInput] = useState("");
-  const [textInput, setTextInput] = useState("");
   const [aiResponse, setAiResponse] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   // We don't need to manage free responses limit checks since we're in testing mode with premium enabled
@@ -160,14 +158,6 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
       speechRecognition.resetTranscript();
     }
   };
-
-  const handleTextSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!textInput.trim()) return;
-    
-    await handleSendVoiceRequest(textInput);
-    setTextInput("");
-  };
   
   const toggleSpeech = () => {
     if (speechSynthesis.isReading) {
@@ -297,25 +287,6 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
               </Button>
             )}
           </div>
-          
-          {/* Text input for typing instead of speaking */}
-          <form onSubmit={handleTextSubmit} className="px-4 pb-4 flex gap-2">
-            <Input
-              type="text"
-              placeholder="Type your message here..."
-              className="bg-[#221F26] border-[#33C3F0]/30 text-white"
-              value={textInput}
-              onChange={(e) => setTextInput(e.target.value)}
-              disabled={isListening || isProcessing}
-            />
-            <Button 
-              type="submit" 
-              disabled={isListening || isProcessing || !textInput.trim()}
-              className="bg-[#1EAEDB] hover:bg-[#33C3F0] text-white"
-            >
-              <Send className="h-4 w-4" />
-            </Button>
-          </form>
         </div>
         
         <CardFooter className="flex flex-col bg-[#221F26] py-2 px-4">
