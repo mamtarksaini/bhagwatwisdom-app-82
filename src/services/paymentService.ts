@@ -28,34 +28,39 @@ export async function createPaymentOrder(
   provider: PaymentProvider
 ): Promise<PaymentOrder> {
   try {
-    // Get the user's session
-    const { data: { session } } = await supabase.auth.getSession();
+    // Get the user's session with more robust error handling
+    const { data, error } = await supabase.auth.getSession();
     
-    if (!session) {
+    if (error) {
+      console.error('Session error:', error.message);
+      throw new Error('Authentication error: ' + error.message);
+    }
+    
+    if (!data?.session) {
+      console.error('No active session found');
       throw new Error('User not authenticated');
     }
     
     // Call the Supabase Edge Function to create an order
-    // Fixed: Removed 'path' property as it doesn't exist in FunctionInvokeOptions
-    const { data, error } = await supabase.functions.invoke('process-payment', {
+    const { data: responseData, error: invokeError } = await supabase.functions.invoke('process-payment', {
       body: {
         planId,
         provider,
-        action: 'create-order', // Added action parameter instead of using path
+        action: 'create-order',
       },
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${session.access_token}`,
+        Authorization: `Bearer ${data.session.access_token}`,
       },
     });
     
-    if (error) {
-      console.error('Error creating payment order:', error);
-      throw new Error(error.message || 'Failed to create payment order');
+    if (invokeError) {
+      console.error('Error creating payment order:', invokeError);
+      throw new Error(invokeError.message || 'Failed to create payment order');
     }
     
     return {
-      ...data,
+      ...responseData,
       provider,
     };
   } catch (error) {

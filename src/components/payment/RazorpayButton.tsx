@@ -22,7 +22,7 @@ declare global {
 export function RazorpayButton({ planId, text = 'Pay with Razorpay', className }: RazorpayButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isScriptLoaded, setIsScriptLoaded] = useState(false);
-  const { user } = useAuth();
+  const { user, status } = useAuth();
 
   // Load Razorpay script
   useEffect(() => {
@@ -55,7 +55,8 @@ export function RazorpayButton({ planId, text = 'Pay with Razorpay', className }
   }, []);
 
   const handleClick = async () => {
-    if (!user) {
+    // Check user authentication status more explicitly
+    if (!user || status !== 'authenticated') {
       toast({
         title: "Authentication required",
         description: "Please sign in to continue with your purchase.",

@@ -16,7 +16,7 @@ interface PayPalButtonProps {
 
 export function PayPalButton({ planId, text = 'Pay with PayPal', className }: PayPalButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const { user } = useAuth();
+  const { user, status } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -74,7 +74,8 @@ export function PayPalButton({ planId, text = 'Pay with PayPal', className }: Pa
   };
 
   const handleClick = async () => {
-    if (!user) {
+    // Check user authentication status more explicitly
+    if (!user || status !== 'authenticated') {
       toast({
         title: "Authentication required",
         description: "Please sign in to continue with your purchase.",
