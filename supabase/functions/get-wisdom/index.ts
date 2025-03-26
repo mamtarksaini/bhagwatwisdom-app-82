@@ -87,8 +87,7 @@ serve(async (req) => {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout (reduced from 15s)
       
-      // FIXED: Use the correct API URL for Gemini model
-      // Changed from v1/models/gemini-pro:generateContent to v1/models/gemini-1.5-pro:generateContent
+      // Use the correct API URL for Gemini model
       const apiUrl = 'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent';
       console.log(`Using API URL: ${apiUrl}`);
 
