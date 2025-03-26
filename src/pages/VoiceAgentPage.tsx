@@ -4,15 +4,19 @@ import { PageLayout } from "@/components/layout/PageLayout";
 import { Language } from "@/types";
 import { LanguagePicker } from "@/components/features/LanguagePicker";
 import { useAuth } from "@/contexts/AuthContext";
-import { Globe, AlertCircle, Volume2, Mic, MicOff, X } from "lucide-react";
+import { Globe, AlertCircle, Volume2, Mic, MicOff, X, Phone } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useConversation } from "@11labs/react";
 import { toast } from "@/components/ui/use-toast";
+import { AudioVisualizer } from "@/components/features/problem-solver/AudioVisualizer";
 
-// Define types for ElevenLabs conversation messages
-type Role = 'user' | 'assistant' | 'system';
+// Import types from @11labs/react to ensure compatibility
+import type { OnMessageProps } from '@11labs/react';
+
+// Define local types for message handling
+type Role = 'user' | 'assistant' | 'system' | 'ai';
 
 interface TranscriptMessage {
   type: 'transcript';
@@ -30,7 +34,12 @@ interface ErrorMessage {
   text?: string;
 }
 
-type ElevenLabsMessage = TranscriptMessage | ResponseMessage | ErrorMessage | { message: string; source: Role };
+interface LegacyMessage {
+  message: string;
+  source: Role;
+}
+
+type ElevenLabsMessage = TranscriptMessage | ResponseMessage | ErrorMessage | LegacyMessage;
 
 export function VoiceAgentPage() {
   const [language, setLanguage] = useState<Language>("english");
@@ -50,29 +59,32 @@ export function VoiceAgentPage() {
     isSpeaking,
     setVolume
   } = useConversation({
-    onMessage: (message: ElevenLabsMessage) => {
+    onMessage: (message: OnMessageProps) => {
+      // Cast to our union type for easier handling
+      const msg = message as unknown as ElevenLabsMessage;
+      
       // Handle legacy message format
-      if ('message' in message && 'source' in message) {
-        if (message.source === 'user') {
-          setTranscript(message.message);
-        } else if (message.source === 'assistant') {
-          setResponses(prev => [...prev, message.message]);
+      if ('message' in msg && 'source' in msg) {
+        if (msg.source === 'user') {
+          setTranscript(msg.message);
+        } else if (msg.source === 'assistant' || msg.source === 'ai') {
+          setResponses(prev => [...prev, msg.message]);
         }
         return;
       }
       
       // Handle new message format
-      if ('type' in message) {
-        if (message.type === 'transcript' && message.isFinal && message.text) {
-          setTranscript(message.text);
+      if ('type' in msg) {
+        if (msg.type === 'transcript' && msg.isFinal && msg.text) {
+          setTranscript(msg.text);
         } 
         
-        if (message.type === 'response' && message.text) {
+        if (msg.type === 'response' && msg.text) {
           // Add new response
-          setResponses(prev => [...prev, message.text]);
+          setResponses(prev => [...prev, msg.text]);
         }
         
-        if (message.type === 'error') {
+        if (msg.type === 'error') {
           setErrorMessage("There was an error with the voice service. Please try again.");
           toast({
             title: "Voice Service Error",
@@ -225,7 +237,18 @@ export function VoiceAgentPage() {
             </CardHeader>
           
             <CardContent className="p-6 pt-4 min-h-[400px] flex flex-col">
-              <div className="flex-1 mb-4 overflow-y-auto">
+              {/* Visualization container */}
+              {isTalking && (
+                <div className="flex justify-center items-center mb-4">
+                  <div className="h-48 w-48 relative">
+                    <div className={`absolute inset-0 rounded-full flex items-center justify-center ${isSpeaking ? 'animate-pulse' : ''}`}>
+                      <AudioVisualizer isActive={sessionActive} color={isSpeaking ? "#33C3F0" : "#1EAEDB"} />
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <div className={`flex-1 ${isTalking ? 'mb-4 max-h-64 overflow-y-auto' : 'mb-4 overflow-y-auto'}`}>
                 {/* Display user transcript */}
                 {transcript && (
                   <div className="bg-blue-900/20 p-3 rounded-lg mb-3 max-w-[85%] ml-auto">
@@ -256,26 +279,21 @@ export function VoiceAgentPage() {
                 
                 {!sessionActive && !isTalking && !errorMessage && responses.length === 0 && (
                   <div className="flex flex-col items-center justify-center h-64 text-center">
-                    <Volume2 className="h-12 w-12 text-[#33C3F0]/50 mb-4" />
+                    <div className="h-32 w-32 mb-4 relative">
+                      <AudioVisualizer isActive={false} color="#33C3F0" />
+                    </div>
                     <p className="text-[#33C3F0]/80 font-medium">Click the mic button to start a voice conversation</p>
                     <p className="text-gray-400 text-sm mt-2">Your AI assistant is ready to discuss spiritual wisdom</p>
-                  </div>
-                )}
-                
-                {isSpeaking && (
-                  <div className="flex justify-center items-center">
-                    <div className="animate-pulse flex space-x-1">
-                      <div className="w-2 h-2 bg-[#33C3F0] rounded-full"></div>
-                      <div className="w-2 h-2 bg-[#33C3F0] rounded-full"></div>
-                      <div className="w-2 h-2 bg-[#33C3F0] rounded-full"></div>
-                    </div>
                   </div>
                 )}
               </div>
               
               {sessionActive && (
                 <div className="text-center text-sm text-[#33C3F0]/80 my-2">
-                  On call • {formatTime(callTime)}
+                  <div className="flex items-center justify-center gap-2">
+                    <Phone className="h-3 w-3" />
+                    <span>On call • {formatTime(callTime)}</span>
+                  </div>
                 </div>
               )}
             </CardContent>
@@ -284,7 +302,7 @@ export function VoiceAgentPage() {
               {!isTalking ? (
                 <Button 
                   onClick={startConversation}
-                  className="rounded-full h-12 w-12 bg-[#1EAEDB] hover:bg-[#33C3F0] text-white"
+                  className="rounded-full h-14 w-14 bg-[#1EAEDB] hover:bg-[#33C3F0] text-white"
                 >
                   <Mic className="h-6 w-6" />
                 </Button>
@@ -292,7 +310,7 @@ export function VoiceAgentPage() {
                 <div className="flex gap-4">
                   <Button
                     onClick={stopConversation}
-                    className="rounded-full h-12 w-12 bg-red-500 hover:bg-red-600 text-white"
+                    className="rounded-full h-14 w-14 bg-red-500 hover:bg-red-600 text-white"
                     title="End conversation"
                   >
                     <X className="h-6 w-6" />
@@ -300,7 +318,7 @@ export function VoiceAgentPage() {
                   
                   <Button
                     variant="outline"
-                    className={`rounded-full h-12 w-12 border-[#33C3F0]/50 ${isTextOnly ? 'bg-[#33C3F0]/20' : ''} text-[#33C3F0] hover:bg-[#33C3F0]/10`}
+                    className={`rounded-full h-14 w-14 border-[#33C3F0]/50 ${isTextOnly ? 'bg-[#33C3F0]/20' : ''} text-[#33C3F0] hover:bg-[#33C3F0]/10`}
                     onClick={toggleTextOnly}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
