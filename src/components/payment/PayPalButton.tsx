@@ -25,15 +25,20 @@ export function PayPalButton({
   const [isLoading, setIsLoading] = useState(false);
   const { user, status } = useAuth();
   const navigate = useNavigate();
+  const [timeoutId, setTimeoutId] = useState<number | null>(null);
 
-  // Clean up any ongoing processing on component unmount
+  // Clean up any ongoing processing and timeouts on component unmount
   useEffect(() => {
     return () => {
       if (isLoading && onProcessingEnd) {
         onProcessingEnd();
       }
+      
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
     };
-  }, [isLoading, onProcessingEnd]);
+  }, [isLoading, onProcessingEnd, timeoutId]);
 
   const handleClick = async () => {
     if (!user) {
@@ -56,9 +61,30 @@ export function PayPalButton({
       setIsLoading(true);
       if (onProcessingStart) onProcessingStart();
       
+      // Set a timeout to cancel the operation if it takes too long
+      const newTimeoutId = window.setTimeout(() => {
+        console.log('PayPalButton: Payment initiation timeout reached');
+        setIsLoading(false);
+        if (onProcessingEnd) onProcessingEnd();
+        
+        toast({
+          title: "Payment timeout",
+          description: "The payment process took too long. Please try again.",
+          variant: "destructive"
+        });
+      }, 15000); // 15-second timeout
+      
+      setTimeoutId(newTimeoutId);
+      
       console.log('PayPalButton: Creating PayPal payment for plan:', planId);
       
       const orderData = await createPaymentOrder(planId, 'paypal');
+      
+      // Clear the timeout since we got a response
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        setTimeoutId(null);
+      }
       
       if (!orderData || !orderData.id) {
         throw new Error('Failed to create PayPal order');
@@ -77,6 +103,12 @@ export function PayPalButton({
       console.error('PayPalButton: Error initiating PayPal payment:', error);
       setIsLoading(false);
       if (onProcessingEnd) onProcessingEnd();
+      
+      // Clear any pending timeout
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        setTimeoutId(null);
+      }
       
       toast({
         title: "Payment error",
