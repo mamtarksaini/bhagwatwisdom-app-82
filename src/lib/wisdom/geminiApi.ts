@@ -3,9 +3,9 @@
 export async function callGeminiDirectly(prompt: string) {
   // Replace with your Gemini API key - for development and testing only
   // In production, use Supabase Edge Functions with secured API keys
-  const DIRECT_GEMINI_API_KEY = 'YOUR_GEMINI_API_KEY'; // You need to replace this with a valid API key
+  const DIRECT_GEMINI_API_KEY = 'AIzaSyDFgEV8YgD7CHtKlINtHE2YeAGiNJzCGe4'; 
   
-  if (!DIRECT_GEMINI_API_KEY || DIRECT_GEMINI_API_KEY === 'YOUR_GEMINI_API_KEY') {
+  if (!DIRECT_GEMINI_API_KEY) {
     console.warn('No valid direct Gemini API key provided for fallback');
     return null;
   }
