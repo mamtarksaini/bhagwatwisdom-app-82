@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { determineResponseCategory, fallbackWisdomResponses, getWisdomResponse } from "@/lib/wisdom";
 import { Language } from "@/types";
 import { toast } from "@/hooks/use-toast";
+import { PLAN_FEATURES, hasFeature, hasExceededLimit } from "@/constants/pricingPlans";
 
 export function useProblemSolver(language: Language, isPremium: boolean = false) {
   const [problem, setProblem] = useState("");
@@ -14,6 +15,10 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
   const [directApiUsed, setDirectApiUsed] = useState(false);
   const [aiServiceUnavailable, setAiServiceUnavailable] = useState(false);
   const [errorDetails, setErrorDetails] = useState("");
+  const [usedInteractions, setUsedInteractions] = useState(0);
+
+  // Get the user's plan - in a real app, this would come from the auth context
+  const userPlanId = isPremium ? "pro" : "basic";
 
   const handleReset = () => {
     setProblem("");
@@ -27,6 +32,16 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
   };
 
   const handleRetry = async () => {
+    // Check if user has access to advanced features
+    if (!isPremium && !hasFeature(userPlanId, "Personalized mantras")) {
+      toast({
+        title: "Premium feature",
+        description: "Upgrade to premium to retry with advanced AI processing.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (problem && !isLoading) {
       setRetryCount(prev => prev + 1);
       setIsLoading(true);
@@ -192,6 +207,16 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
   const handleSubmit = async () => {
     if (!problem.trim() || isLoading) return;
     
+    // Check if user has exceeded their plan's interaction limit
+    if (hasExceededLimit(userPlanId, usedInteractions)) {
+      toast({
+        title: "Interaction limit reached",
+        description: "You've reached your plan's monthly limit. Please upgrade to continue.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setIsLoading(true);
     setUsingFallback(false);
     setNetworkError(false);
@@ -210,6 +235,9 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
     
     try {
       await handleSubmitInternal();
+      
+      // Increment the used interactions count
+      setUsedInteractions(prev => prev + 1);
     } finally {
       loadingToast.dismiss();
       setIsLoading(false);
@@ -229,6 +257,8 @@ export function useProblemSolver(language: Language, isPremium: boolean = false)
     handleReset,
     handleSubmit,
     handleRetry,
-    retryCount
+    retryCount,
+    usedInteractions,
+    userPlanId
   };
 }

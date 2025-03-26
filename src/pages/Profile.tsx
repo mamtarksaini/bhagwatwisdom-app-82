@@ -4,14 +4,27 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { PremiumUpgrade } from "@/components/premium/PremiumUpgrade";
-import { Loader2, LogOut, User, Home, CreditCard } from "lucide-react";
+import { Loader2, LogOut, User, Home, CreditCard, BarChart } from "lucide-react";
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthModal } from "@/components/auth/AuthModal";
+import { Progress } from "@/components/ui/progress";
+import { PLAN_LIMITS } from "@/constants/pricingPlans";
 
 const Profile = () => {
-  const { user, status, signOut } = useAuth();
+  const { user, status, signOut, isPremium } = useAuth();
   const navigate = useNavigate();
   const [authModalOpen, setAuthModalOpen] = React.useState(false);
+  
+  // Mock usage data - in a real app this would come from your backend
+  const [usageData, setUsageData] = React.useState({
+    interactions: 3,
+    lastReset: new Date().toISOString(),
+  });
+  
+  // Determine user's plan
+  const userPlanId = isPremium ? "pro" : "basic";
+  const planLimit = PLAN_LIMITS[userPlanId as keyof typeof PLAN_LIMITS] || 0;
+  const usagePercentage = planLimit ? Math.min(100, (usageData.interactions / planLimit) * 100) : 0;
   
   if (status === 'loading') {
     return (
@@ -95,6 +108,12 @@ const Profile = () => {
                         : 'Recently'}
                     </p>
                   </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground">Current Plan</h3>
+                    <p className="text-lg capitalize font-medium">
+                      {isPremium ? "Pro Plan" : "Basic Plan"}
+                    </p>
+                  </div>
                 </div>
               </CardContent>
               <CardFooter>
@@ -109,7 +128,60 @@ const Profile = () => {
               </CardFooter>
             </Card>
             
-            <PremiumUpgrade />
+            {isPremium ? (
+              <Card className="glass-card">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle>Usage Statistics</CardTitle>
+                    <BarChart className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <CardDescription>Track your monthly usage</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <div className="flex justify-between mb-2">
+                      <span className="text-sm font-medium">Interactions Used</span>
+                      <span className="text-sm font-medium">{usageData.interactions} / {planLimit === Infinity ? 'Unlimited' : planLimit}</span>
+                    </div>
+                    <Progress value={usagePercentage} className="h-2" />
+                  </div>
+                  
+                  <div className="rounded-md bg-muted p-4">
+                    <h4 className="text-sm font-medium mb-2">Pro Plan Benefits</h4>
+                    <ul className="text-sm space-y-1">
+                      <li className="flex items-center gap-2">
+                        <div className="w-1 h-1 rounded-full bg-primary"></div>
+                        <span>250 interactions per month</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <div className="w-1 h-1 rounded-full bg-primary"></div>
+                        <span>Personalized mantras</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <div className="w-1 h-1 rounded-full bg-primary"></div>
+                        <span>All languages supported</span>
+                      </li>
+                    </ul>
+                  </div>
+                  
+                  <div className="text-xs text-muted-foreground">
+                    Next reset: {new Date(usageData.lastReset).toLocaleDateString()}
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Button 
+                    variant="outline"
+                    onClick={() => navigate('/pricing')}
+                    className="w-full"
+                  >
+                    <CreditCard className="mr-2 h-4 w-4" />
+                    Manage Subscription
+                  </Button>
+                </CardFooter>
+              </Card>
+            ) : (
+              <PremiumUpgrade />
+            )}
           </div>
         </div>
       </div>
