@@ -12,7 +12,6 @@ import { AlertCircle } from "lucide-react";
 export function VoiceAgentPage() {
   const [language, setLanguage] = useState<Language>("english");
   const { isPremium } = useAuth();
-  const ELEVEN_LABS_AGENT_ID = "UBrWV90gjXHjFCdjaYBK";
 
   return (
     <PageLayout
@@ -23,7 +22,8 @@ export function VoiceAgentPage() {
         <Alert variant="default" className="bg-amber-500/10 border border-amber-500/30 mb-6">
           <AlertCircle className="h-4 w-4 text-amber-500" />
           <AlertDescription>
-            Voice Agent is now powered by Eleven Labs for enhanced voice interaction. Remember that free users get 2 responses per month.
+            Voice Agent is now using your browser's built-in speech recognition and synthesis. 
+            Say "give me text" if you prefer text-only responses without audio.
           </AlertDescription>
         </Alert>
 
@@ -36,7 +36,7 @@ export function VoiceAgentPage() {
           <LanguagePicker value={language} onValueChange={setLanguage} />
         </div>
         
-        <VoiceAgent language={language} elevenLabsAgentId={ELEVEN_LABS_AGENT_ID} />
+        <VoiceAgent language={language} />
       </div>
     </PageLayout>
   );

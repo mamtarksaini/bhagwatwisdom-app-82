@@ -23,6 +23,15 @@ export function useSpeechSynthesis(language: Language = "english"): SpeechSynthe
   const [isSpeechSupported, setIsSpeechSupported] = useState<boolean>(false);
   const [currentUtterance, setCurrentUtterance] = useState<SpeechSynthesisUtterance | null>(null);
 
+  // Cleanup function to properly stop and reset speech synthesis
+  const cleanupSpeech = useCallback(() => {
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+      setIsReading(false);
+      setCurrentUtterance(null);
+    }
+  }, []);
+
   useEffect(() => {
     if (typeof window !== "undefined" && window.speechSynthesis) {
       setIsSpeechSupported(true);
@@ -47,12 +56,23 @@ export function useSpeechSynthesis(language: Language = "english"): SpeechSynthe
     }
 
     // Cleanup
-    return () => {
-      if (window.speechSynthesis) {
-        window.speechSynthesis.cancel();
-      }
+    return cleanupSpeech;
+  }, [cleanupSpeech]);
+
+  // Add an effect to handle page navigation cleanup
+  useEffect(() => {
+    // Clean up speech when navigating away
+    const handleBeforeUnload = () => {
+      cleanupSpeech();
     };
-  }, []);
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      cleanupSpeech();
+    };
+  }, [cleanupSpeech]);
 
   // Get the best voice for current language
   const getBestVoice = useCallback(
