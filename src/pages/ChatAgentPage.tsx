@@ -68,6 +68,7 @@ export function ChatAgentPage() {
   const handleReadMessage = (index: number, content: string) => {
     // Stop any current reading
     if (isReading) {
+      // When stopping speech, don't show any error messages
       stop();
       setCurrentlyReadingMessageIndex(null);
       return;

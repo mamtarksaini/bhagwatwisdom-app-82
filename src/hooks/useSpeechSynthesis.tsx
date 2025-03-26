@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Language } from "@/types";
 import { toast } from "@/hooks/use-toast";
@@ -265,6 +264,9 @@ export function useSpeechSynthesis(language: Language = "english"): SpeechSynthe
         utterance.pitch = 1.0;
         utterance.volume = 1.0;
 
+        // Flag to track if this is a user-initiated stop
+        const userCancelledRef = useRef(false);
+
         // Set up event handlers
         utterance.onstart = () => {
           console.log("Speech started");
@@ -282,16 +284,23 @@ export function useSpeechSynthesis(language: Language = "english"): SpeechSynthe
           console.error("Speech synthesis error:", event);
           setIsReading(false);
           setCurrentUtterance(null);
+          
+          // Check if this is a user-initiated cancel event
+          // Note: In some browsers, cancellation might not set 'canceled' as the error
+          // So we'll also check if it happened very shortly after the stop() was called
+          if (event.error === 'canceled' || userCancelledRef.current) {
+            console.log("User canceled speech, not treating as an error");
+            return; // Don't increment error counter or show toast for user cancellations
+          }
+          
           failedAttemptsRef.current++;
           
           // Only show toast for errors that aren't user-initiated cancellations
-          if (event.error !== 'canceled') {
-            toast({
-              title: "Speech Error",
-              description: "There was an error playing the voice. Falling back to text-only mode.",
-              variant: "destructive"
-            });
-          }
+          toast({
+            title: "Speech Error",
+            description: "There was an error playing the voice. Falling back to text-only mode.",
+            variant: "destructive"
+          });
         };
 
         // Store the current utterance
@@ -437,6 +446,11 @@ export function useSpeechSynthesis(language: Language = "english"): SpeechSynthe
   const stop = useCallback(() => {
     if (isSpeechSupported) {
       console.log("Stopping speech");
+      
+      // Set a flag to indicate this is a user-initiated cancel
+      // This will help prevent showing error message for intentional cancellation
+      const userCancelledRef = useRef(true);
+      
       window.speechSynthesis.cancel();
       setIsReading(false);
       setCurrentUtterance(null);

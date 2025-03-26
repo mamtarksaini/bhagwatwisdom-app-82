@@ -44,6 +44,7 @@ export function WisdomDisplay({
   
   const handleSpeak = () => {
     if (isReading) {
+      // When stopping speech, don't show any error messages
       stop();
       return;
     }
