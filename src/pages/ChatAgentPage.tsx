@@ -1,17 +1,17 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { PageLayout } from "@/components/layout/PageLayout";
 import { Language } from "@/types";
 import { LanguagePicker } from "@/components/features/LanguagePicker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { SendIcon, RefreshCw, Globe } from "lucide-react";
+import { SendIcon, RefreshCw, Globe, Mic, MicOff } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { callGeminiDirectly } from "@/lib/wisdom/geminiApi";
 import { useToast } from "@/hooks/use-toast";
+import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 
 export function ChatAgentPage() {
   const [language, setLanguage] = useState<Language>("english");
@@ -26,14 +26,49 @@ export function ChatAgentPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
+  // Speech recognition hook
+  const { 
+    transcript, 
+    isListening, 
+    startListening, 
+    stopListening, 
+    resetTranscript,
+    error: speechError 
+  } = useSpeechRecognition(language);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // Update input message with speech transcript
+  useEffect(() => {
+    if (transcript && isListening) {
+      setInputMessage(transcript);
+    }
+  }, [transcript, isListening]);
+
+  const handleVoiceInput = () => {
+    if (isListening) {
+      stopListening();
+    } else {
+      resetTranscript();
+      startListening();
+      toast({
+        title: "Voice input activated",
+        description: "Speak clearly to record your message",
+      });
+    }
   };
 
   const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     
     if (!inputMessage.trim()) return;
+    
+    // Stop listening if active
+    if (isListening) {
+      stopListening();
+    }
     
     // Add user message to chat
     const userMessage = inputMessage.trim();
@@ -116,13 +151,25 @@ export function ChatAgentPage() {
           </div>
           
           <form onSubmit={handleSendMessage} className="border-t p-4 flex gap-2">
-            <Input
-              placeholder="Type your message..."
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              disabled={isLoading}
-              className="flex-1"
-            />
+            <div className="relative flex-1">
+              <Input
+                placeholder="Type your message..."
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                disabled={isLoading}
+                className="pr-10"
+              />
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                className={`absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 ${isListening ? 'text-red-500 animate-pulse' : ''}`}
+                onClick={handleVoiceInput}
+                disabled={isLoading}
+              >
+                {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+              </Button>
+            </div>
             <Button 
               type="submit" 
               size="icon" 
@@ -131,6 +178,12 @@ export function ChatAgentPage() {
               {isLoading ? <RefreshCw className="h-4 w-4 animate-spin" /> : <SendIcon className="h-4 w-4" />}
             </Button>
           </form>
+          
+          {speechError && (
+            <div className="px-4 py-2 bg-red-100 text-red-800 text-sm">
+              {speechError}
+            </div>
+          )}
         </div>
       </div>
     </PageLayout>
