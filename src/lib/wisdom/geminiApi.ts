@@ -45,8 +45,9 @@ async function makeGeminiApiCall(prompt: string, apiKey: string) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
     
-    // FIX: Update the API URL to use the correct version (v1 instead of v1beta)
-    const response = await fetch('https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent', {
+    // FIXED: Use the correct API URL for Gemini model
+    // Changed from v1/models/gemini-pro:generateContent to v1/models/gemini-1.5-pro:generateContent
+    const response = await fetch('https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -74,6 +75,7 @@ async function makeGeminiApiCall(prompt: string, apiKey: string) {
     
     if (!response.ok) {
       const errorText = await response.text();
+      console.error('Gemini API error details:', errorText);
       throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
     }
     

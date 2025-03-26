@@ -81,8 +81,9 @@ serve(async (req) => {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout (reduced from 15s)
       
-      // FIX: Update the API URL to use the correct version (v1 instead of v1beta)
-      const apiUrl = 'https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent';
+      // FIXED: Use the correct API URL for Gemini model
+      // Changed from v1/models/gemini-pro:generateContent to v1/models/gemini-1.5-pro:generateContent
+      const apiUrl = 'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent';
       console.log(`Using API URL: ${apiUrl}`);
 
       // Log exact request details for debugging
@@ -142,6 +143,18 @@ serve(async (req) => {
               error: `API rate limit exceeded`
             }),
             { headers: CORS_HEADERS, status: 429 }
+          );
+        } else if (response.status === 404) {
+          // Added specific handling for 404 model not found errors
+          return new Response(
+            JSON.stringify({ 
+              status: 'error',
+              message: 'Gemini API model not found',
+              retryable: false,
+              useFallback: true,
+              error: `API model error: ${errorText}`
+            }),
+            { headers: CORS_HEADERS, status: 404 }
           );
         }
         
