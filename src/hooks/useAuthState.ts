@@ -7,7 +7,7 @@ import { fetchUserProfile } from '@/services/authService';
 export const useAuthState = () => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [status, setStatus] = useState<AuthStatus>('loading');
-  const [isPremium, setIsPremium] = useState<boolean>(false);
+  const [isPremium, setIsPremium] = useState<boolean>(true); // Set to true for testing mode
 
   const handleAuthStateChange = async (session: any) => {
     console.log("useAuthState: Auth state change detected, session:", session ? "exists" : "null");
@@ -22,12 +22,12 @@ export const useAuthState = () => {
           email: session.user.email,
           name: profile?.name || null,
           created_at: profile?.created_at || new Date().toISOString(),
-          is_premium: Boolean(profile?.is_premium) || false
+          is_premium: true // Always set to true in testing mode
         };
         
         console.log("useAuthState: Profile fetched successfully, updating user state");
         setUser(updatedUser);
-        setIsPremium(Boolean(profile?.is_premium) || false);
+        setIsPremium(true); // Always true in testing mode
         setStatus('authenticated');
       } catch (error) {
         console.error("useAuthState: Error handling auth state change:", error);
@@ -38,17 +38,17 @@ export const useAuthState = () => {
           email: session.user.email,
           name: null,
           created_at: new Date().toISOString(),
-          is_premium: false
+          is_premium: true // Always set to true in testing mode
         };
         
         setUser(fallbackUser);
-        setIsPremium(false);
+        setIsPremium(true); // Always true in testing mode
         setStatus('authenticated');
       }
     } else {
       console.log("useAuthState: No session, setting to unauthenticated");
       setUser(null);
-      setIsPremium(false);
+      setIsPremium(true); // Also set to true for anonymous users in testing mode
       setStatus('unauthenticated');
     }
   };

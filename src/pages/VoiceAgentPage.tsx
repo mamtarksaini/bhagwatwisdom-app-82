@@ -24,6 +24,7 @@ export function VoiceAgentPage() {
           <AlertDescription>
             Voice Agent is now using your browser's built-in speech recognition and synthesis. 
             Say "give me text" if you prefer text-only responses without audio.
+            <span className="ml-2 text-green-500 font-medium">(Premium Mode Enabled for Testing)</span>
           </AlertDescription>
         </Alert>
 

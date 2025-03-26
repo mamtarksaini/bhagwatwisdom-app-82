@@ -25,9 +25,7 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
   const [userInput, setUserInput] = useState("");
   const [aiResponse, setAiResponse] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
-  const [canUseFreeResponse, setCanUseFreeResponse] = useState(false);
-  const [remainingResponses, setRemainingResponses] = useState(0);
-  const [showPremiumOffer, setShowPremiumOffer] = useState(false);
+  // We don't need to manage free responses limit checks since we're in testing mode with premium enabled
   const [useTextOnly, setUseTextOnly] = useState(false);
   const [callTime, setCallTime] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -35,35 +33,7 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
   const speechRecognition = useSpeechRecognition(language);
   const speechSynthesis = useSpeechSynthesis(language);
   
-  useEffect(() => {
-    const checkUsage = async () => {
-      if (!user && !isPremium) {
-        setCanUseFreeResponse(false);
-        setRemainingResponses(0);
-        return;
-      }
-      
-      try {
-        const canUse = await canUseVoiceAgent(user, isPremium);
-        setCanUseFreeResponse(canUse);
-        
-        if (!isPremium && user) {
-          const remaining = await getRemainingFreeResponses(user.id);
-          setRemainingResponses(remaining);
-          setShowPremiumOffer(remaining < 2);
-        } else {
-          setRemainingResponses(0);
-          setShowPremiumOffer(false);
-        }
-      } catch (error) {
-        console.error("Error checking voice agent usage:", error);
-        // Default to allowing usage if there's an error checking
-        setCanUseFreeResponse(true);
-      }
-    };
-    
-    checkUsage();
-  }, [user, isPremium]);
+  // For testing mode, we can skip the usage checks since premium is always true
   
   useEffect(() => {
     if (speechRecognition.isListening) {
@@ -109,16 +79,7 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
   }, [isListening, isProcessing, speechSynthesis.isReading, callTime]);
   
   const startListening = () => {
-    if (!canUseFreeResponse && !isPremium) {
-      toast({
-        title: "Usage Limit Reached",
-        description: "Upgrade to Premium for unlimited voice agent responses.",
-        variant: "destructive"
-      });
-      setShowPremiumOffer(true);
-      return;
-    }
-    
+    // In testing mode, we always allow listening without restrictions
     setIsListening(true);
     speechRecognition.startListening();
     toast({
@@ -139,16 +100,7 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
   const handleSendVoiceRequest = async (input: string) => {
     if (!input.trim()) return;
     
-    if (!canUseFreeResponse && !isPremium) {
-      toast({
-        title: "Usage Limit Reached",
-        description: "Upgrade to Premium for unlimited voice agent responses.",
-        variant: "destructive"
-      });
-      setShowPremiumOffer(true);
-      return;
-    }
-    
+    // In testing mode, we always allow voice requests without restrictions
     setIsProcessing(true);
     setAiResponse("");
     
@@ -181,32 +133,7 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
           }, 500);
         }
         
-        try {
-          if (!isPremium && user) {
-            await incrementVoiceAgentUsage(user.id);
-            const remaining = await getRemainingFreeResponses(user.id);
-            setRemainingResponses(remaining);
-            setCanUseFreeResponse(remaining > 0);
-            
-            if (remaining === 0) {
-              setShowPremiumOffer(true);
-              toast({
-                title: "Usage Limit Reached",
-                description: "You've used all your free voice responses this month. Upgrade to Premium for unlimited access.",
-                variant: "destructive"
-              });
-            } else if (remaining === 1) {
-              toast({
-                title: "Almost Out of Free Responses",
-                description: "You have 1 free voice response remaining this month.",
-                variant: "destructive"
-              });
-            }
-          }
-        } catch (error) {
-          console.error("Error updating usage count:", error);
-          // Continue without blocking the user experience
-        }
+        // Skip usage tracking in testing mode
       } else {
         toast({
           title: "Error",
@@ -256,8 +183,12 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
     <div className="max-w-xl mx-auto w-full">
       <Card className="bg-[#1A1F2C] border-[#33C3F0]/30 text-white overflow-hidden">
         <CardHeader className="pb-0">
-          <CardTitle className="text-[#1EAEDB] text-2xl font-normal">
+          <CardTitle className="text-[#1EAEDB] text-2xl font-normal flex items-center justify-between">
             AI Assistant
+            <span className="flex items-center text-gold text-sm">
+              <Crown className="h-4 w-4 mr-1" />
+              Premium Mode (Testing)
+            </span>
           </CardTitle>
           <Tabs defaultValue="voice" className="w-full">
             <TabsList className="grid w-full grid-cols-2 bg-[#221F26]">
@@ -279,22 +210,6 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
         </CardHeader>
       
         <CardContent className="p-6 pt-8 min-h-[400px] flex flex-col items-center justify-center">
-          {!isPremium && (
-            <div className="text-sm text-[#1EAEDB]/80 w-full mb-4 flex items-center justify-between">
-              <span>
-                {remainingResponses > 0 
-                  ? `${remainingResponses} free ${remainingResponses === 1 ? 'response' : 'responses'} remaining` 
-                  : "No free responses remaining"}
-              </span>
-              {isPremium && (
-                <span className="flex items-center text-gold">
-                  <Crown className="h-4 w-4 mr-1" />
-                  Premium
-                </span>
-              )}
-            </div>
-          )}
-          
           <div className="w-full h-[300px] flex items-center justify-center relative">
             <div className="relative h-56 w-56">
               <div className={`absolute inset-0 rounded-full ${isListening || isProcessing || speechSynthesis.isReading ? 'border-2 border-[#1EAEDB] animate-pulse' : ''}`}>
@@ -329,7 +244,7 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
               <Button 
                 onClick={startListening}
                 className="rounded-full h-12 w-12 bg-[#1EAEDB] hover:bg-[#33C3F0] text-white"
-                disabled={isProcessing || (!canUseFreeResponse && !isPremium)}
+                disabled={isProcessing}
               >
                 <Mic className="h-6 w-6" />
               </Button>
@@ -369,13 +284,8 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
         </div>
         
         <CardFooter className="flex flex-col bg-[#221F26] py-2 px-4">
-          {showPremiumOffer && !isPremium && (
-            <div className="w-full mt-4">
-              <PremiumUpgrade />
-            </div>
-          )}
           <div className="text-xs text-[#1EAEDB]/60 text-center w-full">
-            Powered by Wisdom
+            Premium Mode Enabled for Testing
           </div>
         </CardFooter>
       </Card>
