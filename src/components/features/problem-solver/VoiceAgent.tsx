@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Mic, MicOff, Volume2, VolumeX, Crown, X } from "lucide-react";
+import { Mic, MicOff, Volume2, VolumeX, Crown, X, AlertCircle } from "lucide-react";
 import { Language } from "@/types";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis";
@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { callGeminiDirectly } from "@/lib/wisdom/geminiApi";
 import { canUseVoiceAgent, getRemainingFreeResponses, incrementVoiceAgentUsage } from "@/lib/wisdom/voiceAgent";
 import { AudioVisualizer } from "./AudioVisualizer";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface VoiceAgentProps {
   language: Language;
@@ -28,6 +29,7 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
   const [speechInitFailed, setSpeechInitFailed] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [showTextResponse, setShowTextResponse] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastTranscriptRef = useRef<string>("");
@@ -112,6 +114,7 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
           console.warn("Speech synthesis not supported in this browser");
           setUseTextOnly(true);
           setSpeechInitFailed(true);
+          setShowTextResponse(true);
           return;
         }
         
@@ -120,11 +123,13 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
           console.warn("No voices available for speech synthesis");
           setUseTextOnly(true);
           setSpeechInitFailed(true);
+          setShowTextResponse(true);
         }
       } catch (error) {
         console.error("Error checking speech synthesis support:", error);
         setUseTextOnly(true);
         setSpeechInitFailed(true);
+        setShowTextResponse(true);
       }
     };
     
@@ -190,6 +195,7 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
           input.toLowerCase().includes("show text") ||
           speechInitFailed) {
         setUseTextOnly(true);
+        setShowTextResponse(true);
       }
       
       const prompt = `You are a helpful assistant responding to voice input. 
@@ -215,10 +221,17 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
           setTimeout(() => {
             try {
               speechSynthesis.speak(response);
+              
+              // Always show text response as a fallback after a short delay
+              setTimeout(() => {
+                setShowTextResponse(true);
+              }, 1000);
+              
             } catch (error) {
               console.error("Error speaking response:", error);
               // If speech fails, show the text version
               setUseTextOnly(true);
+              setShowTextResponse(true);
               toast({
                 title: "Speech Error",
                 description: "Voice output failed. Showing text response instead.",
@@ -229,6 +242,7 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
         } else {
           // If we're in text-only mode (either by user choice or as a fallback)
           setUseTextOnly(true);
+          setShowTextResponse(true);
         }
       } else {
         // Handle API failure with retry logic
@@ -271,6 +285,9 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
     if (speechSynthesis.isReading) {
       speechSynthesis.stop();
     } else if (aiResponse) {
+      // Always show text when playing speech
+      setShowTextResponse(true);
+      
       try {
         // Only attempt to play speech if not already in text-only mode due to errors
         if (!speechInitFailed) {
@@ -329,6 +346,10 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
     }
   };
   
+  const toggleTextDisplay = () => {
+    setShowTextResponse(!showTextResponse);
+  };
+  
   return (
     <div className="max-w-xl mx-auto w-full">
       <Card className="bg-[#1A1F2C] border-[#33C3F0]/30 text-white overflow-hidden">
@@ -340,6 +361,14 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
               Premium Mode (Testing)
             </span>
           </CardTitle>
+          {speechInitFailed && (
+            <Alert variant="destructive" className="bg-amber-500/10 border border-amber-500/50 mt-2">
+              <AlertCircle className="h-4 w-4 text-amber-500" />
+              <AlertDescription className="text-xs">
+                Voice output not available in your browser. Using text-only mode.
+              </AlertDescription>
+            </Alert>
+          )}
         </CardHeader>
       
         <CardContent className="p-6 pt-4 min-h-[400px] flex flex-col items-center justify-center">
@@ -357,10 +386,20 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
             )}
             
             {aiResponse && !isListening && (
-              <div className="absolute bottom-0 w-full text-center max-h-24 overflow-y-auto">
-                <p className={`text-white/90 mb-2 ${useTextOnly || !speechSynthesis.isSpeechSupported || speechInitFailed ? 'block' : 'hidden'}`}>
+              <div className="absolute bottom-0 w-full text-center max-h-48 overflow-y-auto">
+                <p className={`text-white/90 mb-2 ${showTextResponse ? 'block' : 'hidden'}`}>
                   {aiResponse}
                 </p>
+                {aiResponse && !showTextResponse && !speechSynthesis.isReading && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-2 text-[#33C3F0]/80 border-[#33C3F0]/30 hover:bg-[#33C3F0]/10"
+                    onClick={toggleTextDisplay}
+                  >
+                    Show Text Response
+                  </Button>
+                )}
               </div>
             )}
             
@@ -442,6 +481,21 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
                 ) : (
                   <Volume2 className="h-6 w-6" />
                 )}
+              </Button>
+            )}
+            
+            {/* Text toggle button */}
+            {aiResponse && (
+              <Button
+                variant="outline"
+                className={`rounded-full h-12 w-12 border-[#33C3F0]/50 text-[#33C3F0] hover:bg-[#33C3F0]/10 ${showTextResponse ? 'bg-[#33C3F0]/20' : ''}`}
+                onClick={toggleTextDisplay}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 7V4h16v3"></path>
+                  <path d="M9 20h6"></path>
+                  <path d="M12 4v16"></path>
+                </svg>
               </Button>
             )}
             

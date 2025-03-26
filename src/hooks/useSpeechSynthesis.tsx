@@ -1,5 +1,4 @@
-
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Language } from "@/types";
 import { toast } from "@/components/ui/use-toast";
 
@@ -22,7 +21,8 @@ export function useSpeechSynthesis(language: Language = "english"): SpeechSynthe
   const [isReading, setIsReading] = useState<boolean>(false);
   const [isSpeechSupported, setIsSpeechSupported] = useState<boolean>(false);
   const [currentUtterance, setCurrentUtterance] = useState<SpeechSynthesisUtterance | null>(null);
-  const [speechSynthesisInitialized, setSpeechSynthesisInitialized] = useState<boolean>(false);
+  const speechInitializedRef = useRef<boolean>(false);
+  const pendingRetryRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Cleanup function to properly stop and reset speech synthesis
   const cleanupSpeech = useCallback(() => {
@@ -30,8 +30,32 @@ export function useSpeechSynthesis(language: Language = "english"): SpeechSynthe
       window.speechSynthesis.cancel();
       setIsReading(false);
       setCurrentUtterance(null);
+      
+      // Clear any pending retry attempts
+      if (pendingRetryRef.current) {
+        clearTimeout(pendingRetryRef.current);
+        pendingRetryRef.current = null;
+      }
     }
   }, []);
+
+  // Chrome and Safari have a bug where speech synthesis sometimes stops unexpectedly
+  // This function keeps it alive
+  const keepAlive = useCallback(() => {
+    if (window.speechSynthesis && isReading) {
+      window.speechSynthesis.pause();
+      window.speechSynthesis.resume();
+      const timeout = setTimeout(keepAlive, 5000); // Keep checking every 5 seconds
+      return () => clearTimeout(timeout);
+    }
+  }, [isReading]);
+
+  useEffect(() => {
+    if (isReading) {
+      const timeoutId = setTimeout(keepAlive, 5000);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [isReading, keepAlive]);
 
   useEffect(() => {
     // Check if the browser supports speech synthesis
@@ -41,33 +65,31 @@ export function useSpeechSynthesis(language: Language = "english"): SpeechSynthe
       // Load voices
       const loadVoices = () => {
         const availableVoices = window.speechSynthesis.getVoices();
-        if (availableVoices.length > 0) {
+        if (availableVoices && availableVoices.length > 0) {
           setVoices(availableVoices);
           console.log("Available voices loaded:", availableVoices.length);
-          setSpeechSynthesisInitialized(true);
+          speechInitializedRef.current = true;
         }
       };
 
-      // First try to load voices immediately
+      // Try to load voices immediately
       loadVoices();
       
       // Chrome loads voices asynchronously, so set up the event listener
-      if (window.speechSynthesis.onvoiceschanged !== undefined) {
-        window.speechSynthesis.onvoiceschanged = loadVoices;
-      }
+      window.speechSynthesis.onvoiceschanged = loadVoices;
       
       // Set a timeout to check if voices loaded, as a fallback
       const voiceLoadingTimeout = setTimeout(() => {
         if (voices.length === 0) {
           console.warn("No voices loaded within timeout, attempting fallback loading method");
           const fallbackVoices = window.speechSynthesis.getVoices();
-          if (fallbackVoices.length > 0) {
+          if (fallbackVoices && fallbackVoices.length > 0) {
             setVoices(fallbackVoices);
-            setSpeechSynthesisInitialized(true);
+            speechInitializedRef.current = true;
             console.log("Voices loaded via fallback method:", fallbackVoices.length);
           } else {
             console.error("Failed to load any voices, speech synthesis may not work");
-            setSpeechSynthesisInitialized(false);
+            speechInitializedRef.current = false;
           }
         }
       }, 3000);
@@ -75,6 +97,7 @@ export function useSpeechSynthesis(language: Language = "english"): SpeechSynthe
       return () => {
         cleanupSpeech();
         clearTimeout(voiceLoadingTimeout);
+        window.speechSynthesis.onvoiceschanged = null;
       };
     } else {
       console.warn("Speech synthesis not supported in this browser");
@@ -82,7 +105,7 @@ export function useSpeechSynthesis(language: Language = "english"): SpeechSynthe
     }
 
     return cleanupSpeech;
-  }, [cleanupSpeech]);
+  }, [cleanupSpeech, voices.length]);
 
   // Add an effect to handle page navigation cleanup
   useEffect(() => {
@@ -102,7 +125,7 @@ export function useSpeechSynthesis(language: Language = "english"): SpeechSynthe
   // Get the best voice for current language
   const getBestVoice = useCallback(
     (text: string): SpeechSynthesisVoice | null => {
-      if (!voices.length) {
+      if (!voices || !voices.length) {
         console.warn("No voices available");
         return null;
       }
@@ -111,22 +134,29 @@ export function useSpeechSynthesis(language: Language = "english"): SpeechSynthe
       const langCode = languageVoiceMap[language] || "en";
       console.log(`Looking for voice with language code: ${langCode}`);
       
-      // First try to find a perfect match for cloud/remote voice (usually better quality)
+      // First try Google voices (usually better quality)
       let voice = voices.find(
-        (v) => v.lang.toLowerCase().indexOf(langCode.toLowerCase()) === 0 && !v.localService
+        (v) => v.name?.includes("Google") && v.lang.toLowerCase().includes(langCode.toLowerCase())
       );
+      
+      // Then try any other cloud/remote voice
+      if (!voice) {
+        voice = voices.find(
+          (v) => v.lang.toLowerCase().includes(langCode.toLowerCase()) && !v.localService
+        );
+      }
       
       // Then try a local voice
       if (!voice) {
         voice = voices.find(
-          (v) => v.lang.toLowerCase().indexOf(langCode.toLowerCase()) === 0
+          (v) => v.lang.toLowerCase().includes(langCode.toLowerCase())
         );
       }
       
       // Fallback to English if no matches for non-English languages
       if (!voice && langCode !== "en") {
         voice = voices.find(
-          (v) => v.lang.toLowerCase().indexOf("en") === 0 && !v.localService
+          (v) => v.lang.toLowerCase().includes("en") && !v.localService
         );
       }
       
@@ -154,14 +184,10 @@ export function useSpeechSynthesis(language: Language = "english"): SpeechSynthe
         return false;
       }
 
-      // Try to resume if paused
-      if (window.speechSynthesis.paused) {
-        window.speechSynthesis.resume();
-      }
-
-      // Safety reset - cancel any ongoing speech
+      // Reset any ongoing speech
       window.speechSynthesis.cancel();
       
+      // Some browsers need a small delay after canceling
       return true;
     } catch (error) {
       console.error("Failed to initialize speech synthesis:", error);
@@ -176,10 +202,10 @@ export function useSpeechSynthesis(language: Language = "english"): SpeechSynthe
         return;
       }
 
-      // Check if speech synthesis is initialized
-      if (!speechSynthesisInitialized) {
-        console.warn("Speech synthesis not fully initialized yet");
-        return;
+      // Clear any pending retries
+      if (pendingRetryRef.current) {
+        clearTimeout(pendingRetryRef.current);
+        pendingRetryRef.current = null;
       }
 
       // Initialize speech synthesis
@@ -241,77 +267,76 @@ export function useSpeechSynthesis(language: Language = "english"): SpeechSynthe
         // Store the current utterance
         setCurrentUtterance(utterance);
         
-        // Reset speech synthesis before speaking (helps with browser bugs)
-        window.speechSynthesis.cancel();
-        
-        // Use a small delay to ensure synthesis is reset
+        // Use a small delay before speaking (helps with browser bugs)
         setTimeout(() => {
           try {
-            // Safari specific workaround
+            // Detect browser for specific fixes
             const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+            const isChrome = /chrome/i.test(navigator.userAgent) && !/edge|edg/i.test(navigator.userAgent);
+            
             if (isSafari) {
-              console.log("Safari detected, applying fix");
+              console.log("Safari detected, applying Safari-specific fix");
               // Safari needs a dummy utterance to "wake up" the speech synthesis
-              window.speechSynthesis.speak(new SpeechSynthesisUtterance(''));
-            }
-            
-            // Actually speak the text
-            window.speechSynthesis.speak(utterance);
-            
-            // Firefox and Chrome bug fix: check if speech actually started
-            const checkSpeechStarted = setTimeout(() => {
-              if (!speechSynthesis.speaking && utterance === currentUtterance) {
-                console.log("Speech didn't start, trying again");
-                try {
-                  // Try to make sure we're not paused
-                  if (window.speechSynthesis.paused) {
+              const dummyUtterance = new SpeechSynthesisUtterance(' ');
+              dummyUtterance.volume = 0; // Make it silent
+              window.speechSynthesis.speak(dummyUtterance);
+              
+              // Small delay after the dummy utterance
+              setTimeout(() => {
+                window.speechSynthesis.speak(utterance);
+              }, 100);
+            } else {
+              // For Chrome and other browsers
+              window.speechSynthesis.speak(utterance);
+              
+              if (isChrome) {
+                // Chrome-specific workaround for the speech synthesis bug
+                // where it stops after ~15 seconds
+                setTimeout(() => {
+                  if (window.speechSynthesis.speaking) {
+                    window.speechSynthesis.pause();
                     window.speechSynthesis.resume();
                   }
-                  // Try speaking again
-                  window.speechSynthesis.speak(utterance);
-                } catch (retryError) {
-                  console.error("Error during speech retry:", retryError);
-                  // Force fallback to text-only mode
-                  setIsReading(false);
-                  toast({
-                    title: "Speech Error",
-                    description: "Could not start speech. Switching to text-only mode.",
-                    variant: "destructive"
-                  });
-                }
+                }, 14000);
+              }
+            }
+            
+            // Check if speech actually started
+            pendingRetryRef.current = setTimeout(() => {
+              if (!window.speechSynthesis.speaking && utterance === currentUtterance) {
+                console.log("Speech didn't start properly, trying again");
+                
+                // Try again with a different approach
+                window.speechSynthesis.cancel();
+                
+                setTimeout(() => {
+                  try {
+                    window.speechSynthesis.speak(utterance);
+                  } catch (retryError) {
+                    console.error("Error during speech retry:", retryError);
+                    setIsReading(false);
+                  }
+                }, 100);
               }
             }, 1000);
             
-            // Clean up the timeout
-            setTimeout(() => clearTimeout(checkSpeechStarted), 2000);
           } catch (innerError) {
             console.error("Secondary speech synthesis error:", innerError);
             setIsReading(false);
             setCurrentUtterance(null);
-            toast({
-              title: "Speech Error",
-              description: "There was an error playing the voice. Falling back to text-only mode.",
-              variant: "destructive"
-            });
           }
-        }, 100);
+        }, 50);
       } catch (error) {
         console.error("Exception in speech synthesis:", error);
-        toast({
-          title: "Speech Error",
-          description: "There was an error with speech synthesis. Falling back to text-only mode.",
-          variant: "destructive"
-        });
         setIsReading(false);
       }
     },
     [
-      isSpeechSupported, 
-      getBestVoice, 
-      language, 
-      currentUtterance, 
-      initSpeechSynthesis, 
-      speechSynthesisInitialized
+      isSpeechSupported,
+      getBestVoice,
+      language,
+      currentUtterance,
+      initSpeechSynthesis
     ]
   );
 
@@ -321,6 +346,12 @@ export function useSpeechSynthesis(language: Language = "english"): SpeechSynthe
       window.speechSynthesis.cancel();
       setIsReading(false);
       setCurrentUtterance(null);
+      
+      // Clear any pending retry attempts
+      if (pendingRetryRef.current) {
+        clearTimeout(pendingRetryRef.current);
+        pendingRetryRef.current = null;
+      }
     }
   }, [isSpeechSupported]);
 
