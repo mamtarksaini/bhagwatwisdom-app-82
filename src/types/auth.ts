@@ -13,7 +13,7 @@ export interface AuthContextType {
 }
 
 export interface Profile {
-  id: string;
+  id: number;
   name: string | null;
   created_at: string;
   is_premium?: boolean;

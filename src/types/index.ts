@@ -16,7 +16,7 @@ export interface Verse {
 
 export type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
 
-// Update UserProfile interface to include is_premium flag
+// Update UserProfile interface to include is_premium flag and use number for id
 export interface UserProfile {
   id: string;
   email?: string;

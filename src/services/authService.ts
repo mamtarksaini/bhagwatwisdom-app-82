@@ -1,3 +1,4 @@
+
 import { supabase } from '@/lib/supabase';
 import { UserProfile } from '@/types';
 import { Profile } from '@/types/auth';
@@ -29,7 +30,7 @@ export const fetchUserProfile = async (userId: string) => {
     const { data: profileData, error } = await supabase
       .from('profiles')
       .select('*')
-      .eq('id', userId)
+      .eq('id', parseInt(userId, 10))
       .single();
     
     if (error) {
@@ -38,7 +39,7 @@ export const fetchUserProfile = async (userId: string) => {
     }
     
     console.log("authService: Profile data fetched successfully");
-    return profileData as Profile;
+    return profileData as unknown as Profile;
   } catch (error) {
     console.error("authService: Exception fetching profile:", error);
     return null;
@@ -98,8 +99,10 @@ export const signUpWithEmail = async (email: string, password: string, name: str
     if (data.user) {
       console.log("authService: Creating profile for new user:", data.user.id);
       
+      const parsedId = parseInt(data.user.id, 10);
+      
       const { error: profileError } = await supabase.from('profiles').insert({
-        id: data.user.id,
+        id: parsedId,
         name,
       });
       
@@ -168,7 +171,7 @@ export const updateUserProfile = async (user: UserProfile, updates: Partial<User
     const { error } = await supabase
       .from('profiles')
       .update(profileUpdates)
-      .eq('id', user.id);
+      .eq('id', parseInt(user.id, 10));
 
     if (error) {
       console.error("authService: Error updating profile:", error);
@@ -211,7 +214,7 @@ export const upgradeUserToPremium = async (userId: string) => {
     const { error } = await supabase
       .from('profiles')
       .update({ is_premium: true })
-      .eq('id', userId);
+      .eq('id', parseInt(userId, 10));
 
     if (error) {
       console.error("authService: Error upgrading to premium:", error);
