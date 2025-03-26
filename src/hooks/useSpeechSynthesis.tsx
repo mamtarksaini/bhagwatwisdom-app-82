@@ -1,6 +1,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Language } from "@/types";
+import { toast } from "@/components/ui/use-toast";
 
 interface SpeechSynthesisHook {
   speak: (text: string) => void;
@@ -99,6 +100,11 @@ export function useSpeechSynthesis(language: Language = "english"): SpeechSynthe
     (text: string) => {
       if (!isSpeechSupported) {
         console.warn("Speech synthesis not supported");
+        toast({
+          title: "Speech Not Supported",
+          description: "Your browser doesn't support text-to-speech. Try using a modern browser like Chrome.",
+          variant: "destructive"
+        });
         return;
       }
 
@@ -139,6 +145,11 @@ export function useSpeechSynthesis(language: Language = "english"): SpeechSynthe
         console.error("Speech synthesis error:", event);
         setIsReading(false);
         setCurrentUtterance(null);
+        toast({
+          title: "Speech Error",
+          description: "There was an error playing the voice. Please try again.",
+          variant: "destructive"
+        });
       };
 
       // Safari fix: create a dummy speak utterance first
@@ -149,12 +160,21 @@ export function useSpeechSynthesis(language: Language = "english"): SpeechSynthe
       
       // Set the current utterance and speak
       setCurrentUtterance(utterance);
+      
+      // Chrome bug fix: Sometimes speechSynthesis gets into a paused state
+      if (window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
+      }
+      
       window.speechSynthesis.speak(utterance);
       
       // Chrome bug fix: if speech doesn't start after 1 second, try again
       setTimeout(() => {
         if (!window.speechSynthesis.speaking && utterance === currentUtterance) {
           console.log("Speech didn't start, trying again");
+          if (window.speechSynthesis.paused) {
+            window.speechSynthesis.resume();
+          }
           window.speechSynthesis.speak(utterance);
         }
       }, 1000);

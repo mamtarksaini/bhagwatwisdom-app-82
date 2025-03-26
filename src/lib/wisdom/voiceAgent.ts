@@ -24,6 +24,19 @@ export const getUserVoiceAgentUsage = async (userId: string | null): Promise<Voi
   }
 
   try {
+    // Check if the voice_agent_usage table exists
+    const { data: tables, error: tablesError } = await supabase
+      .from('information_schema.tables')
+      .select('table_name')
+      .eq('table_name', 'voice_agent_usage')
+      .eq('table_schema', 'public');
+
+    // If table doesn't exist or there was an error, return default usage
+    if (tablesError || !tables || tables.length === 0) {
+      console.error('Voice agent usage table does not exist:', tablesError);
+      return { usedCount: 0, lastResetDate: getCurrentMonthStartDate() };
+    }
+
     // Get current usage from the database - directly using the RPC client to avoid type issues
     const { data, error } = await supabase
       .from('voice_agent_usage')
@@ -99,6 +112,19 @@ export const incrementVoiceAgentUsage = async (userId: string | null): Promise<b
   if (!userId) return false;
 
   try {
+    // Check if the voice_agent_usage table exists
+    const { data: tables, error: tablesError } = await supabase
+      .from('information_schema.tables')
+      .select('table_name')
+      .eq('table_name', 'voice_agent_usage')
+      .eq('table_schema', 'public');
+
+    // If table doesn't exist, return success without incrementing
+    if (tablesError || !tables || tables.length === 0) {
+      console.error('Voice agent usage table does not exist:', tablesError);
+      return true;
+    }
+
     const currentUsage = await getUserVoiceAgentUsage(userId);
     
     const { error } = await supabase

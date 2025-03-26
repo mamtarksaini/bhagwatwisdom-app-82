@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Mic, MicOff, Volume2, VolumeX, Crown } from "lucide-react";
+import { Mic, MicOff, Volume2, VolumeX, Crown, ExternalLink } from "lucide-react";
 import { Language } from "@/types";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis";
@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { callGeminiDirectly } from "@/lib/wisdom/geminiApi";
 import { canUseVoiceAgent, getRemainingFreeResponses, incrementVoiceAgentUsage } from "@/lib/wisdom/voiceAgent";
 import { PremiumUpgrade } from "@/components/premium/PremiumUpgrade";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface VoiceAgentProps {
   language: Language;
@@ -29,6 +30,8 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
   const [useElevenLabs, setUseElevenLabs] = useState(!!elevenLabsAgentId);
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const [elevenLabsUrl, setElevenLabsUrl] = useState<string | null>(null);
+  const [showElevenLabsDialog, setShowElevenLabsDialog] = useState(false);
   
   const speechRecognition = useSpeechRecognition(language);
   const speechSynthesis = useSpeechSynthesis(language);
@@ -138,6 +141,7 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
     
     setIsProcessing(true);
     setAiResponse("");
+    setElevenLabsUrl(null);
     
     try {
       const prompt = `You are a helpful assistant responding to voice input. 
@@ -152,12 +156,15 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
         setAiResponse(response);
         
         if (useElevenLabs && elevenLabsAgentId) {
-          const elevenLabsURL = generateElevenLabsURL(input);
-          if (elevenLabsURL) {
-            window.open(elevenLabsURL, '_blank');
+          const url = generateElevenLabsURL(input);
+          if (url) {
+            setElevenLabsUrl(url);
+            setShowElevenLabsDialog(true);
+            
             toast({
               title: "Eleven Labs Voice Agent",
-              description: "The voice response will play in a new window.",
+              description: "Click the 'Open Voice Agent' button to hear the response.",
+              variant: "success"
             });
           }
         } else if (speechSynthesis.isSpeechSupported) {
@@ -214,12 +221,8 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
   };
   
   const toggleSpeech = () => {
-    if (useElevenLabs) {
-      if (isPlayingAudio && audioRef.current) {
-        audioRef.current.pause();
-      } else if (audioRef.current) {
-        audioRef.current.play();
-      }
+    if (useElevenLabs && elevenLabsUrl) {
+      setShowElevenLabsDialog(true);
     } else {
       if (speechSynthesis.isReading) {
         speechSynthesis.stop();
@@ -228,110 +231,150 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
       }
     }
   };
+
+  const openElevenLabsInNewTab = () => {
+    if (elevenLabsUrl) {
+      window.open(elevenLabsUrl, '_blank');
+      setShowElevenLabsDialog(false);
+    }
+  };
   
   return (
-    <Card className="glass-card border border-gold/30">
-      <CardHeader>
-        <CardTitle className="text-gradient flex items-center gap-2">
-          <Volume2 className="h-5 w-5" />
-          Voice Agent {elevenLabsAgentId && <span className="text-xs font-normal bg-blue-500/20 text-blue-500 py-1 px-2 rounded-full">Eleven Labs</span>}
-        </CardTitle>
-        <CardDescription>
-          Ask questions using your voice and receive spoken wisdom
-        </CardDescription>
-      </CardHeader>
-      
-      <CardContent className="space-y-6">
-        {!isPremium && (
-          <div className="text-sm text-muted-foreground flex items-center justify-between">
-            <span>
-              {remainingResponses > 0 
-                ? `${remainingResponses} free ${remainingResponses === 1 ? 'response' : 'responses'} remaining this month` 
-                : "No free responses remaining this month"}
-            </span>
-            {isPremium && (
-              <span className="flex items-center text-gold">
-                <Crown className="h-4 w-4 mr-1" />
-                Premium
-              </span>
-            )}
-          </div>
-        )}
+    <>
+      <Card className="glass-card border border-gold/30">
+        <CardHeader>
+          <CardTitle className="text-gradient flex items-center gap-2">
+            <Volume2 className="h-5 w-5" />
+            Voice Agent {elevenLabsAgentId && <span className="text-xs font-normal bg-blue-500/20 text-blue-500 py-1 px-2 rounded-full">Eleven Labs</span>}
+          </CardTitle>
+          <CardDescription>
+            Ask questions using your voice and receive spoken wisdom
+          </CardDescription>
+        </CardHeader>
         
-        <div className="border rounded-lg p-4 bg-background/50 min-h-24 relative">
-          {isListening ? (
-            <div className="flex flex-col items-center justify-center h-full">
-              <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center animate-pulse mb-2">
-                <Mic className="h-8 w-8 text-red-500" />
-              </div>
-              <p className="text-center text-sm">
-                {userInput || "Listening..."}
-              </p>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center h-full">
-              <Button 
-                onClick={startListening}
-                className="rounded-full h-16 w-16 button-gradient"
-                disabled={isProcessing || (!canUseFreeResponse && !isPremium)}
-              >
-                <Mic className="h-8 w-8" />
-              </Button>
-              <p className="text-center text-sm mt-2">
-                {isProcessing ? "Processing..." : "Tap to speak"}
-              </p>
+        <CardContent className="space-y-6">
+          {!isPremium && (
+            <div className="text-sm text-muted-foreground flex items-center justify-between">
+              <span>
+                {remainingResponses > 0 
+                  ? `${remainingResponses} free ${remainingResponses === 1 ? 'response' : 'responses'} remaining this month` 
+                  : "No free responses remaining this month"}
+              </span>
+              {isPremium && (
+                <span className="flex items-center text-gold">
+                  <Crown className="h-4 w-4 mr-1" />
+                  Premium
+                </span>
+              )}
             </div>
           )}
           
-          {isListening && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="absolute bottom-2 right-2"
-              onClick={stopListening}
-            >
-              <MicOff className="h-4 w-4 mr-1" />
-              Stop
-            </Button>
-          )}
-        </div>
-        
-        {aiResponse && (
-          <div className="border rounded-lg p-4 bg-background/50 relative">
-            <div className="prose dark:prose-invert">
-              <p>{aiResponse}</p>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="absolute top-2 right-2"
-              onClick={toggleSpeech}
-            >
-              {(speechSynthesis.isReading || isPlayingAudio) ? (
-                <>
-                  <VolumeX className="h-4 w-4 mr-1" />
-                  Stop
-                </>
+          <div className="border rounded-lg p-4 bg-background/50 min-h-24 relative">
+            {isListening ? (
+              <div className="flex flex-col items-center justify-center h-full">
+                <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center animate-pulse mb-2">
+                  <Mic className="h-8 w-8 text-red-500" />
+                </div>
+                <p className="text-center text-sm">
+                  {userInput || "Listening..."}
+                </p>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full">
+                <Button 
+                  onClick={startListening}
+                  className="rounded-full h-16 w-16 button-gradient"
+                  disabled={isProcessing || (!canUseFreeResponse && !isPremium)}
+                >
+                  <Mic className="h-8 w-8" />
+                </Button>
+                <p className="text-center text-sm mt-2">
+                  {isProcessing ? "Processing..." : "Tap to speak"}
+                </p>
+              </div>
+            )}
+            
+            {isListening && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="absolute bottom-2 right-2"
+                onClick={stopListening}
+              >
+                <MicOff className="h-4 w-4 mr-1" />
+                Stop
+              </Button>
+            )}
+          </div>
+          
+          {aiResponse && (
+            <div className="border rounded-lg p-4 bg-background/50 relative">
+              <div className="prose dark:prose-invert">
+                <p>{aiResponse}</p>
+              </div>
+              
+              {useElevenLabs && elevenLabsUrl ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="absolute top-2 right-2"
+                  onClick={() => setShowElevenLabsDialog(true)}
+                >
+                  <ExternalLink className="h-4 w-4 mr-1" />
+                  Open Voice Agent
+                </Button>
               ) : (
-                <>
-                  <Volume2 className="h-4 w-4 mr-1" />
-                  Play
-                </>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="absolute top-2 right-2"
+                  onClick={toggleSpeech}
+                >
+                  {speechSynthesis.isReading ? (
+                    <>
+                      <VolumeX className="h-4 w-4 mr-1" />
+                      Stop
+                    </>
+                  ) : (
+                    <>
+                      <Volume2 className="h-4 w-4 mr-1" />
+                      Play
+                    </>
+                  )}
+                </Button>
               )}
+            </div>
+          )}
+
+          <audio ref={audioRef} style={{ display: 'none' }} />
+        </CardContent>
+        
+        <CardFooter className="flex flex-col">
+          {showPremiumOffer && !isPremium && (
+            <div className="w-full mt-4">
+              <PremiumUpgrade />
+            </div>
+          )}
+        </CardFooter>
+      </Card>
+
+      <Dialog open={showElevenLabsDialog} onOpenChange={setShowElevenLabsDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Eleven Labs Voice Agent</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="mb-4">Click the button below to open the Eleven Labs voice agent in a new tab and hear the spoken response to your question.</p>
+            <Button 
+              className="w-full button-gradient" 
+              onClick={openElevenLabsInNewTab}
+            >
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Open Voice Agent in New Tab
             </Button>
           </div>
-        )}
-
-        <audio ref={audioRef} style={{ display: 'none' }} />
-      </CardContent>
-      
-      <CardFooter className="flex flex-col">
-        {showPremiumOffer && !isPremium && (
-          <div className="w-full mt-4">
-            <PremiumUpgrade />
-          </div>
-        )}
-      </CardFooter>
-    </Card>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
