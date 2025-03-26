@@ -1,6 +1,14 @@
 
 import { supabase } from '../supabase';
 
+// Define typings for edge function response
+interface EdgeFunctionResponse {
+  error?: string;
+  data?: {
+    apiKey?: string;
+  };
+}
+
 // Helper function to make a direct API call to Gemini
 export async function callGeminiDirectly(prompt: string) {
   try {
@@ -8,7 +16,7 @@ export async function callGeminiDirectly(prompt: string) {
     console.log('Fetching API key from edge function...');
     
     // Add a timeout for the edge function call
-    const timeoutPromise = new Promise((_, reject) => 
+    const timeoutPromise = new Promise<never>((_, reject) => 
       setTimeout(() => reject(new Error('Edge function request timed out')), 8000)
     );
     
@@ -18,7 +26,7 @@ export async function callGeminiDirectly(prompt: string) {
     const edgeFunctionResponse = await Promise.race([
       functionCallPromise,
       timeoutPromise
-    ]);
+    ]) as EdgeFunctionResponse;
     
     console.log('Edge function response:', edgeFunctionResponse);
     
