@@ -128,7 +128,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
-      const { error } = await updateUserProfile(user.id, updates);
+      // Convert user.id to string when passing to updateUserProfile
+      const { error } = await updateUserProfile(user.id.toString(), updates);
       
       if (!error) {
         console.log("AuthContext: Profile updated successfully, updating local state");
@@ -162,7 +163,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
-      const { error } = await upgradeUserToPremium(user.id);
+      // Convert user.id to string when passing to upgradeUserToPremium
+      const { error } = await upgradeUserToPremium(user.id.toString());
       
       if (!error) {
         console.log("AuthContext: Premium upgrade successful, updating local state");

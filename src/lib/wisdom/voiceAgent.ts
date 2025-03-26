@@ -131,7 +131,8 @@ export const canUseVoiceAgent = async (
   if (!user) return false;
 
   try {
-    const { usedCount } = await getUserVoiceAgentUsage(user.id);
+    // Convert user.id to string when passing to getUserVoiceAgentUsage
+    const { usedCount } = await getUserVoiceAgentUsage(user.id.toString());
     return usedCount < FREE_VOICE_RESPONSES_LIMIT;
   } catch (error) {
     console.error('Error checking voice agent usage:', error);
