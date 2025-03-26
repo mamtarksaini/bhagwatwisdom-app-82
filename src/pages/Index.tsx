@@ -7,7 +7,6 @@ import { ProblemSolver } from "@/components/features/ProblemSolver";
 import { DreamInterpreter } from "@/components/features/DreamInterpreter";
 import { MoodMantra } from "@/components/features/MoodMantra";
 import { DailyVerse } from "@/components/features/DailyVerse";
-import { LanguagePicker } from "@/components/features/LanguagePicker";
 import { BookOpen, Moon, Sun, Heart, Globe, User, LogIn, Crown, Menu, X, MessageSquare, RefreshCw } from "lucide-react";
 import { Language } from "@/types";
 import { Link } from "react-router-dom";
@@ -177,18 +176,6 @@ const Index = () => {
                 <Button variant="outline" onClick={() => setAuthModalOpen(true)}>Sign In</Button>
               )}
             </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="w-full pb-8">
-        <div className="container px-4 md:px-6 flex justify-center">
-          <div className="w-full max-w-xs">
-            <div className="flex items-center gap-2 mb-2">
-              <Globe className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium text-muted-foreground">Select Language</span>
-            </div>
-            <LanguagePicker value={language} onValueChange={setLanguage} />
           </div>
         </div>
       </section>

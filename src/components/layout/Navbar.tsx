@@ -8,6 +8,7 @@ import { useTheme } from '@/components/ui/ThemeProvider';
 import { Separator } from '@/components/ui/separator';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { LanguageSelector } from '@/components/ui/LanguageSelector';
+import { LanguagePicker } from '@/components/features/LanguagePicker';
 import { Language } from '@/types';
 import {
   DropdownMenu,
@@ -70,11 +71,18 @@ export function Navbar() {
           </div>
 
           <div className="flex items-center space-x-4">
+            <div className="hidden md:block">
+              <LanguagePicker 
+                value={language} 
+                onValueChange={handleLanguageChange}
+              />
+            </div>
+            
             <LanguageSelector 
               value={language} 
               onChange={handleLanguageChange} 
               variant="minimal" 
-              className="mr-1"
+              className="mr-1 md:hidden"
             />
             
             <Button variant="ghost" size="icon" onClick={toggleTheme}>
@@ -146,10 +154,9 @@ export function Navbar() {
             
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Language</span>
-              <LanguageSelector 
+              <LanguagePicker 
                 value={language} 
-                onChange={handleLanguageChange}
-                variant="minimal"
+                onValueChange={handleLanguageChange}
               />
             </div>
             
