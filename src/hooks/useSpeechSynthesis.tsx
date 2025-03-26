@@ -25,6 +25,7 @@ export function useSpeechSynthesis(language: Language = "english"): SpeechSynthe
   const pendingRetryRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const failedAttemptsRef = useRef<number>(0);
   const maxRetryAttempts = 2;
+  const userCancelledRef = useRef<boolean>(false);
 
   // Cleanup function to properly stop and reset speech synthesis
   const cleanupSpeech = useCallback(() => {
@@ -213,6 +214,9 @@ export function useSpeechSynthesis(language: Language = "english"): SpeechSynthe
         return;
       }
 
+      // Reset user cancelled flag at the beginning of a new speech request
+      userCancelledRef.current = false;
+
       // Check if we've had too many failed attempts
       if (failedAttemptsRef.current >= maxRetryAttempts) {
         toast({
@@ -264,9 +268,6 @@ export function useSpeechSynthesis(language: Language = "english"): SpeechSynthe
         utterance.pitch = 1.0;
         utterance.volume = 1.0;
 
-        // Flag to track if this is a user-initiated stop
-        const userCancelledRef = useRef(false);
-
         // Set up event handlers
         utterance.onstart = () => {
           console.log("Speech started");
@@ -285,9 +286,7 @@ export function useSpeechSynthesis(language: Language = "english"): SpeechSynthe
           setIsReading(false);
           setCurrentUtterance(null);
           
-          // Check if this is a user-initiated cancel event
-          // Note: In some browsers, cancellation might not set 'canceled' as the error
-          // So we'll also check if it happened very shortly after the stop() was called
+          // Only show error if it wasn't user-cancelled
           if (event.error === 'canceled' || userCancelledRef.current) {
             console.log("User canceled speech, not treating as an error");
             return; // Don't increment error counter or show toast for user cancellations
@@ -295,7 +294,6 @@ export function useSpeechSynthesis(language: Language = "english"): SpeechSynthe
           
           failedAttemptsRef.current++;
           
-          // Only show toast for errors that aren't user-initiated cancellations
           toast({
             title: "Speech Error",
             description: "There was an error playing the voice. Falling back to text-only mode.",
@@ -445,11 +443,10 @@ export function useSpeechSynthesis(language: Language = "english"): SpeechSynthe
 
   const stop = useCallback(() => {
     if (isSpeechSupported) {
-      console.log("Stopping speech");
+      console.log("Stopping speech - user initiated");
       
-      // Set a flag to indicate this is a user-initiated cancel
-      // This will help prevent showing error message for intentional cancellation
-      const userCancelledRef = useRef(true);
+      // Mark this as a user-initiated cancel to prevent error messages
+      userCancelledRef.current = true;
       
       window.speechSynthesis.cancel();
       setIsReading(false);
