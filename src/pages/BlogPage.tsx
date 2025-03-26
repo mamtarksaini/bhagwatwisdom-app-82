@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
+import { CalendarDays, Clock, User } from "lucide-react";
 
 const BlogPage = () => {
   // Sample blog posts data
@@ -46,7 +47,7 @@ const BlogPage = () => {
       author: "Maya Patel",
       category: "Emotional Wellbeing",
       readTime: "7 min read",
-      image: "/lovable-uploads/c3d9b365-6fc8-4cba-bd7b-ea9317db1356.png"
+      image: "/lovable-uploads/68d9ec0c-8fbe-494e-ae18-59650aec00e8.png"
     },
   ];
 
@@ -57,23 +58,33 @@ const BlogPage = () => {
     >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {blogPosts.map((post) => (
-          <Card key={post.id} className="overflow-hidden">
+          <Card key={post.id} className="overflow-hidden hover:shadow-md transition-shadow">
             <div className="aspect-video relative overflow-hidden">
               <img 
                 src={post.image} 
                 alt={post.title} 
-                className="object-cover w-full h-full"
+                className="object-cover w-full h-full transition-transform hover:scale-105 duration-500"
               />
             </div>
             <CardHeader>
               <div className="flex justify-between items-center mb-2">
                 <Badge variant="secondary">{post.category}</Badge>
-                <span className="text-xs text-muted-foreground">{post.readTime}</span>
+                <div className="flex items-center text-xs text-muted-foreground">
+                  <Clock className="h-3 w-3 mr-1" />
+                  <span>{post.readTime}</span>
+                </div>
               </div>
               <CardTitle className="hover:text-primary transition-colors">
                 <Link to={`/blog/${post.id}`}>{post.title}</Link>
               </CardTitle>
-              <CardDescription>{post.date} • by {post.author}</CardDescription>
+              <CardDescription className="flex items-center gap-2">
+                <CalendarDays className="h-3 w-3" />
+                {post.date} 
+                <span className="flex items-center">
+                  <User className="h-3 w-3 mr-1" />
+                  {post.author}
+                </span>
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground">{post.excerpt}</p>

@@ -8,7 +8,7 @@ import { DreamInterpreter } from "@/components/features/DreamInterpreter";
 import { MoodMantra } from "@/components/features/MoodMantra";
 import { DailyVerse } from "@/components/features/DailyVerse";
 import { LanguagePicker } from "@/components/features/LanguagePicker";
-import { BookOpen, Moon, Sun, Heart, Globe, User, LogIn, Crown } from "lucide-react";
+import { BookOpen, Moon, Sun, Heart, Globe, User, LogIn, Crown, Menu, X } from "lucide-react";
 import { Language } from "@/types";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,6 +18,24 @@ const Index = () => {
   const [language, setLanguage] = useState<Language>("english");
   const { user, isPremium } = useAuth();
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Navigation links
+  const mainLinks = [
+    { path: "/", label: "Home" },
+    { path: "/about", label: "About" },
+    { path: "/blog", label: "Blog" },
+    { path: "/faq", label: "FAQ" },
+    { path: "/support", label: "Support" },
+  ];
+
+  const footerLinks = [
+    { path: "/contact", label: "Contact" },
+    { path: "/terms", label: "Terms" },
+    { path: "/privacy", label: "Privacy" },
+    { path: "/refund", label: "Refund Policy" },
+    { path: "/documentation", label: "Documentation" },
+  ];
 
   // Devotee data with the requested names
   const devotees = [
@@ -29,8 +47,24 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background w-full">
       {/* Navigation */}
-      <nav className="w-full py-4 px-4 md:px-6 flex justify-between items-center">
-        <div className="text-xl font-heading font-bold text-gradient">Bhagwat Wisdom</div>
+      <nav className="w-full py-4 px-4 md:px-6 flex justify-between items-center border-b border-border">
+        <div className="flex items-center">
+          <Link to="/" className="text-xl font-heading font-bold text-gradient mr-8">Bhagwat Wisdom</Link>
+          
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center space-x-1">
+            {mainLinks.map((link) => (
+              <Link 
+                key={link.path} 
+                to={link.path} 
+                className="px-3 py-2 text-sm font-medium rounded-md hover:bg-secondary transition-colors"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </div>
+        </div>
+        
         <div className="flex items-center gap-2">
           {user ? (
             <Link to="/profile">
@@ -51,8 +85,48 @@ const Index = () => {
               <span className="hidden sm:inline">Sign In</span>
             </Button>
           )}
+          
+          {/* Mobile menu button */}
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="md:hidden" 
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </Button>
         </div>
       </nav>
+      
+      {/* Mobile menu */}
+      {mobileMenuOpen && (
+        <div className="md:hidden bg-background p-4 border-b border-border">
+          <div className="flex flex-col space-y-2">
+            {mainLinks.map((link) => (
+              <Link 
+                key={link.path} 
+                to={link.path} 
+                className="px-3 py-2 text-sm font-medium rounded-md hover:bg-secondary transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {link.label}
+              </Link>
+            ))}
+            <div className="pt-2 border-t border-border mt-2">
+              {footerLinks.map((link) => (
+                <Link 
+                  key={link.path} 
+                  to={link.path} 
+                  className="px-3 py-2 text-sm font-medium rounded-md hover:bg-secondary transition-colors block"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Hero Section */}
       <section className="w-full py-12 md:py-24 lg:py-32 flex flex-col items-center justify-center text-center px-4">
@@ -213,6 +287,28 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* Simple Footer */}
+      <footer className="w-full py-8 bg-secondary/20 border-t border-border">
+        <div className="container px-4 md:px-6 mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-center md:text-left">
+            {footerLinks.map((link) => (
+              <Link 
+                key={link.path}
+                to={link.path}
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </div>
+          <div className="mt-8 pt-8 border-t border-border text-center">
+            <p className="text-sm text-muted-foreground">
+              © {new Date().getFullYear()} Bhagwat Wisdom. All rights reserved.
+            </p>
+          </div>
+        </div>
+      </footer>
 
       {/* Auth Modal */}
       <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
