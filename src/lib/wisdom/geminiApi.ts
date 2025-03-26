@@ -37,7 +37,7 @@ export async function callGeminiDirectly(prompt: string) {
       console.warn('Using fallback API key');
       
       // Updated valid API key for Gemini
-      const FALLBACK_API_KEY = 'AIzaSyDh02zFLuPX2Jyc7uQZ-MSFQrWKRXDURz8'; 
+      const FALLBACK_API_KEY = 'AIzaSyBp6l8ATf6k8FeAUVCk0TygqDjSPsusUXo'; 
       
       if (!FALLBACK_API_KEY) {
         console.error('No fallback API key available');
@@ -57,7 +57,7 @@ export async function callGeminiDirectly(prompt: string) {
     
     // Fall back to the hardcoded key if any error occurs
     console.warn('Using fallback API key due to error');
-    const FALLBACK_API_KEY = 'AIzaSyDh02zFLuPX2Jyc7uQZ-MSFQrWKRXDURz8';
+    const FALLBACK_API_KEY = 'AIzaSyBp6l8ATf6k8FeAUVCk0TygqDjSPsusUXo';
     
     if (!FALLBACK_API_KEY) {
       console.error('No fallback API key available');
