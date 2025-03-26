@@ -35,6 +35,8 @@ const Index = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { isDark, toggleTheme } = useTheme();
 
+  const [randomAffirmationIndex, setRandomAffirmationIndex] = useState(0);
+
   const mainLinks = [
     { path: "/", label: "Home" },
     { path: "/about", label: "About" },
@@ -56,6 +58,11 @@ const Index = () => {
     { id: 2, name: "Rita", role: "Spiritual Seeker" },
     { id: 3, name: "Ankur", role: "Spiritual Seeker" },
   ];
+
+  const getRandomAffirmation = () => {
+    const affirmations = affirmationsData[language] || affirmationsData.english;
+    setRandomAffirmationIndex(Math.floor(Math.random() * affirmations.length));
+  };
 
   return (
     <div className="min-h-screen bg-background w-full">
@@ -290,7 +297,7 @@ const Index = () => {
                   <CardContent>
                     <div className="flex flex-col space-y-4">
                       <div className="p-4 bg-secondary/20 rounded-lg">
-                        <p className="text-center">{(affirmationsData[language] || affirmationsData.english)[currentAffirmation]}</p>
+                        <p className="text-center">{(affirmationsData[language] || affirmationsData.english)[randomAffirmationIndex]}</p>
                       </div>
                       <Button asChild className="w-full">
                         <Link to="/affirmations">
