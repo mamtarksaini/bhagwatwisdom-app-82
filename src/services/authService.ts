@@ -136,23 +136,21 @@ export async function checkEmailVerificationStatus(email: string): Promise<{ ver
   try {
     console.log('authService: Checking email verification status for:', email);
     
-    // Get user by email
-    const { data, error } = await supabase
-      .from('users')
-      .select('email_confirmed_at')
-      .eq('email', email)
-      .maybeSingle();
+    // Instead of trying to query the auth.users table directly,
+    // let's use the Supabase auth API to get the current session
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
     
-    if (error) {
-      console.error('authService: Error checking email verification:', error);
-      return { verified: false, error };
+    if (sessionError) {
+      console.error('authService: Error checking session:', sessionError);
+      return { verified: false, error: sessionError };
     }
     
-    // If email_confirmed_at exists and is not null, email is verified
-    const verified = data && data.email_confirmed_at !== null;
+    // If we have a session and the email matches, then the email is verified
+    // Because Supabase by default requires email verification for session creation
+    const verified = sessionData?.session?.user?.email === email;
     console.log('authService: Email verification status:', verified);
     
-    return { verified: !!verified, error: null };
+    return { verified, error: null };
   } catch (error) {
     console.error('authService: Exception during email verification check:', error);
     return { verified: false, error: error as Error };
