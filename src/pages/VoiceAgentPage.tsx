@@ -38,7 +38,7 @@ export function VoiceAgentPage() {
           <LanguagePicker value={language} onValueChange={setLanguage} />
         </div>
         
-        <VoiceAgent language={language} />
+        <VoiceAgent language={language} elevenLabsAgentId="UBrWV90gjXHjFCdjaYBK" />
       </div>
     </PageLayout>
   );

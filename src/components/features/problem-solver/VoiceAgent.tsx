@@ -10,9 +10,7 @@ import { toast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { callGeminiDirectly } from "@/lib/wisdom/geminiApi";
 import { canUseVoiceAgent, getRemainingFreeResponses, incrementVoiceAgentUsage } from "@/lib/wisdom/voiceAgent";
-import { PremiumUpgrade } from "@/components/premium/PremiumUpgrade";
 import { AudioVisualizer } from "./AudioVisualizer";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface VoiceAgentProps {
   language: Language;
@@ -250,7 +248,7 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
   return (
     <div className="max-w-xl mx-auto w-full">
       <Card className="bg-[#1A1F2C] border-[#33C3F0]/30 text-white overflow-hidden">
-        <CardHeader className="pb-0">
+        <CardHeader className="pb-2">
           <CardTitle className="text-[#1EAEDB] text-2xl font-normal flex items-center justify-between">
             AI Assistant
             <span className="flex items-center text-gold text-sm">
@@ -258,26 +256,9 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
               Premium Mode (Testing)
             </span>
           </CardTitle>
-          <Tabs defaultValue="voice" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 bg-[#221F26]">
-              <TabsTrigger 
-                value="voice" 
-                className="text-[#1EAEDB] data-[state=active]:bg-[#1EAEDB]/10 data-[state=active]:text-white"
-              >
-                Voice Assistant
-              </TabsTrigger>
-              <TabsTrigger 
-                value="chat" 
-                className="text-[#1EAEDB] data-[state=active]:bg-[#1EAEDB]/10 data-[state=active]:text-white"
-                disabled
-              >
-                Chat Assistant
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
         </CardHeader>
       
-        <CardContent className="p-6 pt-8 min-h-[400px] flex flex-col items-center justify-center">
+        <CardContent className="p-6 pt-4 min-h-[400px] flex flex-col items-center justify-center">
           <div className="w-full h-[300px] flex items-center justify-center relative">
             <div className="relative h-56 w-56">
               <div className={`absolute inset-0 rounded-full ${isListening || isProcessing || speechSynthesis.isReading ? 'border-2 border-[#1EAEDB] animate-pulse' : ''}`}>
