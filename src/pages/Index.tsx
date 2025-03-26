@@ -7,17 +7,33 @@ import { DreamInterpreter } from "@/components/features/DreamInterpreter";
 import { MoodMantra } from "@/components/features/MoodMantra";
 import { DailyVerse } from "@/components/features/DailyVerse";
 import { LanguagePicker } from "@/components/features/LanguagePicker";
-import { BookOpen, Moon, Sun, Heart, Globe, User, LogIn, Crown, Menu, X, MessageSquare, Volume2 } from "lucide-react";
+import { BookOpen, Moon, Sun, Heart, Globe, User, LogIn, Crown, Menu, X, MessageSquare, RefreshCw } from "lucide-react";
 import { Language } from "@/types";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { AuthModal } from "@/components/auth/AuthModal";
+
+const affirmationsData = {
+  english: [
+    "I am at peace with my past and present, as taught in the Bhagavad Gita.",
+    "My true self is eternal and unchanging, regardless of life's circumstances.",
+    "I perform my duties with dedication, without attachment to results.",
+    "I accept what I cannot change with equanimity."
+  ],
+  hindi: [
+    "मैं अपने अतीत और ���र्तमान से शांति से जुड़ा हूँ, जैसा भगवद गीता में सिखाया गया है।",
+    "मेरा वास्तविक स्वयं शाश्वत और अपरिवर्तनीय है, जीवन की परिस्थितियों से निरपेक्ष।",
+    "मैं अपने कर्तव्यों को समर्पण के साथ निभाता हूँ, परिणामों से अनासक्त रहकर।",
+    "मैं जो नहीं बदल सकता उसे समभाव से स्वीकार करता हूँ।"
+  ]
+};
 
 const Index = () => {
   const [language, setLanguage] = useState<Language>("english");
   const { user, isPremium } = useAuth();
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [currentAffirmation, setCurrentAffirmation] = useState(0);
 
   const mainLinks = [
     { path: "/", label: "Home" },
@@ -40,6 +56,12 @@ const Index = () => {
     { id: 2, name: "Rita", role: "Spiritual Seeker" },
     { id: 3, name: "Ankur", role: "Spiritual Seeker" },
   ];
+
+  const getRandomAffirmation = () => {
+    const affirmations = affirmationsData[language] || affirmationsData.english;
+    const randomIndex = Math.floor(Math.random() * affirmations.length);
+    setCurrentAffirmation(randomIndex);
+  };
 
   return (
     <div className="min-h-screen bg-background w-full">
@@ -168,7 +190,7 @@ const Index = () => {
           </div>
           
           <Tabs defaultValue="daily-verse" className="w-full max-w-4xl mx-auto">
-            <TabsList className="grid grid-cols-6 w-full mb-6">
+            <TabsList className="grid grid-cols-5 w-full mb-6">
               <TabsTrigger value="daily-verse" className="flex items-center gap-2">
                 <BookOpen className="h-4 w-4" />
                 <span className="hidden sm:inline">Daily Verse</span>
@@ -184,10 +206,6 @@ const Index = () => {
               <TabsTrigger value="chat-agent" className="flex items-center gap-2">
                 <MessageSquare className="h-4 w-4" />
                 <span className="hidden sm:inline">Chat Agent</span>
-              </TabsTrigger>
-              <TabsTrigger value="voice-agent" className="flex items-center gap-2">
-                <Volume2 className="h-4 w-4" />
-                <span className="hidden sm:inline">Voice Agent</span>
               </TabsTrigger>
               <TabsTrigger value="mantra" className="flex items-center gap-2">
                 <Heart className="h-4 w-4" />
@@ -253,27 +271,6 @@ const Index = () => {
                 </Card>
               </TabsContent>
               
-              <TabsContent value="voice-agent" className="mt-0">
-                <Card className="border-0 shadow-none">
-                  <CardHeader>
-                    <CardTitle>Voice Agent</CardTitle>
-                    <CardDescription>Converse with an AI voice guide for spiritual wisdom</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-col space-y-4">
-                      <div className="p-4 bg-secondary/20 rounded-lg">
-                        <p className="text-center">Speak to our AI voice guide and receive spoken wisdom based on Bhagavad Gita's teachings.</p>
-                      </div>
-                      <Button asChild className="w-full">
-                        <Link to="/voice-agent">
-                          Start Voice Conversation
-                        </Link>
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              
               <TabsContent value="mantra" className="mt-0">
                 <Card className="border-0 shadow-none">
                   <CardHeader>
@@ -287,6 +284,55 @@ const Index = () => {
               </TabsContent>
             </div>
           </Tabs>
+        </div>
+      </section>
+
+      <section className="w-full py-12 bg-secondary/30">
+        <div className="container px-4 md:px-6">
+          <div className="flex flex-col items-center space-y-4 text-center mb-8">
+            <h2 className="text-3xl font-heading font-bold tracking-tighter sm:text-4xl">
+              Daily Affirmations
+            </h2>
+            <p className="mx-auto max-w-[700px] text-muted-foreground">
+              Positive affirmations inspired by Bhagavad Gita teachings for your daily practice
+            </p>
+          </div>
+          
+          <div className="max-w-xl mx-auto">
+            <Card className="glass-card border border-gold/30">
+              <CardHeader>
+                <CardTitle className="text-gradient">Today's Affirmation</CardTitle>
+                <CardDescription>
+                  Repeat this affirmation throughout your day to cultivate positive mindset
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="bg-spiritual dark:bg-gray-800/40 rounded-lg p-6 border border-spiritual-dark dark:border-gray-700">
+                  <blockquote className="text-xl md:text-2xl font-heading font-medium text-center">
+                    "{(affirmationsData[language] || affirmationsData.english)[currentAffirmation]}"
+                  </blockquote>
+                </div>
+                
+                <div className="flex justify-center">
+                  <Button 
+                    onClick={getRandomAffirmation} 
+                    className="button-gradient flex items-center gap-2"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                    New Affirmation
+                  </Button>
+                </div>
+                
+                <div className="flex justify-center mt-4">
+                  <Button asChild className="w-full max-w-sm">
+                    <Link to="/affirmations">
+                      View All Affirmations
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </section>
       
