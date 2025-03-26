@@ -74,7 +74,10 @@ export function AffirmationsPage() {
         {!showAffirmation ? (
           <div className="flex justify-center">
             <Button 
-              onClick={() => setShowAffirmation(true)} 
+              onClick={() => {
+                setShowAffirmation(true);
+                getRandomAffirmation();
+              }} 
               className="button-gradient flex items-center gap-2"
             >
               <Plus className="h-4 w-4" />
