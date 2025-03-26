@@ -7,13 +7,15 @@ import { ProblemSolver } from "@/components/features/ProblemSolver";
 import { DreamInterpreter } from "@/components/features/DreamInterpreter";
 import { MoodMantra } from "@/components/features/MoodMantra";
 import { DailyVerse } from "@/components/features/DailyVerse";
-import { LanguagePicker } from "@/components/features/LanguagePicker";
 import { BookOpen, Moon, Sun, Heart, Globe, User, LogIn, Crown, Menu, X, MessageSquare, RefreshCw } from "lucide-react";
 import { Language } from "@/types";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { useTheme } from "@/components/ui/ThemeProvider";
+import { LanguageSelector } from "@/components/ui/LanguageSelector";
+import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu";
+import { cn } from "@/lib/utils";
 
 const affirmationsData = {
   english: [
@@ -66,6 +68,11 @@ const Index = () => {
     setCurrentAffirmation(randomIndex);
   };
 
+  const handleLanguageChange = (newLanguage: Language) => {
+    setLanguage(newLanguage);
+    // You could also save this to localStorage or context for persistence
+  };
+
   return (
     <div className="min-h-screen bg-background w-full">
       <nav className="w-full py-4 px-4 md:px-6 flex justify-between items-center border-b border-border">
@@ -86,6 +93,13 @@ const Index = () => {
         </div>
         
         <div className="flex items-center gap-2">
+          <LanguageSelector 
+            value={language} 
+            onChange={handleLanguageChange} 
+            variant="minimal" 
+            className="mr-1"
+          />
+          
           <Button 
             variant="ghost" 
             size="icon" 
@@ -181,18 +195,6 @@ const Index = () => {
         </div>
       </section>
 
-      <section className="w-full pb-8">
-        <div className="container px-4 md:px-6 flex justify-center">
-          <div className="w-full max-w-xs">
-            <div className="flex items-center gap-2 mb-2">
-              <Globe className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium text-muted-foreground">Select Language</span>
-            </div>
-            <LanguagePicker value={language} onValueChange={setLanguage} />
-          </div>
-        </div>
-      </section>
-
       <section id="features" className="w-full py-12 md:py-24">
         <div className="container px-4 md:px-6">
           <div className="flex flex-col items-center space-y-4 text-center mb-10">
@@ -202,6 +204,55 @@ const Index = () => {
             <p className="mx-auto max-w-[700px] text-muted-foreground">
               Explore various features that provide spiritual insights based on Bhagavad Gita teachings.
             </p>
+          </div>
+          
+          {/* Main Navigation Menu for Features */}
+          <div className="max-w-4xl mx-auto mb-10">
+            <NavigationMenu className="justify-center w-full">
+              <NavigationMenuList className="justify-center w-full flex-wrap">
+                <NavigationMenuItem>
+                  <Link to="/daily-verse" className={cn(navigationMenuTriggerStyle(), "flex items-center gap-2 group")}>
+                    <BookOpen className="h-4 w-4" />
+                    <span>Daily Verse</span>
+                  </Link>
+                </NavigationMenuItem>
+                
+                <NavigationMenuItem>
+                  <Link to="/problem-solver" className={cn(navigationMenuTriggerStyle(), "flex items-center gap-2 group")}>
+                    <Sun className="h-4 w-4" />
+                    <span>Problem Solver</span>
+                  </Link>
+                </NavigationMenuItem>
+                
+                <NavigationMenuItem>
+                  <Link to="/dream-interpreter" className={cn(navigationMenuTriggerStyle(), "flex items-center gap-2 group")}>
+                    <Moon className="h-4 w-4" />
+                    <span>Dream Interpretation</span>
+                  </Link>
+                </NavigationMenuItem>
+                
+                <NavigationMenuItem>
+                  <Link to="/chat-agent" className={cn(navigationMenuTriggerStyle(), "flex items-center gap-2 group")}>
+                    <MessageSquare className="h-4 w-4" />
+                    <span>Chat Agent</span>
+                  </Link>
+                </NavigationMenuItem>
+                
+                <NavigationMenuItem>
+                  <Link to="/mood-mantra" className={cn(navigationMenuTriggerStyle(), "flex items-center gap-2 group")}>
+                    <Heart className="h-4 w-4" />
+                    <span>Mood Mantra</span>
+                  </Link>
+                </NavigationMenuItem>
+                
+                <NavigationMenuItem>
+                  <Link to="/affirmations" className={cn(navigationMenuTriggerStyle(), "flex items-center gap-2 group")}>
+                    <RefreshCw className="h-4 w-4" />
+                    <span>Affirmations</span>
+                  </Link>
+                </NavigationMenuItem>
+              </NavigationMenuList>
+            </NavigationMenu>
           </div>
           
           <Tabs defaultValue="daily-verse" className="w-full max-w-4xl mx-auto">
