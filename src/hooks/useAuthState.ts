@@ -22,18 +22,28 @@ export const useAuthState = () => {
           email: session.user.email,
           name: profile?.name || null,
           created_at: profile?.created_at || new Date().toISOString(),
-          is_premium: false
+          is_premium: Boolean(profile?.is_premium) || false
         };
         
         console.log("useAuthState: Profile fetched successfully, updating user state");
         setUser(updatedUser);
-        setIsPremium(false);
+        setIsPremium(Boolean(profile?.is_premium) || false);
         setStatus('authenticated');
       } catch (error) {
         console.error("useAuthState: Error handling auth state change:", error);
-        setStatus('unauthenticated');
-        setUser(null);
+        // Even if profile fetch fails, we still have basic user info from session
+        // This allows app to function without crashing
+        const fallbackUser = {
+          id: session.user.id,
+          email: session.user.email,
+          name: null,
+          created_at: new Date().toISOString(),
+          is_premium: false
+        };
+        
+        setUser(fallbackUser);
         setIsPremium(false);
+        setStatus('authenticated');
       }
     } else {
       console.log("useAuthState: No session, setting to unauthenticated");
