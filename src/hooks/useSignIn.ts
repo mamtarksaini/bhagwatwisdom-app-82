@@ -1,6 +1,6 @@
 
 import { useState, useRef, useEffect } from 'react';
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 import { toast } from "@/components/ui/use-toast";
 import { useNavigate } from 'react-router-dom';
 import { z } from "zod";
