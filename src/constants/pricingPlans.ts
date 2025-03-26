@@ -23,7 +23,7 @@ export const PRICING_PLANS: PricingPlan[] = [
     interactions: "5",
     popular: false,
     description: "Perfect for beginners starting their spiritual journey",
-    icon: <Zap className="h-5 w-5 text-blue-500" />,
+    icon: React.createElement(Zap, { className: "h-5 w-5 text-blue-500" }),
     features: [
       "Basic wisdom responses",
     ],
@@ -35,7 +35,7 @@ export const PRICING_PLANS: PricingPlan[] = [
     interactions: "250",
     popular: true,
     description: "Enhanced wisdom for dedicated spiritual seekers",
-    icon: <Crown className="h-5 w-5 text-gold" />,
+    icon: React.createElement(Crown, { className: "h-5 w-5 text-gold" }),
     features: [
       "Basic wisdom responses",
       "Personalized mantras",
@@ -51,7 +51,7 @@ export const PRICING_PLANS: PricingPlan[] = [
     interactions: "Unlimited",
     popular: false,
     description: "Complete spiritual guidance for the most dedicated",
-    icon: <CircleDollarSign className="h-5 w-5 text-green-500" />,
+    icon: React.createElement(CircleDollarSign, { className: "h-5 w-5 text-green-500" }),
     features: [
       "Basic wisdom responses",
       "Personalized mantras",

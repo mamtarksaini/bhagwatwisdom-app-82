@@ -1,8 +1,9 @@
 
 import React from 'react';
-import { Check, LucideIcon } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PricingPlan } from '@/types/pricing';
+import { PricingFeaturesList } from './PricingFeaturesList';
 
 interface PricingCardProps {
   plan: PricingPlan;
@@ -36,14 +37,7 @@ export function PricingCard({ plan, isCurrentPlan, isUpgrading, onUpgradeClick }
       
       <p className="text-muted-foreground mb-6">{plan.description}</p>
       
-      <ul className="space-y-2 mb-6">
-        {plan.features.map((feature, index) => (
-          <li key={index} className="flex items-start gap-2">
-            <Check className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
-            <span>{feature}</span>
-          </li>
-        ))}
-      </ul>
+      <PricingFeaturesList features={plan.features} />
       
       {isCurrentPlan ? (
         <Button disabled className="w-full bg-green-600 hover:bg-green-700">
