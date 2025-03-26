@@ -7,7 +7,7 @@ import { DreamInterpreter } from "@/components/features/DreamInterpreter";
 import { MoodMantra } from "@/components/features/MoodMantra";
 import { DailyVerse } from "@/components/features/DailyVerse";
 import { LanguagePicker } from "@/components/features/LanguagePicker";
-import { BookOpen, Moon, Sun, Heart, Globe, User, LogIn, Crown, Menu, X, MessageSquare } from "lucide-react";
+import { BookOpen, Moon, Sun, Heart, Globe, User, LogIn, Crown, Menu, X, MessageSquare, Volume2 } from "lucide-react";
 import { Language } from "@/types";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -168,7 +168,7 @@ const Index = () => {
           </div>
           
           <Tabs defaultValue="daily-verse" className="w-full max-w-4xl mx-auto">
-            <TabsList className="grid grid-cols-5 w-full mb-6">
+            <TabsList className="grid grid-cols-6 w-full mb-6">
               <TabsTrigger value="daily-verse" className="flex items-center gap-2">
                 <BookOpen className="h-4 w-4" />
                 <span className="hidden sm:inline">Daily Verse</span>
@@ -184,6 +184,10 @@ const Index = () => {
               <TabsTrigger value="chat-agent" className="flex items-center gap-2">
                 <MessageSquare className="h-4 w-4" />
                 <span className="hidden sm:inline">Chat Agent</span>
+              </TabsTrigger>
+              <TabsTrigger value="voice-agent" className="flex items-center gap-2">
+                <Volume2 className="h-4 w-4" />
+                <span className="hidden sm:inline">Voice Agent</span>
               </TabsTrigger>
               <TabsTrigger value="mantra" className="flex items-center gap-2">
                 <Heart className="h-4 w-4" />
@@ -242,6 +246,27 @@ const Index = () => {
                       <Button asChild className="w-full">
                         <Link to="/chat-agent">
                           Start Conversation
+                        </Link>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="voice-agent" className="mt-0">
+                <Card className="border-0 shadow-none">
+                  <CardHeader>
+                    <CardTitle>Voice Agent</CardTitle>
+                    <CardDescription>Converse with an AI voice guide for spiritual wisdom</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-col space-y-4">
+                      <div className="p-4 bg-secondary/20 rounded-lg">
+                        <p className="text-center">Speak to our AI voice guide and receive spoken wisdom based on Bhagavad Gita's teachings.</p>
+                      </div>
+                      <Button asChild className="w-full">
+                        <Link to="/voice-agent">
+                          Start Voice Conversation
                         </Link>
                       </Button>
                     </div>
