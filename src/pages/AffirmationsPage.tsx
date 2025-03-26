@@ -6,7 +6,7 @@ import { LanguagePicker } from "@/components/features/LanguagePicker";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Globe, RefreshCw } from "lucide-react";
+import { AlertCircle, Globe, RefreshCw, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 // Sample affirmations
@@ -40,6 +40,7 @@ const affirmationsData = {
 export function AffirmationsPage() {
   const [language, setLanguage] = useState<Language>("english");
   const [currentAffirmation, setCurrentAffirmation] = useState(0);
+  const [showAffirmation, setShowAffirmation] = useState(false);
   const { isPremium } = useAuth();
   
   const getRandomAffirmation = () => {
@@ -70,43 +71,62 @@ export function AffirmationsPage() {
           </AlertDescription>
         </Alert>
         
-        <Card className="glass-card border border-gold/30">
-          <CardHeader>
-            <CardTitle className="text-gradient">Daily Affirmation</CardTitle>
-            <CardDescription>
-              Repeat this affirmation throughout your day to cultivate positive mindset
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="bg-spiritual dark:bg-gray-800/40 rounded-lg p-6 border border-spiritual-dark dark:border-gray-700">
-              <blockquote className="text-xl md:text-2xl font-heading font-medium text-center">
-                "{(affirmationsData[language] || affirmationsData.english)[currentAffirmation]}"
-              </blockquote>
-            </div>
-            
-            <div className="flex justify-center">
-              <Button 
-                onClick={getRandomAffirmation} 
-                className="button-gradient flex items-center gap-2"
-              >
-                <RefreshCw className="h-4 w-4" />
-                New Affirmation
-              </Button>
-            </div>
-            
-            {!isPremium && (
-              <div className="mt-4 bg-gold/10 dark:bg-gold/20 rounded-lg p-4 text-sm">
-                <p className="font-medium mb-1">Upgrade to Premium for enhanced affirmations:</p>
-                <ul className="list-disc pl-5 space-y-1 text-foreground/80">
-                  <li>Personalized affirmations based on your spiritual needs</li>
-                  <li>Daily affirmation notifications and reminders</li>
-                  <li>Audio recordings to accompany your affirmation practice</li>
-                  <li>Create custom affirmation collections for different aspects of life</li>
-                </ul>
+        {!showAffirmation ? (
+          <div className="flex justify-center">
+            <Button 
+              onClick={() => setShowAffirmation(true)} 
+              className="button-gradient flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Show Today's Affirmation
+            </Button>
+          </div>
+        ) : (
+          <Card className="glass-card border border-gold/30">
+            <CardHeader>
+              <CardTitle className="text-gradient">Daily Affirmation</CardTitle>
+              <CardDescription>
+                Repeat this affirmation throughout your day to cultivate positive mindset
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="bg-spiritual dark:bg-gray-800/40 rounded-lg p-6 border border-spiritual-dark dark:border-gray-700">
+                <blockquote className="text-xl md:text-2xl font-heading font-medium text-center">
+                  "{(affirmationsData[language] || affirmationsData.english)[currentAffirmation]}"
+                </blockquote>
               </div>
-            )}
-          </CardContent>
-        </Card>
+              
+              <div className="flex justify-center gap-4">
+                <Button 
+                  onClick={getRandomAffirmation} 
+                  className="button-gradient flex items-center gap-2"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  New Affirmation
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowAffirmation(false)}
+                >
+                  Hide Affirmation
+                </Button>
+              </div>
+              
+              {!isPremium && (
+                <div className="mt-4 bg-gold/10 dark:bg-gold/20 rounded-lg p-4 text-sm">
+                  <p className="font-medium mb-1">Upgrade to Premium for enhanced affirmations:</p>
+                  <ul className="list-disc pl-5 space-y-1 text-foreground/80">
+                    <li>Personalized affirmations based on your spiritual needs</li>
+                    <li>Daily affirmation notifications and reminders</li>
+                    <li>Audio recordings to accompany your affirmation practice</li>
+                    <li>Create custom affirmation collections for different aspects of life</li>
+                  </ul>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
       </div>
     </PageLayout>
   );
