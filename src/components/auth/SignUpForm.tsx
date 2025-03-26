@@ -11,6 +11,7 @@ import { Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { InfoIcon } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
@@ -41,6 +42,7 @@ export function SignUpForm({ onSuccess }: SignUpFormProps) {
     setIsLoading(true);
     
     try {
+      // Call the signUp function from AuthContext
       const { error } = await signUp(values.email, values.password, values.name);
       
       if (error) {
@@ -62,6 +64,10 @@ export function SignUpForm({ onSuccess }: SignUpFormProps) {
         }
       } else {
         console.log("SignUpForm: Sign up successful, triggering onSuccess");
+        
+        // Double-check session to confirm signup was successful
+        const { data: sessionData } = await supabase.auth.getSession();
+        console.log("SignUpForm: Current session after signup:", sessionData?.session ? "exists" : "null");
         
         // Show the verification alert and success toast
         setShowVerificationAlert(true);

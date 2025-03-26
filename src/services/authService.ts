@@ -11,7 +11,7 @@ export async function fetchUserProfile(userId: string): Promise<UserProfile | nu
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
-      .eq('id', Number(userId))
+      .eq('id', userId)
       .maybeSingle();
     
     if (error) {
@@ -19,7 +19,7 @@ export async function fetchUserProfile(userId: string): Promise<UserProfile | nu
       throw error;
     }
     
-    // Convert the id to string to match UserProfile type
+    // Return the profile data
     if (data) {
       return {
         ...data,
@@ -37,18 +37,23 @@ export async function fetchUserProfile(userId: string): Promise<UserProfile | nu
 
 export async function createUserProfile(userId: string, email: string, name?: string): Promise<void> {
   try {
-    // Convert the string userId to a number for database insertion
+    console.log('authService: Creating profile for user:', userId, 'with email:', email);
+    
+    // Insert the profile record
     const { error } = await supabase.from('profiles').insert({
-      id: Number(userId),
-      email,
+      id: userId,
+      email: email,
       name: name || null,
       created_at: new Date().toISOString(),
+      is_premium: false, // Default to false for new users
     });
     
     if (error) {
       console.error('authService: Error creating profile:', error);
       throw error;
     }
+    
+    console.log('authService: Profile created successfully');
   } catch (error) {
     console.error('authService: Error creating profile:', error);
     throw error;
@@ -63,7 +68,7 @@ export async function updateUserProfile(userId: string, updates: Partial<UserPro
     const { error } = await supabase
       .from('profiles')
       .update(updateData)
-      .eq('id', Number(userId));
+      .eq('id', userId);
     
     if (error) {
       console.error('authService: Error updating profile:', error);
@@ -103,6 +108,7 @@ export async function signUpWithEmail(email: string, password: string, name: str
   try {
     console.log('authService: Signing up user with email:', email);
     
+    // Sign up the user with Supabase Auth
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -118,14 +124,21 @@ export async function signUpWithEmail(email: string, password: string, name: str
       return { error };
     }
     
+    // If signup successful, create a profile in the profiles table
     if (data?.user) {
+      console.log('authService: User created successfully with ID:', data.user.id);
+      
       try {
+        // Create the user profile after successful signup
         await createUserProfile(data.user.id, email, name);
         console.log('authService: User profile created successfully');
       } catch (profileError) {
         console.error('authService: Error creating user profile after signup:', profileError);
-        // Continue since the user was created successfully even if profile creation failed
+        // We'll continue since the user was created successfully
+        // The profile can be created later when needed
       }
+    } else {
+      console.log('authService: User data not available after signup');
     }
     
     return { error: null };

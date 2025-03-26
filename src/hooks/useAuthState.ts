@@ -17,17 +17,25 @@ export const useAuthState = () => {
         console.log("useAuthState: User authenticated, fetching profile for ID:", session.user.id);
         const profile = await fetchUserProfile(session.user.id);
         
-        const updatedUser = {
-          id: session.user.id,
-          email: session.user.email,
-          name: profile?.name || null,
-          created_at: profile?.created_at || new Date().toISOString(),
-          is_premium: profile?.is_premium || false // Use actual premium status from profile or default to false
-        };
+        if (profile) {
+          console.log("useAuthState: Profile fetched successfully:", profile);
+          setUser(profile);
+          setIsPremium(profile.is_premium || false);
+        } else {
+          console.log("useAuthState: No profile found, creating basic user object");
+          // If no profile found, create a basic user object with data from the session
+          const fallbackUser = {
+            id: session.user.id,
+            email: session.user.email,
+            name: session.user.user_metadata?.name || null,
+            created_at: new Date().toISOString(),
+            is_premium: false
+          };
+          
+          setUser(fallbackUser);
+          setIsPremium(false);
+        }
         
-        console.log("useAuthState: Profile fetched successfully, updating user state");
-        setUser(updatedUser);
-        setIsPremium(updatedUser.is_premium); // Set premium status based on profile data
         setStatus('authenticated');
       } catch (error) {
         console.error("useAuthState: Error handling auth state change:", error);
@@ -36,7 +44,7 @@ export const useAuthState = () => {
         const fallbackUser = {
           id: session.user.id,
           email: session.user.email,
-          name: null,
+          name: session.user.user_metadata?.name || null,
           created_at: new Date().toISOString(),
           is_premium: false // Default to false for fallback
         };
@@ -59,11 +67,7 @@ export const useAuthState = () => {
     
     const initialize = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        console.log("useAuthState: Current session:", session ? "exists" : "null");
-        
-        await handleAuthStateChange(session);
-        
+        // First set up the auth state change subscription
         console.log("useAuthState: Setting up auth state change subscription");
         authSubscription = supabase.auth.onAuthStateChange(
           async (event, session) => {
@@ -71,6 +75,12 @@ export const useAuthState = () => {
             await handleAuthStateChange(session);
           }
         );
+        
+        // Then check the current session
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log("useAuthState: Current session:", session ? "exists" : "null");
+        
+        await handleAuthStateChange(session);
       } catch (error) {
         console.error("useAuthState: Error during initialization:", error);
         setStatus('unauthenticated');
