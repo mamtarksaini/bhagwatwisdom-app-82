@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +13,7 @@ import { Language } from "@/types";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { AuthModal } from "@/components/auth/AuthModal";
+import { useTheme } from "@/components/ui/ThemeProvider";
 
 const affirmationsData = {
   english: [
@@ -21,7 +23,7 @@ const affirmationsData = {
     "I accept what I cannot change with equanimity."
   ],
   hindi: [
-    "मैं अपने अतीत और ���र्तमान से शांति से जुड़ा हूँ, जैसा भगवद गीता में सिखाया गया है।",
+    "मैं अपने अतीत और वर्तमान से शांति से जुड़ा हूँ, जैसा भगवद गीता में सिखाया गया है।",
     "मेरा वास्तविक स्वयं शाश्वत और अपरिवर्तनीय है, जीवन की परिस्थितियों से निरपेक्ष।",
     "मैं अपने कर्तव्यों को समर्पण के साथ निभाता हूँ, परिणामों से अनासक्त रहकर।",
     "मैं जो नहीं बदल सकता उसे समभाव से स्वीकार करता हूँ।"
@@ -34,6 +36,7 @@ const Index = () => {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currentAffirmation, setCurrentAffirmation] = useState(0);
+  const { isDark, toggleTheme } = useTheme();
 
   const mainLinks = [
     { path: "/", label: "Home" },
@@ -83,6 +86,18 @@ const Index = () => {
         </div>
         
         <div className="flex items-center gap-2">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={toggleTheme}
+            className="flex items-center justify-center"
+            aria-label="Toggle theme"
+          >
+            <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+            <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+            <span className="sr-only">Toggle theme</span>
+          </Button>
+          
           {user ? (
             <Link to="/profile">
               <Button variant="ghost" size="sm" className="flex items-center gap-2">
@@ -190,7 +205,7 @@ const Index = () => {
           </div>
           
           <Tabs defaultValue="daily-verse" className="w-full max-w-4xl mx-auto">
-            <TabsList className="grid grid-cols-5 w-full mb-6">
+            <TabsList className="grid grid-cols-6 w-full mb-6">
               <TabsTrigger value="daily-verse" className="flex items-center gap-2">
                 <BookOpen className="h-4 w-4" />
                 <span className="hidden sm:inline">Daily Verse</span>
@@ -210,6 +225,10 @@ const Index = () => {
               <TabsTrigger value="mantra" className="flex items-center gap-2">
                 <Heart className="h-4 w-4" />
                 <span className="hidden sm:inline">Mood Mantra</span>
+              </TabsTrigger>
+              <TabsTrigger value="affirmations" className="flex items-center gap-2">
+                <RefreshCw className="h-4 w-4" />
+                <span className="hidden sm:inline">Affirmations</span>
               </TabsTrigger>
             </TabsList>
             
@@ -279,6 +298,27 @@ const Index = () => {
                   </CardHeader>
                   <CardContent>
                     <MoodMantra language={language} />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="affirmations" className="mt-0">
+                <Card className="border-0 shadow-none">
+                  <CardHeader>
+                    <CardTitle>Affirmations</CardTitle>
+                    <CardDescription>Daily affirmations inspired by the Bhagavad Gita</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-col space-y-4">
+                      <div className="p-4 bg-secondary/20 rounded-lg">
+                        <p className="text-center">{(affirmationsData[language] || affirmationsData.english)[currentAffirmation]}</p>
+                      </div>
+                      <Button asChild className="w-full">
+                        <Link to="/affirmations">
+                          View All Affirmations
+                        </Link>
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               </TabsContent>
