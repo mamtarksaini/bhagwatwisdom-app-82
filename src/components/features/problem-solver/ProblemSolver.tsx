@@ -32,11 +32,7 @@ export function ProblemSolver({ language, isPremium = false }: ProblemSolverProp
 
   return (
     <Card className="glass-card border border-gold/30">
-      <CardHeader>
-        <CardTitle className="text-gradient">Wisdom Guide</CardTitle>
-        <CardDescription>Share your challenge and receive guidance from ancient Bhagavad Gita wisdom</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 pt-6">
         {networkError && !isLoading && (
           <Alert variant="default" className="bg-amber-500/10 border border-amber-500/30">
             <AlertCircle className="h-4 w-4 text-amber-500" />

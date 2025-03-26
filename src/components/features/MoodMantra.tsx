@@ -1,6 +1,5 @@
-
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Language } from "@/types";
@@ -8,7 +7,6 @@ import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis";
 import { Volume2, VolumeX, Copy, RotateCcw, Send, Plus } from "lucide-react";
 import { MOODS } from "@/utils/constants";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/lib/supabase";
 
 interface MoodMantraProps {
   language: Language;
@@ -99,7 +97,7 @@ const mockMantras: Record<string, { [key: string]: MantraData }> = {
     },
     hindi: {
       text: "ॐ सहना वावतु",
-      meaning: "हम एक साथ सुरक्षित रहें। यह प्राचीन शांति मंत्र हमारे भीतर और हमारे आसपास सद्भाव बनाता है, जो बाहरी परिस्थितियों के बावजूद भगवद गीता के आंतरिक शांति के शिक्षाओं के साथ गूंजता है।"
+      meaning: "हम एक साथ सुरक्षित रहें। यह प्राचीन शांति मंत्र हमारे भीतर और हमारे आसपास सद्भाव बनाता है, जो भगवद गीता के आंतरिक शांति के शिक्षाओं के साथ गूंजता है।"
     }
   },
   "Energetic": {
@@ -249,11 +247,7 @@ ${language === 'hindi' ? "कृपया अपना उत्तर हिं
 
   return (
     <Card className="glass-card border border-gold/30">
-      <CardHeader>
-        <CardTitle className="text-gradient">Mood Mantras</CardTitle>
-        <CardDescription>Discover sacred mantras based on your current emotional state</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 pt-6">
         <div>
           <h3 className="text-sm font-medium text-muted-foreground mb-3">How are you feeling today?</h3>
           

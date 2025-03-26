@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Language } from "@/types";
@@ -52,7 +52,6 @@ export function DreamInterpreter({ language, isPremium = false }: DreamInterpret
     setNetworkError(false);
     setApiKeyError(false);
     
-    // Show loading toast
     const loadingToast = toast({
       title: "Interpreting your dream",
       description: "Finding spiritual meaning in your dream...",
@@ -60,7 +59,6 @@ export function DreamInterpreter({ language, isPremium = false }: DreamInterpret
     });
     
     try {
-      // Create a prompt specifically for dream interpretation using formal, respectful language
       const dreamPrompt = `Interpret this dream through the lens of Bhagavad Gita and spiritual wisdom in a formal, respectful tone: "${dream}"
       
       ${language === 'hindi' ? "Important: Please use formal, respectful Hindi language. Avoid casual expressions like 'यार'. Maintain a tone appropriate for spiritual guidance." : ""}
@@ -71,7 +69,6 @@ export function DreamInterpreter({ language, isPremium = false }: DreamInterpret
       3. Connects to authentic Bhagavad Gita teachings when appropriate
       4. Offers practical wisdom without casual language`;
       
-      // Use the wisdom API to get an AI-generated interpretation
       const response = await getWisdomResponse('spirituality', language, dreamPrompt);
       
       setInterpretation(response.answer);
@@ -140,11 +137,7 @@ export function DreamInterpreter({ language, isPremium = false }: DreamInterpret
 
   return (
     <Card className="glass-card border border-gold/30">
-      <CardHeader>
-        <CardTitle className="text-gradient">Dream Interpreter</CardTitle>
-        <CardDescription>Understand your dreams through the ancient wisdom of Bhagavad Gita</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 pt-6">
         <div>
           <div className="relative">
             <Textarea
