@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,23 +13,19 @@ import { canUseVoiceAgent, getRemainingFreeResponses, incrementVoiceAgentUsage }
 import { PremiumUpgrade } from "@/components/premium/PremiumUpgrade";
 import { AudioVisualizer } from "./AudioVisualizer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useConversation } from "@11labs/react";
 
 interface VoiceAgentProps {
   language: Language;
   elevenLabsAgentId?: string;
 }
 
-const DEFAULT_AGENT_ID = "UBrWV90gjXHjFCdjaYBK";
-
-export function VoiceAgent({ language, elevenLabsAgentId = DEFAULT_AGENT_ID }: VoiceAgentProps) {
+export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
   const { user, isPremium } = useAuth();
   const [isListening, setIsListening] = useState(false);
   const [userInput, setUserInput] = useState("");
   const [aiResponse, setAiResponse] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [useTextOnly, setUseTextOnly] = useState(false);
-  const [useElevenLabs, setUseElevenLabs] = useState(true);
   const [callTime, setCallTime] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -38,51 +35,24 @@ export function VoiceAgent({ language, elevenLabsAgentId = DEFAULT_AGENT_ID }: V
   const speechRecognition = useSpeechRecognition(language);
   const speechSynthesis = useSpeechSynthesis(language);
   
-  const elevenLabsConversation = useConversation({
-    onMessage: (message) => {
-      if (message && typeof message === 'object') {
-        if ('transcript' in message && message.transcript) {
-          const transcript = message.transcript;
-          if (typeof transcript === 'string') {
-            setUserInput(transcript);
-          }
-        }
-        if ('text' in message && message.text) {
-          const text = message.text;
-          if (typeof text === 'string') {
-            setAiResponse(text);
-          }
-        }
-      }
-    },
-    onError: (error) => {
-      console.error("ElevenLabs error:", error);
-      setUseElevenLabs(false);
-      toast({
-        title: "Voice Agent Error",
-        description: "Falling back to basic voice mode. Try refreshing the page.",
-        variant: "destructive"
-      });
-    }
-  });
-  
-  const isElevenLabsActive = elevenLabsConversation.status === "connected";
-  const isElevenLabsSpeaking = elevenLabsConversation.isSpeaking;
-  
   useEffect(() => {
     if (speechRecognition.isListening) {
       setUserInput(speechRecognition.transcript);
       
+      // If we have a transcript, reset the silence timer
       if (speechRecognition.transcript !== lastTranscriptRef.current) {
         lastTranscriptRef.current = speechRecognition.transcript;
         
+        // Clear any existing silence timer
         if (silenceTimerRef.current) {
           clearTimeout(silenceTimerRef.current);
           silenceTimerRef.current = null;
         }
         
+        // Set a new silence timer
         if (speechRecognition.transcript.trim()) {
           silenceTimerRef.current = setTimeout(() => {
+            // Only auto-stop if we have some content and we're still listening
             if (speechRecognition.isListening && speechRecognition.transcript.trim()) {
               stopListening();
             }
@@ -92,15 +62,11 @@ export function VoiceAgent({ language, elevenLabsAgentId = DEFAULT_AGENT_ID }: V
     }
   }, [speechRecognition.transcript, speechRecognition.isListening]);
 
+  // Clean up resources when component unmounts
   useEffect(() => {
     return () => {
-      if (useElevenLabs && isElevenLabsActive) {
-        elevenLabsConversation.endSession();
-      } else {
-        speechSynthesis.stop();
-        speechRecognition.stopListening();
-      }
-      
+      speechSynthesis.stop();
+      speechRecognition.stopListening();
       if (timerRef.current) {
         clearInterval(timerRef.current);
       }
@@ -108,20 +74,21 @@ export function VoiceAgent({ language, elevenLabsAgentId = DEFAULT_AGENT_ID }: V
         clearTimeout(silenceTimerRef.current);
       }
     };
-  }, [speechSynthesis, speechRecognition, useElevenLabs, isElevenLabsActive, elevenLabsConversation]);
+  }, [speechSynthesis, speechRecognition]);
 
+  // Timer effect for "call" duration
   useEffect(() => {
-    const isActive = isListening || isProcessing || speechSynthesis.isReading || isElevenLabsActive;
-    
-    if (isActive) {
+    if (isListening || isProcessing || speechSynthesis.isReading) {
+      // Start or continue timer
       if (!timerRef.current) {
-        const startTime = Date.now() - callTime * 1000;
+        const startTime = Date.now() - callTime * 1000; // Account for existing time
         timerRef.current = setInterval(() => {
           const elapsed = Math.floor((Date.now() - startTime) / 1000);
           setCallTime(elapsed);
         }, 1000);
       }
     } else {
+      // Stop timer
       if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
@@ -133,60 +100,30 @@ export function VoiceAgent({ language, elevenLabsAgentId = DEFAULT_AGENT_ID }: V
         clearInterval(timerRef.current);
       }
     };
-  }, [isListening, isProcessing, speechSynthesis.isReading, isElevenLabsActive, callTime]);
+  }, [isListening, isProcessing, speechSynthesis.isReading, callTime]);
   
-  const startListening = async () => {
-    try {
-      if (useElevenLabs) {
-        setIsProcessing(true);
-        
-        await elevenLabsConversation.startSession({
-          agentId: elevenLabsAgentId,
-        });
-        
-        setIsProcessing(false);
-        setIsListening(true);
-        
-        toast({
-          title: "ElevenLabs Voice Agent",
-          description: "Agent connected. Start speaking...",
-        });
-      } else {
-        setIsListening(true);
-        speechRecognition.startListening();
-        
-        toast({
-          title: "Listening",
-          description: "Speak now. I'm listening... I'll process after you pause speaking.",
-        });
-      }
-      
-      lastTranscriptRef.current = "";
-      if (silenceTimerRef.current) {
-        clearTimeout(silenceTimerRef.current);
-        silenceTimerRef.current = null;
-      }
-    } catch (error) {
-      console.error("Error starting voice agent:", error);
-      setUseElevenLabs(false);
-      setIsProcessing(false);
-      
-      toast({
-        title: "Voice Agent Error",
-        description: "Falling back to basic voice mode. Try again.",
-        variant: "destructive"
-      });
-    }
-  };
-  
-  const stopListening = async () => {
+  const startListening = () => {
+    // In testing mode, we always allow listening without restrictions
+    setIsListening(true);
+    speechRecognition.startListening();
+    toast({
+      title: "Listening",
+      description: "Speak now. I'm listening... I'll process after you pause speaking.",
+    });
+    
+    // Reset refs
+    lastTranscriptRef.current = "";
     if (silenceTimerRef.current) {
       clearTimeout(silenceTimerRef.current);
       silenceTimerRef.current = null;
     }
-    
-    if (useElevenLabs && isElevenLabsActive) {
-      return;
+  };
+  
+  const stopListening = async () => {
+    // Clear silence timer
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
     }
     
     speechRecognition.stopListening();
@@ -205,10 +142,12 @@ export function VoiceAgent({ language, elevenLabsAgentId = DEFAULT_AGENT_ID }: V
   const handleSendVoiceRequest = async (input: string) => {
     if (!input.trim()) return;
     
+    // In testing mode, we always allow voice requests without restrictions
     setIsProcessing(true);
     setAiResponse("");
     
     try {
+      // Check if user specifically requested text-only mode
       if (input.toLowerCase().includes("give me text") || 
           input.toLowerCase().includes("text only") || 
           input.toLowerCase().includes("show text")) {
@@ -226,12 +165,15 @@ export function VoiceAgent({ language, elevenLabsAgentId = DEFAULT_AGENT_ID }: V
       if (response) {
         setAiResponse(response);
         
+        // Only trigger speech if not in text-only mode
         if (!useTextOnly && speechSynthesis.isSpeechSupported) {
+          // Auto-play the response using speech synthesis
           setTimeout(() => {
             try {
               speechSynthesis.speak(response);
             } catch (error) {
               console.error("Error speaking response:", error);
+              // If speech fails, show the text version
               setUseTextOnly(true);
               toast({
                 title: "Speech Error",
@@ -241,8 +183,11 @@ export function VoiceAgent({ language, elevenLabsAgentId = DEFAULT_AGENT_ID }: V
             }
           }, 500);
         } else {
+          // If we're in text-only mode (either by user choice or as a fallback)
           setUseTextOnly(true);
         }
+        
+        // Skip usage tracking in testing mode
       } else {
         toast({
           title: "Error",
@@ -288,16 +233,10 @@ export function VoiceAgent({ language, elevenLabsAgentId = DEFAULT_AGENT_ID }: V
   };
 
   const endCall = () => {
-    if (useElevenLabs && isElevenLabsActive) {
-      elevenLabsConversation.endSession();
-    } else {
-      speechSynthesis.stop();
-      speechRecognition.stopListening();
-    }
-    
+    speechSynthesis.stop();
+    speechRecognition.stopListening();
     setIsListening(false);
     setCallTime(0);
-    
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
@@ -308,8 +247,6 @@ export function VoiceAgent({ language, elevenLabsAgentId = DEFAULT_AGENT_ID }: V
     }
   };
   
-  const isAnyActive = isListening || isProcessing || speechSynthesis.isReading || isElevenLabsActive || isElevenLabsSpeaking;
-  
   return (
     <div className="max-w-xl mx-auto w-full">
       <Card className="bg-[#1A1F2C] border-[#33C3F0]/30 text-white overflow-hidden">
@@ -318,7 +255,7 @@ export function VoiceAgent({ language, elevenLabsAgentId = DEFAULT_AGENT_ID }: V
             AI Assistant
             <span className="flex items-center text-gold text-sm">
               <Crown className="h-4 w-4 mr-1" />
-              {useElevenLabs ? "ElevenLabs Agent" : "Basic Voice Mode"}
+              Premium Mode (Testing)
             </span>
           </CardTitle>
           <Tabs defaultValue="voice" className="w-full">
@@ -343,18 +280,18 @@ export function VoiceAgent({ language, elevenLabsAgentId = DEFAULT_AGENT_ID }: V
         <CardContent className="p-6 pt-8 min-h-[400px] flex flex-col items-center justify-center">
           <div className="w-full h-[300px] flex items-center justify-center relative">
             <div className="relative h-56 w-56">
-              <div className={`absolute inset-0 rounded-full ${isAnyActive ? 'border-2 border-[#1EAEDB] animate-pulse' : ''}`}>
-                <AudioVisualizer isActive={isAnyActive} color="#1EAEDB" />
+              <div className={`absolute inset-0 rounded-full ${isListening || isProcessing || speechSynthesis.isReading ? 'border-2 border-[#1EAEDB] animate-pulse' : ''}`}>
+                <AudioVisualizer isActive={isListening || isProcessing || speechSynthesis.isReading} color="#1EAEDB" />
               </div>
             </div>
             
-            {(isListening || isElevenLabsActive) && (
+            {isListening && (
               <div className="absolute bottom-0 w-full text-center">
                 <p className="text-white/80 mb-2">{userInput || "Listening..."}</p>
               </div>
             )}
             
-            {aiResponse && !isListening && !isElevenLabsActive && (
+            {aiResponse && !isListening && (
               <div className="absolute bottom-0 w-full text-center max-h-24 overflow-y-auto">
                 <p className={`text-white/90 mb-2 ${useTextOnly || !speechSynthesis.isSpeechSupported ? 'block' : 'hidden'}`}>
                   {aiResponse}
@@ -365,7 +302,7 @@ export function VoiceAgent({ language, elevenLabsAgentId = DEFAULT_AGENT_ID }: V
           
           <div className="w-full text-center mt-2">
             <p className="text-[#1EAEDB]/80 text-sm">
-              {isAnyActive && 
+              {(isListening || isProcessing || speechSynthesis.isReading) && 
                 `On call with AI Assistant • ${formatTime(callTime)}`}
             </p>
           </div>
@@ -373,7 +310,7 @@ export function VoiceAgent({ language, elevenLabsAgentId = DEFAULT_AGENT_ID }: V
       
         <div className="border-t border-[#33C3F0]/20">
           <div className="flex items-center justify-center p-4 gap-2">
-            {!isListening && !isElevenLabsActive ? (
+            {!isListening ? (
               <Button 
                 onClick={startListening}
                 className="rounded-full h-12 w-12 bg-[#1EAEDB] hover:bg-[#33C3F0] text-white"
@@ -386,13 +323,12 @@ export function VoiceAgent({ language, elevenLabsAgentId = DEFAULT_AGENT_ID }: V
                 onClick={stopListening}
                 className="rounded-full h-12 w-12 bg-red-500 hover:bg-red-600 text-white"
                 title="Stop listening and get response"
-                disabled={useElevenLabs && isElevenLabsActive}
               >
                 <MicOff className="h-6 w-6" />
               </Button>
             )}
             
-            {aiResponse && !useElevenLabs && (
+            {aiResponse && (
               <Button
                 variant="outline"
                 className="rounded-full h-12 w-12 border-[#33C3F0]/50 text-[#33C3F0] hover:bg-[#33C3F0]/10"
@@ -406,7 +342,7 @@ export function VoiceAgent({ language, elevenLabsAgentId = DEFAULT_AGENT_ID }: V
               </Button>
             )}
             
-            {isAnyActive && (
+            {(isListening || isProcessing || speechSynthesis.isReading) && (
               <Button
                 variant="outline"
                 className="rounded-full h-12 w-12 border-red-500/50 text-red-500 hover:bg-red-500/10"
@@ -420,7 +356,7 @@ export function VoiceAgent({ language, elevenLabsAgentId = DEFAULT_AGENT_ID }: V
         
         <CardFooter className="flex flex-col bg-[#221F26] py-2 px-4">
           <div className="text-xs text-[#1EAEDB]/60 text-center w-full">
-            {useElevenLabs ? "Using ElevenLabs Voice Agent" : "Using Basic Voice Mode"}
+            Premium Mode Enabled for Testing
           </div>
         </CardFooter>
       </Card>
