@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase';
 import { UserProfile } from '@/types';
 
@@ -133,6 +132,33 @@ export async function signInWithEmail(email: string, password: string): Promise<
   }
 }
 
+export async function checkEmailVerificationStatus(email: string): Promise<{ verified: boolean; error: Error | null }> {
+  try {
+    console.log('authService: Checking email verification status for:', email);
+    
+    // Get user by email
+    const { data, error } = await supabase
+      .from('users')
+      .select('email_confirmed_at')
+      .eq('email', email)
+      .maybeSingle();
+    
+    if (error) {
+      console.error('authService: Error checking email verification:', error);
+      return { verified: false, error };
+    }
+    
+    // If email_confirmed_at exists and is not null, email is verified
+    const verified = data && data.email_confirmed_at !== null;
+    console.log('authService: Email verification status:', verified);
+    
+    return { verified: !!verified, error: null };
+  } catch (error) {
+    console.error('authService: Exception during email verification check:', error);
+    return { verified: false, error: error as Error };
+  }
+}
+
 export async function signUpWithEmail(email: string, password: string, name: string): Promise<{ error: Error | null }> {
   try {
     console.log('authService: Signing up user with email:', email, 'and name:', name);
@@ -144,7 +170,9 @@ export async function signUpWithEmail(email: string, password: string, name: str
       options: {
         data: {
           name
-        }
+        },
+        // Set emailRedirectTo to ensure proper redirect after email verification
+        emailRedirectTo: window.location.origin
       }
     });
     

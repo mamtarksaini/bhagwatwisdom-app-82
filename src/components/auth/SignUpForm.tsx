@@ -27,6 +27,7 @@ export function SignUpForm({ onSuccess }: SignUpFormProps) {
   const { signUp } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showVerificationAlert, setShowVerificationAlert] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -37,9 +38,44 @@ export function SignUpForm({ onSuccess }: SignUpFormProps) {
     },
   });
 
+  // Function to resend verification email
+  const handleResendVerification = async () => {
+    if (!userEmail) return;
+    
+    try {
+      setIsLoading(true);
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: userEmail,
+      });
+      
+      if (error) {
+        toast({
+          title: "Error sending verification email",
+          description: error.message || "Please try again later.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Verification email sent",
+          description: "Please check your inbox or spam folder.",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error sending verification email",
+        description: error.message || "Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     console.log("SignUpForm: Starting sign up with:", values.email);
     setIsLoading(true);
+    setUserEmail(values.email);
     
     try {
       console.log("SignUpForm: About to call signUp with email:", values.email, "and name:", values.name);
@@ -106,7 +142,15 @@ export function SignUpForm({ onSuccess }: SignUpFormProps) {
           <InfoIcon className="h-4 w-4" />
           <AlertTitle>Email Verification Required</AlertTitle>
           <AlertDescription>
-            Please check your email for a verification link. For development purposes, you might need to disable email verification in the Supabase Dashboard.
+            Please check your email for a verification link. If you don't see it in your inbox, please check your spam folder.
+            <Button 
+              variant="link" 
+              className="p-0 h-auto font-normal" 
+              onClick={handleResendVerification}
+              disabled={isLoading}
+            >
+              Resend verification email
+            </Button>
           </AlertDescription>
         </Alert>
       )}
