@@ -33,6 +33,7 @@ export function useSpeechSynthesis(language: Language = "english"): SpeechSynthe
   }, []);
 
   useEffect(() => {
+    // Check if the browser supports speech synthesis
     if (typeof window !== "undefined" && window.speechSynthesis) {
       setIsSpeechSupported(true);
       
@@ -106,11 +107,16 @@ export function useSpeechSynthesis(language: Language = "english"): SpeechSynthe
       }
       
       // Final fallback to any voice
-      if (!voice) {
+      if (!voice && voices.length > 0) {
         voice = voices[0];
       }
       
-      console.log(`Selected voice: ${voice?.name} (${voice?.lang})`);
+      if (voice) {
+        console.log(`Selected voice: ${voice.name} (${voice.lang})`);
+      } else {
+        console.warn("No suitable voice found");
+      }
+      
       return voice;
     },
     [voices, language]
@@ -134,70 +140,85 @@ export function useSpeechSynthesis(language: Language = "english"): SpeechSynthe
 
       console.log("Starting speech synthesis");
       
-      // Create a new utterance
-      const utterance = new SpeechSynthesisUtterance(text);
-      const voice = getBestVoice(text);
-      
-      if (voice) {
-        utterance.voice = voice;
-        utterance.lang = voice.lang;
-      } else {
-        // Default to English if no appropriate voice found
-        utterance.lang = language === 'hindi' ? 'hi-IN' : 'en-US';
-      }
+      try {
+        // Create a new utterance
+        const utterance = new SpeechSynthesisUtterance(text);
+        const voice = getBestVoice(text);
+        
+        if (voice) {
+          utterance.voice = voice;
+          utterance.lang = voice.lang;
+        } else {
+          // Default to English if no appropriate voice found
+          utterance.lang = language === 'hindi' ? 'hi-IN' : 'en-US';
+        }
 
-      utterance.rate = 0.9; // Slightly slower for clarity
-      utterance.pitch = 1;
-      utterance.volume = 1;
+        utterance.rate = 0.9; // Slightly slower for clarity
+        utterance.pitch = 1;
+        utterance.volume = 1;
 
-      utterance.onstart = () => {
-        console.log("Speech started");
-        setIsReading(true);
-      };
-      
-      utterance.onend = () => {
-        console.log("Speech ended");
-        setIsReading(false);
-        setCurrentUtterance(null);
-      };
-      
-      utterance.onerror = (event) => {
-        console.error("Speech synthesis error:", event);
-        setIsReading(false);
-        setCurrentUtterance(null);
+        utterance.onstart = () => {
+          console.log("Speech started");
+          setIsReading(true);
+        };
+        
+        utterance.onend = () => {
+          console.log("Speech ended");
+          setIsReading(false);
+          setCurrentUtterance(null);
+        };
+        
+        utterance.onerror = (event) => {
+          console.error("Speech synthesis error:", event);
+          setIsReading(false);
+          setCurrentUtterance(null);
+          
+          // Don't show error toast for user-initiated cancellations
+          if (event.error !== 'canceled') {
+            toast({
+              title: "Speech Error",
+              description: "There was an error playing the voice. Falling back to text-only mode.",
+              variant: "destructive"
+            });
+          }
+        };
+
+        // Set the current utterance 
+        setCurrentUtterance(utterance);
+        
+        // Chrome bug fix: Sometimes speechSynthesis gets into a paused state
+        if (window.speechSynthesis.paused) {
+          window.speechSynthesis.resume();
+        }
+        
+        // Safari fix: create a dummy speak utterance first
+        if (/^((?!chrome|android).)*safari/i.test(navigator.userAgent)) {
+          console.log("Safari detected, applying fix");
+          window.speechSynthesis.speak(new SpeechSynthesisUtterance(''));
+        }
+        
+        // Actually speak the text
+        window.speechSynthesis.speak(utterance);
+        
+        // Chrome bug fix: if speech doesn't start after 1 second, try again
+        setTimeout(() => {
+          if (window.speechSynthesis.speaking === false && utterance === currentUtterance) {
+            console.log("Speech didn't start, trying again");
+            if (window.speechSynthesis.paused) {
+              window.speechSynthesis.resume();
+            }
+            window.speechSynthesis.speak(utterance);
+          }
+        }, 1000);
+      } catch (error) {
+        console.error("Exception in speech synthesis:", error);
         toast({
           title: "Speech Error",
-          description: "There was an error playing the voice. Please try again.",
+          description: "There was an error with speech synthesis. Falling back to text-only mode.",
           variant: "destructive"
         });
-      };
-
-      // Safari fix: create a dummy speak utterance first
-      if (/^((?!chrome|android).)*safari/i.test(navigator.userAgent)) {
-        console.log("Safari detected, applying fix");
-        window.speechSynthesis.speak(new SpeechSynthesisUtterance(''));
+        setIsReading(false);
       }
-      
-      // Set the current utterance and speak
-      setCurrentUtterance(utterance);
-      
-      // Chrome bug fix: Sometimes speechSynthesis gets into a paused state
-      if (window.speechSynthesis.paused) {
-        window.speechSynthesis.resume();
-      }
-      
-      window.speechSynthesis.speak(utterance);
-      
-      // Chrome bug fix: if speech doesn't start after 1 second, try again
-      setTimeout(() => {
-        if (!window.speechSynthesis.speaking && utterance === currentUtterance) {
-          console.log("Speech didn't start, trying again");
-          if (window.speechSynthesis.paused) {
-            window.speechSynthesis.resume();
-          }
-          window.speechSynthesis.speak(utterance);
-        }
-      }, 1000);
     },
     [isSpeechSupported, getBestVoice, language, currentUtterance]
   );

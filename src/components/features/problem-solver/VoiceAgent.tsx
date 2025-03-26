@@ -152,8 +152,6 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
           input.toLowerCase().includes("text only") || 
           input.toLowerCase().includes("show text")) {
         setUseTextOnly(true);
-      } else {
-        setUseTextOnly(false);
       }
       
       const prompt = `You are a helpful assistant responding to voice input. 
@@ -171,8 +169,22 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
         if (!useTextOnly && speechSynthesis.isSpeechSupported) {
           // Auto-play the response using speech synthesis
           setTimeout(() => {
-            speechSynthesis.speak(response);
+            try {
+              speechSynthesis.speak(response);
+            } catch (error) {
+              console.error("Error speaking response:", error);
+              // If speech fails, show the text version
+              setUseTextOnly(true);
+              toast({
+                title: "Speech Error",
+                description: "Voice output failed. Showing text response instead.",
+                variant: "destructive"
+              });
+            }
           }, 500);
+        } else {
+          // If we're in text-only mode (either by user choice or as a fallback)
+          setUseTextOnly(true);
         }
         
         // Skip usage tracking in testing mode
@@ -200,7 +212,17 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
     if (speechSynthesis.isReading) {
       speechSynthesis.stop();
     } else if (aiResponse) {
-      speechSynthesis.speak(aiResponse);
+      try {
+        speechSynthesis.speak(aiResponse);
+      } catch (error) {
+        console.error("Error playing speech:", error);
+        setUseTextOnly(true);
+        toast({
+          title: "Speech Error", 
+          description: "Unable to play voice. Showing text instead.",
+          variant: "destructive"
+        });
+      }
     }
   };
 
@@ -271,7 +293,9 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
             
             {aiResponse && !isListening && (
               <div className="absolute bottom-0 w-full text-center max-h-24 overflow-y-auto">
-                <p className={`text-white/90 mb-2 ${useTextOnly ? 'block' : 'hidden'}`}>{aiResponse}</p>
+                <p className={`text-white/90 mb-2 ${useTextOnly || !speechSynthesis.isSpeechSupported ? 'block' : 'hidden'}`}>
+                  {aiResponse}
+                </p>
               </div>
             )}
           </div>
