@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,6 +25,7 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
   const [useTextOnly, setUseTextOnly] = useState(false);
   const [callTime, setCallTime] = useState(0);
   const [speechInitFailed, setSpeechInitFailed] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastTranscriptRef = useRef<string>("");
@@ -174,6 +174,7 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
     // In testing mode, we always allow voice requests without restrictions
     setIsProcessing(true);
     setAiResponse("");
+    setApiError(null);
     
     try {
       // Check if user specifically requested text-only mode
@@ -189,6 +190,11 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
                     Keep your answer under 100 words for better voice synthesis.
                     User input: ${input}
                     ${language === 'hindi' ? 'Please respond in Hindi.' : 'Please respond in English.'}`;
+      
+      toast({
+        title: "Processing",
+        description: "Connecting to AI services...",
+      });
       
       const response = await callGeminiDirectly(prompt);
       
@@ -219,6 +225,7 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
         
         // Skip usage tracking in testing mode
       } else {
+        setApiError("Failed to get response from AI. Please try again.");
         toast({
           title: "Error",
           description: "Failed to get response from AI. Please try again.",
@@ -227,6 +234,7 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
       }
     } catch (error) {
       console.error("Voice agent error:", error);
+      setApiError("Failed to process your request. Please try again.");
       toast({
         title: "Error",
         description: "Failed to process your request. Please try again.",
@@ -310,6 +318,29 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
                 <p className={`text-white/90 mb-2 ${useTextOnly || !speechSynthesis.isSpeechSupported || speechInitFailed ? 'block' : 'hidden'}`}>
                   {aiResponse}
                 </p>
+              </div>
+            )}
+            
+            {apiError && !isProcessing && !isListening && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="bg-red-900/80 text-white p-4 rounded-lg max-w-[80%] text-center">
+                  <div className="flex items-center justify-center mb-2">
+                    <svg className="w-6 h-6 text-red-300 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="12" cy="12" r="10" strokeWidth="2" />
+                      <path strokeLinecap="round" strokeWidth="2" d="M12 8v4M12 16h.01" />
+                    </svg>
+                    <span className="font-medium">Error</span>
+                  </div>
+                  <p>{apiError}</p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-2 border-red-300 text-red-300 hover:bg-red-800/50"
+                    onClick={() => setApiError(null)}
+                  >
+                    Dismiss
+                  </Button>
+                </div>
               </div>
             )}
           </div>

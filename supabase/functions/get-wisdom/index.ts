@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
 const CORS_HEADERS = {
@@ -17,7 +16,7 @@ serve(async (req) => {
   try {
     // Get the API key from environment variables and log status
     // Using a valid API key for Gemini as fallback
-    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY') || 'AIzaSyBp6l8ATf6k8FeAUVCk0TygqDjSPsusUXo';
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY') || 'AIzaSyDfDU4BIRp9O9j1R8NDy5wUQLl4s3GZKHM';
     
     // Log the beginning of the function execution with timestamp
     console.log(`[${new Date().toISOString()}] Edge function started`);
@@ -80,7 +79,7 @@ serve(async (req) => {
     if (language === 'hindi') {
       prompt += `
       
-      पूरे उत्तर को सम्मानजनक, औपचारिक हिंदी में लिखें। "यार", "अरे", जैसे अनौपचारिक शब्दों का प्रयोग न करें। आध्यात्मिक मार्गदर्शन के लिए उपयुक्त सम्मानजनक भाषा का प्रयोग करें। हिंदी भाषा सहज और समझने योग्य होनी चाहिए, लेकिन अनौपचारिक या बेहद आम बोलचाल वाली नहीं।`;
+      पूरे उत्तर को सम्मानजनक, औपचारिक हिंदी में लिखें। "यार", "अरे", जैसे अनौपचारिक शब्दों का प्रयोग न करें। आध्यात्मिक मार्गदर्शन के लिए उपयुक्त सम्मानजनक भाषा का प्रयोग करें। हिंदी भाषा सहज और समझने योग्य ��ोनी चाहिए, लेकिन अनौपचारिक या बेहद आम बोलचाल वाली नहीं।`;
     }
     
     try {
