@@ -19,22 +19,13 @@ export async function checkEmailVerificationStatus(email: string): Promise<{ ver
       return { verified: true, error: null };
     }
     
-    // If we don't have a matching session, check user metadata
-    // This is a more reliable way to determine verification status
-    const { data: userData, error: userError } = await supabase.auth.admin.getUserByEmail(email);
+    // If we don't have a matching session, we can't reliably check verification status
+    // for non-logged in users without admin privileges, so we'll just return false
+    console.log('authService: No matching session, assuming unverified');
     
-    if (userError) {
-      // This might fail if the user doesn't exist or if we don't have admin rights
-      // But that's okay, we'll just assume unverified
-      console.log('authService: User lookup failed, assuming unverified:', userError);
-      return { verified: false, error: null };
-    }
-    
-    // If we have user data, check if email is confirmed
-    const verified = userData?.user?.email_confirmed_at != null;
-    console.log('authService: Email verification status:', verified);
-    
-    return { verified, error: null };
+    // User lookup with admin API is not available, so we'll just assume unverified
+    // This is a safer approach as it will prompt users to sign in
+    return { verified: false, error: null };
   } catch (error) {
     console.error('authService: Exception during email verification check:', error);
     return { verified: false, error: error as Error };
