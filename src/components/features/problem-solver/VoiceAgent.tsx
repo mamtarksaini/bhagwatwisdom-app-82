@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Mic, MicOff, Volume2, VolumeX, Crown } from "lucide-react";
@@ -14,9 +14,10 @@ import { PremiumUpgrade } from "@/components/premium/PremiumUpgrade";
 
 interface VoiceAgentProps {
   language: Language;
+  elevenLabsAgentId?: string;
 }
 
-export function VoiceAgent({ language }: VoiceAgentProps) {
+export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
   const { user, isPremium } = useAuth();
   const [isListening, setIsListening] = useState(false);
   const [userInput, setUserInput] = useState("");
@@ -25,6 +26,9 @@ export function VoiceAgent({ language }: VoiceAgentProps) {
   const [canUseFreeResponse, setCanUseFreeResponse] = useState(false);
   const [remainingResponses, setRemainingResponses] = useState(0);
   const [showPremiumOffer, setShowPremiumOffer] = useState(false);
+  const [useElevenLabs, setUseElevenLabs] = useState(!!elevenLabsAgentId);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   
   // Speech hooks
   const speechRecognition = useSpeechRecognition(language);
@@ -61,6 +65,26 @@ export function VoiceAgent({ language }: VoiceAgentProps) {
       setUserInput(speechRecognition.transcript);
     }
   }, [speechRecognition.transcript, speechRecognition.isListening]);
+
+  // Handle audio playback events
+  useEffect(() => {
+    const audioElement = audioRef.current;
+    if (!audioElement) return;
+
+    const handlePlay = () => setIsPlayingAudio(true);
+    const handlePause = () => setIsPlayingAudio(false);
+    const handleEnded = () => setIsPlayingAudio(false);
+
+    audioElement.addEventListener('play', handlePlay);
+    audioElement.addEventListener('pause', handlePause);
+    audioElement.addEventListener('ended', handleEnded);
+
+    return () => {
+      audioElement.removeEventListener('play', handlePlay);
+      audioElement.removeEventListener('pause', handlePause);
+      audioElement.removeEventListener('ended', handleEnded);
+    };
+  }, []);
   
   const startListening = () => {
     if (!canUseFreeResponse && !isPremium) {
@@ -88,6 +112,15 @@ export function VoiceAgent({ language }: VoiceAgentProps) {
     if (speechRecognition.transcript.trim()) {
       await handleSendVoiceRequest(speechRecognition.transcript);
     }
+  };
+
+  const generateElevenLabsURL = (prompt: string) => {
+    if (!elevenLabsAgentId) return null;
+    
+    // This generates a URL that will open the Eleven Labs Chat widget
+    // We could alternatively use their JavaScript SDK for a more integrated experience
+    const encodedPrompt = encodeURIComponent(prompt);
+    return `https://elevenlabs.io/chat/${elevenLabsAgentId}?query=${encodedPrompt}`;
   };
   
   const handleSendVoiceRequest = async (input: string) => {
@@ -120,8 +153,19 @@ export function VoiceAgent({ language }: VoiceAgentProps) {
       if (response) {
         setAiResponse(response);
         
-        // Play audio response
-        if (speechSynthesis.isSpeechSupported) {
+        // Play audio response based on which system we're using
+        if (useElevenLabs && elevenLabsAgentId) {
+          // Open Eleven Labs in a new window or tab
+          const elevenLabsURL = generateElevenLabsURL(input);
+          if (elevenLabsURL) {
+            window.open(elevenLabsURL, '_blank');
+            toast({
+              title: "Eleven Labs Voice Agent",
+              description: "The voice response will play in a new window.",
+            });
+          }
+        } else if (speechSynthesis.isSpeechSupported) {
+          // Fallback to browser speech synthesis
           speechSynthesis.speak(response);
         }
         
@@ -168,10 +212,20 @@ export function VoiceAgent({ language }: VoiceAgentProps) {
   };
   
   const toggleSpeech = () => {
-    if (speechSynthesis.isReading) {
-      speechSynthesis.stop();
-    } else if (aiResponse) {
-      speechSynthesis.speak(aiResponse);
+    if (useElevenLabs) {
+      // For Eleven Labs, we would control the audio element
+      if (isPlayingAudio && audioRef.current) {
+        audioRef.current.pause();
+      } else if (audioRef.current) {
+        audioRef.current.play();
+      }
+    } else {
+      // For browser speech synthesis
+      if (speechSynthesis.isReading) {
+        speechSynthesis.stop();
+      } else if (aiResponse) {
+        speechSynthesis.speak(aiResponse);
+      }
     }
   };
   
@@ -180,7 +234,7 @@ export function VoiceAgent({ language }: VoiceAgentProps) {
       <CardHeader>
         <CardTitle className="text-gradient flex items-center gap-2">
           <Volume2 className="h-5 w-5" />
-          Voice Agent
+          Voice Agent {elevenLabsAgentId && <span className="text-xs font-normal bg-blue-500/20 text-blue-500 py-1 px-2 rounded-full">Eleven Labs</span>}
         </CardTitle>
         <CardDescription>
           Ask questions using your voice and receive spoken wisdom
@@ -256,7 +310,7 @@ export function VoiceAgent({ language }: VoiceAgentProps) {
               className="absolute top-2 right-2"
               onClick={toggleSpeech}
             >
-              {speechSynthesis.isReading ? (
+              {(speechSynthesis.isReading || isPlayingAudio) ? (
                 <>
                   <VolumeX className="h-4 w-4 mr-1" />
                   Stop
@@ -270,6 +324,9 @@ export function VoiceAgent({ language }: VoiceAgentProps) {
             </Button>
           </div>
         )}
+
+        {/* Hidden audio element for Eleven Labs */}
+        <audio ref={audioRef} style={{ display: 'none' }} />
       </CardContent>
       
       <CardFooter className="flex flex-col">
