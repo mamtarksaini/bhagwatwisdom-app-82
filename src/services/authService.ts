@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase';
 import { UserProfile } from '@/types';
 
@@ -36,8 +35,7 @@ export async function createUserProfile(userId: string, email: string, name?: st
   try {
     console.log('authService: Creating profile for user:', userId, 'with email:', email);
     
-    // Generate a secure numeric ID instead of trying to convert UUID
-    // This is a more reliable approach than trying to convert UUID to numeric ID
+    // Generate a secure numeric ID
     const numericId = Math.floor(Math.random() * 1000000000);
     
     // First check if the table structure has the columns we need
@@ -109,8 +107,6 @@ export async function updateUserProfile(userId: string, updates: Partial<UserPro
     return { error: error as Error };
   }
 }
-
-// Authentication functions
 
 export async function signInWithEmail(email: string, password: string): Promise<{ error: Error | null }> {
   try {
