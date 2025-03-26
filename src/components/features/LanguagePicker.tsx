@@ -24,9 +24,14 @@ import { Badge } from "@/components/ui/badge";
 interface LanguagePickerProps {
   value: Language;
   onValueChange: (value: Language) => void;
+  variant?: "default" | "dark";
 }
 
-export function LanguagePicker({ value, onValueChange }: LanguagePickerProps) {
+export function LanguagePicker({ 
+  value, 
+  onValueChange,
+  variant = "default"
+}: LanguagePickerProps) {
   const [open, setOpen] = React.useState(false);
   
   const selectedLanguage = LANGUAGES.find((language) => language.id === value);
@@ -43,6 +48,10 @@ export function LanguagePicker({ value, onValueChange }: LanguagePickerProps) {
   // Order of regions to display
   const regionOrder = ["Global", "Indo-Aryan", "Dravidian", "Other Indian"];
 
+  const buttonClasses = variant === "dark" 
+    ? "bg-background/10 dark:bg-slate-950 border-0 text-foreground hover:bg-background/20 hover:text-foreground"
+    : "bg-background border border-input";
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -50,13 +59,22 @@ export function LanguagePicker({ value, onValueChange }: LanguagePickerProps) {
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-full justify-between"
+          className={cn("w-[140px] justify-between", buttonClasses)}
         >
           <div className="flex items-center gap-2 truncate">
             <Globe className="h-4 w-4 text-muted-foreground" />
             <span className="truncate">{selectedLanguage ? selectedLanguage.label : "Select language..."}</span>
           </div>
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          <svg 
+            width="12" 
+            height="12" 
+            viewBox="0 0 12 12" 
+            fill="none" 
+            xmlns="http://www.w3.org/2000/svg"
+            className="opacity-70 ml-1"
+          >
+            <path d="M6 8.5L10 4.5H2L6 8.5Z" fill="currentColor" />
+          </svg>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[300px] p-0">

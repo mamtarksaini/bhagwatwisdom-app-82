@@ -18,6 +18,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu";
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -72,6 +81,27 @@ export function Navbar() {
 
           <div className="flex items-center space-x-4">
             <div className="hidden md:block">
+              <Button 
+                variant="outline" 
+                className="flex items-center gap-2 bg-background border-border"
+                onClick={() => {
+                  // For the dropdown to be shown in a more controlled way, you could implement a custom dropdown here
+                }}
+              >
+                <Globe className="h-5 w-5" />
+                <span>{language === "english" ? "English" : "हिंदी"}</span>
+                <svg 
+                  width="12" 
+                  height="12" 
+                  viewBox="0 0 12 12" 
+                  fill="none" 
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="opacity-70"
+                >
+                  <path d="M6 8.5L10 4.5H2L6 8.5Z" fill="currentColor" />
+                </svg>
+              </Button>
+              
               <LanguagePicker 
                 value={language} 
                 onValueChange={handleLanguageChange}

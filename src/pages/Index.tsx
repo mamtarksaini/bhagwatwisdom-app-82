@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +13,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { useTheme } from "@/components/ui/ThemeProvider";
+import { LanguagePicker } from "@/components/features/LanguagePicker";
 
 const affirmationsData = {
   english: [
@@ -64,6 +66,11 @@ const Index = () => {
     setRandomAffirmationIndex(Math.floor(Math.random() * affirmations.length));
   };
 
+  const handleLanguageChange = (newLanguage: Language) => {
+    setLanguage(newLanguage);
+    // Here you could save to localStorage or context for persistence
+  };
+
   return (
     <div className="min-h-screen bg-background w-full">
       <nav className="w-full py-4 px-4 md:px-6 flex justify-between items-center border-b border-border">
@@ -84,6 +91,14 @@ const Index = () => {
         </div>
         
         <div className="flex items-center gap-2">
+          <div className="hidden md:block">
+            <LanguagePicker 
+              value={language} 
+              onValueChange={handleLanguageChange}
+              variant="dark"
+            />
+          </div>
+          
           <Button 
             variant="ghost" 
             size="icon" 
@@ -151,6 +166,14 @@ const Index = () => {
                   {link.label}
                 </Link>
               ))}
+            </div>
+            
+            <div className="flex items-center justify-between pt-2 border-t border-border mt-2">
+              <span className="text-sm font-medium">Language</span>
+              <LanguagePicker 
+                value={language} 
+                onValueChange={handleLanguageChange}
+              />
             </div>
           </div>
         </div>
