@@ -51,7 +51,7 @@ const DocumentationPage = () => {
                     An approachable introduction to the history, context, and central themes of the Bhagavad Gita.
                   </p>
                   <Button variant="outline" asChild>
-                    <Link to="#">Read Guide</Link>
+                    <Link to="/documentation/intro-to-gita">Read Guide</Link>
                   </Button>
                 </CardContent>
               </Card>
@@ -66,7 +66,7 @@ const DocumentationPage = () => {
                     A detailed explanation of the core philosophical principles that form the foundation of Gita teachings.
                   </p>
                   <Button variant="outline" asChild>
-                    <Link to="#">Read Guide</Link>
+                    <Link to="/documentation/core-principles">Read Guide</Link>
                   </Button>
                 </CardContent>
               </Card>
@@ -89,7 +89,7 @@ const DocumentationPage = () => {
                 </CardHeader>
                 <CardContent>
                   <Button variant="outline" asChild className="w-full">
-                    <Link to="#">Read Guide</Link>
+                    <Link to="/documentation/stress-management">Read Guide</Link>
                   </Button>
                 </CardContent>
               </Card>
@@ -101,7 +101,7 @@ const DocumentationPage = () => {
                 </CardHeader>
                 <CardContent>
                   <Button variant="outline" asChild className="w-full">
-                    <Link to="#">Read Guide</Link>
+                    <Link to="/documentation/finding-purpose">Read Guide</Link>
                   </Button>
                 </CardContent>
               </Card>
@@ -113,7 +113,7 @@ const DocumentationPage = () => {
                 </CardHeader>
                 <CardContent>
                   <Button variant="outline" asChild className="w-full">
-                    <Link to="#">Read Guide</Link>
+                    <Link to="/documentation/spiritual-growth">Read Guide</Link>
                   </Button>
                 </CardContent>
               </Card>

@@ -76,19 +76,19 @@ const AboutPage = () => {
             Explore our comprehensive resources to deepen your understanding of Bhagavad Gita wisdom:
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 not-prose">
-            <Link to="/documentation" className="flex items-center gap-2 p-4 bg-background rounded-lg hover:bg-primary/5 transition-colors">
+            <Link to="/documentation/intro-to-gita" className="flex items-center gap-2 p-4 bg-background rounded-lg hover:bg-primary/5 transition-colors">
               <BookOpen className="h-5 w-5 text-primary" />
               <div className="flex-1">
-                <h3 className="text-lg font-medium mb-1">Documentation Hub</h3>
-                <p className="text-sm text-muted-foreground">Complete guides, API reference, and tutorials</p>
+                <h3 className="text-lg font-medium mb-1">Introduction to Bhagavad Gita</h3>
+                <p className="text-sm text-muted-foreground">Learn about the historical context and significance</p>
               </div>
               <ArrowRight className="h-4 w-4 text-muted-foreground" />
             </Link>
-            <Link to="/blog" className="flex items-center gap-2 p-4 bg-background rounded-lg hover:bg-primary/5 transition-colors">
+            <Link to="/documentation/core-principles" className="flex items-center gap-2 p-4 bg-background rounded-lg hover:bg-primary/5 transition-colors">
               <FileText className="h-5 w-5 text-primary" />
               <div className="flex-1">
-                <h3 className="text-lg font-medium mb-1">Blog & Articles</h3>
-                <p className="text-sm text-muted-foreground">Insights and practical applications</p>
+                <h3 className="text-lg font-medium mb-1">Core Principles Explained</h3>
+                <p className="text-sm text-muted-foreground">Understanding dharma, karma, and yoga</p>
               </div>
               <ArrowRight className="h-4 w-4 text-muted-foreground" />
             </Link>

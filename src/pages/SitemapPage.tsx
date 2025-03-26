@@ -31,11 +31,20 @@ export function SitemapPage() {
       ]
     },
     {
+      category: "Documentation",
+      icon: <FileText className="h-5 w-5 text-primary" />,
+      links: [
+        { name: "Documentation Home", path: "/documentation" },
+        { name: "Introduction to Bhagavad Gita", path: "/documentation/intro-to-gita" },
+        { name: "Core Principles Explained", path: "/documentation/core-principles" },
+        { name: "Dealing with Stress", path: "/documentation/stress-management" },
+      ]
+    },
+    {
       category: "User Account",
       icon: <User className="h-5 w-5 text-primary" />,
       links: [
         { name: "Profile", path: "/profile" },
-        { name: "Documentation", path: "/documentation" },
       ]
     },
     {

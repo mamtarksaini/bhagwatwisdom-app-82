@@ -18,6 +18,9 @@ import SupportPage from '@/pages/SupportPage';
 import { SitemapPage } from '@/pages/SitemapPage';
 import BlogPage from '@/pages/BlogPage';
 import DocumentationPage from '@/pages/DocumentationPage';
+import IntroToGitaPage from '@/pages/documentation/IntroToGitaPage';
+import CorePrinciplesPage from '@/pages/documentation/CorePrinciplesPage';
+import StressManagementPage from '@/pages/documentation/StressManagementPage';
 import NotFound from '@/pages/NotFound';
 import { ThemeProvider } from '@/components/ui/ThemeProvider';
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -55,6 +58,12 @@ function App() {
                 <Route path="/sitemap" element={<SitemapPage />} />
                 <Route path="/blog" element={<BlogPage />} />
                 <Route path="/documentation" element={<DocumentationPage />} />
+                
+                {/* Documentation Guide Pages */}
+                <Route path="/documentation/intro-to-gita" element={<IntroToGitaPage />} />
+                <Route path="/documentation/core-principles" element={<CorePrinciplesPage />} />
+                <Route path="/documentation/stress-management" element={<StressManagementPage />} />
+                
                 <Route path="*" element={<NotFound />} />
               </Routes>
               <Toaster />
