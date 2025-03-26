@@ -4,8 +4,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { PremiumUpgrade } from "@/components/premium/PremiumUpgrade";
-import { Loader2, LogOut, User } from "lucide-react";
-import { useNavigate } from 'react-router-dom';
+import { Loader2, LogOut, User, Home } from "lucide-react";
+import { useNavigate, Link } from 'react-router-dom';
 import { AuthModal } from "@/components/auth/AuthModal";
 
 const Profile = () => {
@@ -53,6 +53,13 @@ const Profile = () => {
           <h1 className="text-3xl font-heading font-bold tracking-tighter sm:text-4xl md:text-5xl text-gradient">
             Your Spiritual Journey
           </h1>
+          
+          <div className="flex space-x-4">
+            <Button variant="outline" onClick={() => navigate('/')} className="flex items-center gap-2">
+              <Home className="h-4 w-4" />
+              Return to Home
+            </Button>
+          </div>
 
           <div className="grid w-full max-w-4xl gap-8 md:grid-cols-2">
             <Card className="glass-card">
@@ -104,6 +111,6 @@ const Profile = () => {
       </div>
     </div>
   );
-};
+}
 
 export default Profile;

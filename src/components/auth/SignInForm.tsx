@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -9,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
+import { useNavigate } from 'react-router-dom';
 
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -22,6 +22,7 @@ interface SignInFormProps {
 export function SignInForm({ onSuccess }: SignInFormProps) {
   const { signIn, status } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -34,11 +35,12 @@ export function SignInForm({ onSuccess }: SignInFormProps) {
   // Monitor auth status changes
   React.useEffect(() => {
     if (status === 'authenticated' && isLoading) {
-      console.log("SignInForm: User authenticated, calling onSuccess callback");
+      console.log("SignInForm: User authenticated, redirecting to home page");
       setIsLoading(false);
       onSuccess();
+      navigate('/');
     }
-  }, [status, isLoading, onSuccess]);
+  }, [status, isLoading, onSuccess, navigate]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (isLoading) {
