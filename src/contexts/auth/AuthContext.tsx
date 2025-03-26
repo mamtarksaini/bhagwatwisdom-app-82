@@ -3,6 +3,7 @@ import React, { createContext, useContext } from 'react';
 import { AuthContextValue } from './types';
 import { useAuthProvider } from './useAuthProvider';
 
+// Create a context with proper typing
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
