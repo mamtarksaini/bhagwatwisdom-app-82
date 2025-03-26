@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,16 +40,18 @@ export function VoiceAgent({ language, elevenLabsAgentId = DEFAULT_AGENT_ID }: V
   
   const elevenLabsConversation = useConversation({
     onMessage: (message) => {
-      // The ElevenLabs message structure is different than what we expected
-      // We need to handle the message based on its actual structure
       if (message && typeof message === 'object') {
-        // For transcript messages (user speech)
         if ('transcript' in message && message.transcript) {
-          setUserInput(message.transcript);
+          const transcript = message.transcript;
+          if (typeof transcript === 'string') {
+            setUserInput(transcript);
+          }
         }
-        // For text messages (AI response)
-        else if ('text' in message && message.text) {
-          setAiResponse(message.text);
+        if ('text' in message && message.text) {
+          const text = message.text;
+          if (typeof text === 'string') {
+            setAiResponse(text);
+          }
         }
       }
     },
