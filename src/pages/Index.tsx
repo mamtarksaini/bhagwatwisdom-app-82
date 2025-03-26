@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +6,7 @@ import { ProblemSolver } from "@/components/features/ProblemSolver";
 import { DreamInterpreter } from "@/components/features/DreamInterpreter";
 import { MoodMantra } from "@/components/features/MoodMantra";
 import { DailyVerse } from "@/components/features/DailyVerse";
-import { BookOpen, Moon, Sun, Heart, Globe, User, LogIn, Crown, Menu, X, MessageSquare, RefreshCw } from "lucide-react";
+import { BookOpen, Moon, Sun, Heart, Globe, User, LogIn, Crown, Menu, X, MessageSquare, RefreshCw, Plus } from "lucide-react";
 import { Language } from "@/types";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -35,6 +34,7 @@ const Index = () => {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currentAffirmation, setCurrentAffirmation] = useState(0);
+  const [showAffirmation, setShowAffirmation] = useState(false);
   const { isDark, toggleTheme } = useTheme();
 
   const mainLinks = [
@@ -326,39 +326,61 @@ const Index = () => {
           </div>
           
           <div className="max-w-xl mx-auto">
-            <Card className="glass-card border border-gold/30">
-              <CardHeader>
-                <CardTitle className="text-gradient">Today's Affirmation</CardTitle>
-                <CardDescription>
-                  Repeat this affirmation throughout your day to cultivate positive mindset
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="bg-spiritual dark:bg-gray-800/40 rounded-lg p-6 border border-spiritual-dark dark:border-gray-700">
-                  <blockquote className="text-xl md:text-2xl font-heading font-medium text-center">
-                    "{(affirmationsData[language] || affirmationsData.english)[currentAffirmation]}"
-                  </blockquote>
-                </div>
-                
-                <div className="flex justify-center">
-                  <Button 
-                    onClick={getRandomAffirmation} 
-                    className="button-gradient flex items-center gap-2"
-                  >
-                    <RefreshCw className="h-4 w-4" />
-                    New Affirmation
-                  </Button>
-                </div>
-                
-                <div className="flex justify-center mt-4">
-                  <Button asChild className="w-full max-w-sm">
-                    <Link to="/affirmations">
-                      View All Affirmations
-                    </Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            {!showAffirmation ? (
+              <div className="flex justify-center">
+                <Button 
+                  onClick={() => {
+                    setShowAffirmation(true);
+                    getRandomAffirmation();
+                  }} 
+                  className="button-gradient flex items-center gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  Show Today's Affirmation
+                </Button>
+              </div>
+            ) : (
+              <Card className="glass-card border border-gold/30">
+                <CardHeader>
+                  <CardTitle className="text-gradient">Today's Affirmation</CardTitle>
+                  <CardDescription>
+                    Repeat this affirmation throughout your day to cultivate positive mindset
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="bg-spiritual dark:bg-gray-800/40 rounded-lg p-6 border border-spiritual-dark dark:border-gray-700">
+                    <blockquote className="text-xl md:text-2xl font-heading font-medium text-center">
+                      "{(affirmationsData[language] || affirmationsData.english)[currentAffirmation]}"
+                    </blockquote>
+                  </div>
+                  
+                  <div className="flex justify-center gap-4">
+                    <Button 
+                      onClick={getRandomAffirmation} 
+                      className="button-gradient flex items-center gap-2"
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                      New Affirmation
+                    </Button>
+                    
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setShowAffirmation(false)}
+                    >
+                      Hide Affirmation
+                    </Button>
+                  </div>
+                  
+                  <div className="flex justify-center mt-4">
+                    <Button asChild className="w-full max-w-sm">
+                      <Link to="/affirmations">
+                        View All Affirmations
+                      </Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </section>
@@ -426,3 +448,4 @@ const Index = () => {
 };
 
 export default Index;
+
