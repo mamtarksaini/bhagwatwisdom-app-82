@@ -107,21 +107,19 @@ export function PayPalButton({ planId, text = 'Pay with PayPal', className }: Pa
       return;
     }
     
-    if (!user || status !== 'authenticated') {
-      // Direct check with Supabase as a last resort
-      const { data, error } = await supabase.auth.getSession();
+    // Ensure user is authenticated before proceeding
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError || !sessionData.session) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to continue with your purchase.",
+        variant: "destructive"
+      });
       
-      if (error || !data.session) {
-        toast({
-          title: "Authentication required",
-          description: "Please sign in to continue with your purchase.",
-          variant: "destructive"
-        });
-        
-        // Redirect to auth page
-        navigate('/auth');
-        return;
-      }
+      // Redirect to auth page
+      navigate('/auth');
+      return;
     }
     
     try {
@@ -129,13 +127,25 @@ export function PayPalButton({ planId, text = 'Pay with PayPal', className }: Pa
       
       console.log('PayPalButton: Creating payment order for plan:', planId);
       
-      // Create a PayPal order
+      // Create a PayPal order with the current session token
       const order = await createPaymentOrder(planId, 'paypal');
       
       // Check if the order and links property exist
       if (!order || !order.links || !Array.isArray(order.links)) {
         console.error('Invalid PayPal order response:', order);
-        throw new Error('Invalid payment response from server');
+        
+        if (order && order.error === 'invalid_token') {
+          // Handle token issues by refreshing the session
+          await supabase.auth.refreshSession();
+          toast({
+            title: "Session refreshed",
+            description: "Please try again.",
+            variant: "default"
+          });
+        } else {
+          throw new Error('Invalid payment response from server');
+        }
+        return;
       }
       
       // Find the approval URL in the links array
@@ -151,13 +161,14 @@ export function PayPalButton({ planId, text = 'Pay with PayPal', className }: Pa
       
     } catch (error) {
       console.error('Error initiating PayPal payment:', error);
-      setIsLoading(false);
       
       toast({
         title: "Payment error",
         description: error.message || "An error occurred initiating your payment.",
         variant: "destructive"
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 

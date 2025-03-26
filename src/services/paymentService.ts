@@ -28,7 +28,15 @@ export async function createPaymentOrder(
   provider: PaymentProvider
 ): Promise<PaymentOrder> {
   try {
-    // Check if we have an active session first
+    // First refresh the session to ensure we have a valid token
+    const { error: refreshError } = await supabase.auth.refreshSession();
+    
+    if (refreshError) {
+      console.error('Session refresh error:', refreshError.message);
+      // Continue anyway as the session might still be valid
+    }
+    
+    // Check if we have an active session
     const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
     
     if (sessionError) {
@@ -43,7 +51,7 @@ export async function createPaymentOrder(
     
     console.log('Payment service: Creating order with active session for user:', sessionData.session.user.id);
     
-    // Call the Supabase Edge Function to create an order
+    // Call the Supabase Edge Function to create an order with the fresh token
     const { data: responseData, error: invokeError } = await supabase.functions.invoke('process-payment', {
       body: {
         planId,

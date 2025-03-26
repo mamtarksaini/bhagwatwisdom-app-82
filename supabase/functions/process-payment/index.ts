@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 
@@ -23,19 +22,39 @@ const PAYPAL_API_URL = 'https://api-m.sandbox.paypal.com'; // Use https://api-m.
 
 // Function to get PayPal access token
 async function getPayPalAccessToken() {
-  const auth = btoa(`${paypalClientId}:${paypalSecretKey}`);
-  
-  const response = await fetch(`${PAYPAL_API_URL}/v1/oauth2/token`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'Authorization': `Basic ${auth}`,
-    },
-    body: 'grant_type=client_credentials',
-  });
+  try {
+    const auth = btoa(`${paypalClientId}:${paypalSecretKey}`);
+    
+    if (!paypalClientId || !paypalSecretKey) {
+      throw new Error('PayPal credentials not configured');
+    }
+    
+    const response = await fetch(`${PAYPAL_API_URL}/v1/oauth2/token`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': `Basic ${auth}`,
+      },
+      body: 'grant_type=client_credentials',
+    });
 
-  const data = await response.json();
-  return data.access_token;
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('PayPal token error:', errorData);
+      throw new Error(`PayPal API error: ${errorData.error_description || 'Failed to get token'}`);
+    }
+
+    const data = await response.json();
+    
+    if (!data.access_token) {
+      throw new Error('PayPal did not return an access token');
+    }
+    
+    return data.access_token;
+  } catch (error) {
+    console.error('Error getting PayPal access token:', error);
+    throw error;
+  }
 }
 
 // Function to create a PayPal order
@@ -279,14 +298,22 @@ serve(async (req) => {
     // Verify the JWT token and get the user
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     
-    if (authError || !user) {
+    if (authError) {
+      console.error('Auth error:', authError.message);
       return new Response(
-        JSON.stringify({ error: 'Unauthorized', details: authError?.message }),
+        JSON.stringify({ error: 'invalid_token', error_description: authError.message }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    if (!user) {
+      return new Response(
+        JSON.stringify({ error: 'invalid_token', error_description: 'User not found' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Process the request based on body content instead of path
+    // Process the request based on body content
     if (req.method === 'POST') {
       const body = await req.json();
       const { action, planId, provider } = body;
@@ -302,21 +329,29 @@ serve(async (req) => {
         
         let orderResponse;
         
-        if (provider === 'paypal') {
-          orderResponse = await createPayPalOrder(planId);
-        } else if (provider === 'razorpay') {
-          orderResponse = await createRazorpayOrder(planId);
-        } else {
+        try {
+          if (provider === 'paypal') {
+            orderResponse = await createPayPalOrder(planId);
+          } else if (provider === 'razorpay') {
+            orderResponse = await createRazorpayOrder(planId);
+          } else {
+            return new Response(
+              JSON.stringify({ error: 'Invalid payment provider' }),
+              { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+          
           return new Response(
-            JSON.stringify({ error: 'Invalid payment provider' }),
-            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            JSON.stringify(orderResponse),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        } catch (error) {
+          console.error(`Error creating ${provider} order:`, error);
+          return new Response(
+            JSON.stringify({ error: error.message || `Failed to create ${provider} order` }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
-        
-        return new Response(
-          JSON.stringify(orderResponse),
-          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
       } else if (action === 'verify-payment') {
         const { provider, planId, ...paymentDetails } = body;
         
