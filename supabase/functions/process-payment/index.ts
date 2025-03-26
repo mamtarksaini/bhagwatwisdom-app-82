@@ -286,15 +286,13 @@ serve(async (req) => {
       );
     }
 
-    const { pathname, searchParams } = new URL(req.url);
-    
-    // Process the request based on the path
+    // Process the request based on body content instead of path
     if (req.method === 'POST') {
       const body = await req.json();
+      const { action, planId, provider } = body;
       
-      if (pathname.endsWith('/create-order')) {
-        const { planId, provider } = body;
-        
+      // Handle the request based on the action parameter
+      if (action === 'create-order') {
         if (!planId || !provider) {
           return new Response(
             JSON.stringify({ error: 'Missing required parameters' }),
@@ -319,7 +317,7 @@ serve(async (req) => {
           JSON.stringify(orderResponse),
           { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
-      } else if (pathname.endsWith('/verify-payment')) {
+      } else if (action === 'verify-payment') {
         const { provider, planId, ...paymentDetails } = body;
         
         if (!provider || !planId) {
@@ -385,13 +383,18 @@ serve(async (req) => {
           }),
           { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
+      } else {
+        return new Response(
+          JSON.stringify({ error: 'Invalid action' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       }
     }
     
-    // If no matching endpoint is found
+    // If method is not POST
     return new Response(
-      JSON.stringify({ error: 'Not found' }),
-      { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ error: 'Method not allowed' }),
+      { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
     console.error('Error processing request:', error);

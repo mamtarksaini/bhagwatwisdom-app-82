@@ -29,13 +29,8 @@ export function PaymentMethods({ planId, planName, price, currency }: PaymentMet
             <PayPalButton 
               planId={planId} 
               className="w-full flex items-center justify-center"
-              text={
-                <div className="flex items-center">
-                  <span className="mr-2">Pay with</span>
-                  <span className="font-bold text-blue-600">Pay</span>
-                  <span className="font-bold text-blue-800">Pal</span>
-                </div>
-              }
+              // Fixed: Using string instead of React Element for text prop
+              text="Pay with PayPal" 
             />
             
             <Separator />
@@ -43,12 +38,8 @@ export function PaymentMethods({ planId, planName, price, currency }: PaymentMet
             <RazorpayButton 
               planId={planId} 
               className="w-full flex items-center justify-center"
-              text={
-                <div className="flex items-center">
-                  <span className="mr-2">Pay with</span>
-                  <span className="font-bold text-blue-600">Razorpay</span>
-                </div>
-              }
+              // Fixed: Using string instead of React Element for text prop
+              text="Pay with Razorpay"
             />
           </div>
         </div>

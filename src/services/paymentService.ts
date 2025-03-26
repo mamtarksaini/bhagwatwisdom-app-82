@@ -36,13 +36,14 @@ export async function createPaymentOrder(
     }
     
     // Call the Supabase Edge Function to create an order
+    // Fixed: Removed 'path' property as it doesn't exist in FunctionInvokeOptions
     const { data, error } = await supabase.functions.invoke('process-payment', {
       body: {
         planId,
         provider,
+        action: 'create-order', // Added action parameter instead of using path
       },
       method: 'POST',
-      path: '/create-order',
       headers: {
         Authorization: `Bearer ${session.access_token}`,
       },
@@ -84,14 +85,15 @@ export async function verifyPayment(
     }
     
     // Call the Supabase Edge Function to verify the payment
+    // Fixed: Removed 'path' property as it doesn't exist in FunctionInvokeOptions
     const { data, error } = await supabase.functions.invoke('process-payment', {
       body: {
         provider,
         planId,
+        action: 'verify-payment', // Added action parameter instead of using path
         ...paymentDetails,
       },
       method: 'POST',
-      path: '/verify-payment',
       headers: {
         Authorization: `Bearer ${session.access_token}`,
       },

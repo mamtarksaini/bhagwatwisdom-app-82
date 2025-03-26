@@ -40,10 +40,9 @@ serve(async (req) => {
         });
       }
 
-      const paymentId = searchParams.get('paymentId');
       const token = searchParams.get('token');
 
-      if (!paymentId && !token) {
+      if (!token) {
         // Redirect to frontend with error status
         return new Response(null, {
           status: 302,
