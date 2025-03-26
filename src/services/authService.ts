@@ -18,7 +18,15 @@ export async function fetchUserProfile(userId: string): Promise<UserProfile | nu
       throw error;
     }
     
-    return data as UserProfile | null;
+    // Convert the id to string to match UserProfile type
+    if (data) {
+      return {
+        ...data,
+        id: String(data.id),
+      } as UserProfile;
+    }
+    
+    return null;
   } catch (error) {
     console.error('authService: Error fetching profile:', error);
     // Gracefully handle the error by returning null, allowing the app to continue
@@ -28,6 +36,7 @@ export async function fetchUserProfile(userId: string): Promise<UserProfile | nu
 
 export async function createUserProfile(userId: string, email: string, name?: string): Promise<void> {
   try {
+    // Convert the string userId to a number if needed for database insertion
     const { error } = await supabase.from('profiles').insert({
       id: userId,
       email,
@@ -47,9 +56,12 @@ export async function createUserProfile(userId: string, email: string, name?: st
 
 export async function updateUserProfile(userId: string, updates: Partial<UserProfile>): Promise<{ error: Error | null }> {
   try {
+    // Remove id from updates if present, as we shouldn't be updating the primary key
+    const { id, ...updateData } = updates;
+    
     const { error } = await supabase
       .from('profiles')
-      .update(updates)
+      .update(updateData)
       .eq('id', userId);
     
     if (error) {
