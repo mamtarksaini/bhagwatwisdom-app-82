@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,6 +27,7 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
   const [callTime, setCallTime] = useState(0);
   const [speechInitFailed, setSpeechInitFailed] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastTranscriptRef = useRef<string>("");
@@ -132,6 +134,9 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
   }, [speechSynthesis.isSpeechSupported, speechSynthesis.voices]);
   
   const startListening = () => {
+    // Reset any previous errors
+    setApiError(null);
+    
     // In testing mode, we always allow listening without restrictions
     setIsListening(true);
     speechRecognition.startListening();
@@ -171,10 +176,12 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
   const handleSendVoiceRequest = async (input: string) => {
     if (!input.trim()) return;
     
+    // Reset any previous errors
+    setApiError(null);
+    
     // In testing mode, we always allow voice requests without restrictions
     setIsProcessing(true);
     setAiResponse("");
-    setApiError(null);
     
     try {
       // Check if user specifically requested text-only mode
@@ -200,6 +207,7 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
       
       if (response) {
         setAiResponse(response);
+        setRetryCount(0); // Reset retry count on success
         
         // Only trigger speech if not in text-only mode
         if (!useTextOnly && speechSynthesis.isSpeechSupported && !speechInitFailed) {
@@ -222,9 +230,22 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
           // If we're in text-only mode (either by user choice or as a fallback)
           setUseTextOnly(true);
         }
-        
-        // Skip usage tracking in testing mode
       } else {
+        // Handle API failure with retry logic
+        if (retryCount < 2) {
+          // Try again with a short delay
+          setRetryCount(prevCount => prevCount + 1);
+          toast({
+            title: "Retrying",
+            description: "Connection issue detected. Trying again...",
+          });
+          
+          setTimeout(() => {
+            handleSendVoiceRequest(input);
+          }, 1500);
+          return;
+        }
+        
         setApiError("Failed to get response from AI. Please try again.");
         toast({
           title: "Error",
@@ -251,8 +272,17 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
       speechSynthesis.stop();
     } else if (aiResponse) {
       try {
-        setUseTextOnly(false); // Reset text-only mode when manually playing speech
-        speechSynthesis.speak(aiResponse);
+        // Only attempt to play speech if not already in text-only mode due to errors
+        if (!speechInitFailed) {
+          setUseTextOnly(false); // Reset text-only mode when manually playing speech
+          speechSynthesis.speak(aiResponse);
+        } else {
+          toast({
+            title: "Speech Not Available", 
+            description: "Speech synthesis is not available in your browser. Using text-only mode.",
+            variant: "destructive"
+          });
+        }
       } catch (error) {
         console.error("Error playing speech:", error);
         setUseTextOnly(true);
@@ -276,6 +306,7 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
     speechRecognition.stopListening();
     setIsListening(false);
     setCallTime(0);
+    setApiError(null);
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
@@ -283,6 +314,18 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
     if (silenceTimerRef.current) {
       clearTimeout(silenceTimerRef.current);
       silenceTimerRef.current = null;
+    }
+  };
+  
+  const retryRequest = () => {
+    setApiError(null);
+    if (userInput) {
+      handleSendVoiceRequest(userInput);
+    } else {
+      toast({
+        title: "No Input",
+        description: "Please speak first to send a request.",
+      });
     }
   };
   
@@ -332,14 +375,24 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
                     <span className="font-medium">Error</span>
                   </div>
                   <p>{apiError}</p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="mt-2 border-red-300 text-red-300 hover:bg-red-800/50"
-                    onClick={() => setApiError(null)}
-                  >
-                    Dismiss
-                  </Button>
+                  <div className="flex justify-center gap-2 mt-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-red-300 text-red-300 hover:bg-red-800/50"
+                      onClick={() => setApiError(null)}
+                    >
+                      Dismiss
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-green-300 text-green-300 hover:bg-green-800/50"
+                      onClick={retryRequest}
+                    >
+                      Retry
+                    </Button>
+                  </div>
                 </div>
               </div>
             )}

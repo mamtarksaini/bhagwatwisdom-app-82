@@ -20,7 +20,7 @@ serve(async (req) => {
   try {
     // Get the API key from environment variable (set in edge function secrets)
     // Using a valid API key that works with Gemini
-    const apiKey = Deno.env.get("GEMINI_API_KEY") || 'AIzaSyDfDU4BIRp9O9j1R8NDy5wUQLl4s3GZKHM';
+    const apiKey = Deno.env.get("GEMINI_API_KEY") || 'AIzaSyCU28PvXUyLmp_wxj-g9WesUvLXSdFsCtM';
     
     console.log(`[${new Date().toISOString()}] get_gemini_key function called`);
     console.log(`API key exists: ${Boolean(apiKey)}`);
