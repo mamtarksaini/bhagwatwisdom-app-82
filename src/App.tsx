@@ -50,6 +50,7 @@ const App = () => (
               <Route path="/problem-solver" element={<ProblemSolverPage />} />
               <Route path="/dream-interpreter" element={<DreamInterpreterPage />} />
               <Route path="/mood-mantra" element={<MoodMantraPage />} />
+              <Route path="/mantras" element={<MoodMantraPage />} /> {/* Add alias route for mantras */}
               <Route path="/affirmations" element={<AffirmationsPage />} />
               <Route path="/sitemap" element={<SitemapPage />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THIS LINE */}
