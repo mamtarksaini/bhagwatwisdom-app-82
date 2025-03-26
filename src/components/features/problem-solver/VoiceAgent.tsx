@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Mic, MicOff, Volume2, VolumeX, Crown, X, Send } from "lucide-react";
+import { Mic, MicOff, Volume2, VolumeX, Crown, X } from "lucide-react";
 import { Language } from "@/types";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis";
@@ -13,7 +13,6 @@ import { canUseVoiceAgent, getRemainingFreeResponses, incrementVoiceAgentUsage }
 import { PremiumUpgrade } from "@/components/premium/PremiumUpgrade";
 import { AudioVisualizer } from "./AudioVisualizer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
 
 interface VoiceAgentProps {
   language: Language;
@@ -24,7 +23,6 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
   const { user, isPremium } = useAuth();
   const [isListening, setIsListening] = useState(false);
   const [userInput, setUserInput] = useState("");
-  const [textInput, setTextInput] = useState("");
   const [aiResponse, setAiResponse] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   // We don't need to manage free responses limit checks since we're in testing mode with premium enabled
@@ -155,18 +153,6 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
       speechRecognition.resetTranscript();
     }
   };
-
-  const handleTextInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setTextInput(e.target.value);
-  };
-
-  const handleTextSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (textInput.trim()) {
-      handleSendVoiceRequest(textInput);
-      setTextInput("");
-    }
-  };
   
   const toggleSpeech = () => {
     if (speechSynthesis.isReading) {
@@ -239,7 +225,7 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
             
             {aiResponse && !isListening && (
               <div className="absolute bottom-0 w-full text-center max-h-24 overflow-y-auto">
-                <p className="text-white/90 mb-2">{aiResponse}</p>
+                <p className={`text-white/90 mb-2 ${useTextOnly ? 'block' : 'hidden'}`}>{aiResponse}</p>
               </div>
             )}
           </div>
@@ -253,72 +239,48 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
         </CardContent>
       
         <div className="border-t border-[#33C3F0]/20">
-          <form onSubmit={handleTextSubmit} className="p-4">
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <Input
-                type="text"
-                placeholder="Type your message here..."
-                value={textInput}
-                onChange={handleTextInputChange}
-                className="bg-[#221F26] border-[#33C3F0]/30 text-white"
-                disabled={isProcessing || isListening}
-              />
+          <div className="flex items-center justify-center p-4 gap-2">
+            {!isListening ? (
               <Button 
-                type="submit" 
-                className="bg-[#1EAEDB] hover:bg-[#33C3F0] rounded-full h-10 w-10 p-0 flex items-center justify-center"
-                disabled={isProcessing || isListening || !textInput.trim()}
+                onClick={startListening}
+                className="rounded-full h-12 w-12 bg-[#1EAEDB] hover:bg-[#33C3F0] text-white"
+                disabled={isProcessing}
               >
-                <Send className="h-5 w-5" />
+                <Mic className="h-6 w-6" />
               </Button>
-            </div>
+            ) : (
+              <Button
+                onClick={stopListening}
+                className="rounded-full h-12 w-12 bg-red-500 hover:bg-red-600 text-white"
+              >
+                <MicOff className="h-6 w-6" />
+              </Button>
+            )}
             
-            <div className="flex items-center justify-center gap-2">
-              {!isListening ? (
-                <Button 
-                  onClick={startListening}
-                  className="rounded-full h-12 w-12 bg-[#1EAEDB] hover:bg-[#33C3F0] text-white"
-                  disabled={isProcessing}
-                  type="button"
-                >
-                  <Mic className="h-6 w-6" />
-                </Button>
-              ) : (
-                <Button
-                  onClick={stopListening}
-                  className="rounded-full h-12 w-12 bg-red-500 hover:bg-red-600 text-white"
-                  type="button"
-                >
-                  <MicOff className="h-6 w-6" />
-                </Button>
-              )}
-              
-              {aiResponse && (
-                <Button
-                  variant="outline"
-                  className="rounded-full h-12 w-12 border-[#33C3F0]/50 text-[#33C3F0] hover:bg-[#33C3F0]/10"
-                  onClick={toggleSpeech}
-                  type="button"
-                >
-                  {speechSynthesis.isReading ? (
-                    <VolumeX className="h-6 w-6" />
-                  ) : (
-                    <Volume2 className="h-6 w-6" />
-                  )}
-                </Button>
-              )}
-              
-              {(isListening || isProcessing || speechSynthesis.isReading) && (
-                <Button
-                  variant="outline"
-                  className="rounded-full h-12 w-12 border-red-500/50 text-red-500 hover:bg-red-500/10"
-                  onClick={endCall}
-                  type="button"
-                >
-                  <X className="h-6 w-6" />
-                </Button>
-              )}
-            </div>
-          </form>
+            {aiResponse && (
+              <Button
+                variant="outline"
+                className="rounded-full h-12 w-12 border-[#33C3F0]/50 text-[#33C3F0] hover:bg-[#33C3F0]/10"
+                onClick={toggleSpeech}
+              >
+                {speechSynthesis.isReading ? (
+                  <VolumeX className="h-6 w-6" />
+                ) : (
+                  <Volume2 className="h-6 w-6" />
+                )}
+              </Button>
+            )}
+            
+            {(isListening || isProcessing || speechSynthesis.isReading) && (
+              <Button
+                variant="outline"
+                className="rounded-full h-12 w-12 border-red-500/50 text-red-500 hover:bg-red-500/10"
+                onClick={endCall}
+              >
+                <X className="h-6 w-6" />
+              </Button>
+            )}
+          </div>
         </div>
         
         <CardFooter className="flex flex-col bg-[#221F26] py-2 px-4">
