@@ -11,6 +11,27 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useConversation } from "@11labs/react";
 import { toast } from "@/components/ui/use-toast";
 
+// Define types for ElevenLabs conversation messages
+type Role = 'user' | 'assistant' | 'system';
+
+interface TranscriptMessage {
+  type: 'transcript';
+  text: string;
+  isFinal: boolean;
+}
+
+interface ResponseMessage {
+  type: 'response';
+  text: string;
+}
+
+interface ErrorMessage {
+  type: 'error';
+  text?: string;
+}
+
+type ElevenLabsMessage = TranscriptMessage | ResponseMessage | ErrorMessage | { message: string; source: Role };
+
 export function VoiceAgentPage() {
   const [language, setLanguage] = useState<Language>("english");
   const { isPremium } = useAuth();
@@ -29,23 +50,36 @@ export function VoiceAgentPage() {
     isSpeaking,
     setVolume
   } = useConversation({
-    onMessage: (message) => {
-      if (message.type === 'transcript' && message.isFinal && message.text) {
-        setTranscript(message.text);
-      } 
-      
-      if (message.type === 'response' && message.text) {
-        // Add new response
-        setResponses(prev => [...prev, message.text]);
+    onMessage: (message: ElevenLabsMessage) => {
+      // Handle legacy message format
+      if ('message' in message && 'source' in message) {
+        if (message.source === 'user') {
+          setTranscript(message.message);
+        } else if (message.source === 'assistant') {
+          setResponses(prev => [...prev, message.message]);
+        }
+        return;
       }
       
-      if (message.type === 'error') {
-        setErrorMessage("There was an error with the voice service. Please try again.");
-        toast({
-          title: "Voice Service Error",
-          description: "There was an error with the voice agent. Please try again.",
-          variant: "destructive"
-        });
+      // Handle new message format
+      if ('type' in message) {
+        if (message.type === 'transcript' && message.isFinal && message.text) {
+          setTranscript(message.text);
+        } 
+        
+        if (message.type === 'response' && message.text) {
+          // Add new response
+          setResponses(prev => [...prev, message.text]);
+        }
+        
+        if (message.type === 'error') {
+          setErrorMessage("There was an error with the voice service. Please try again.");
+          toast({
+            title: "Voice Service Error",
+            description: "There was an error with the voice agent. Please try again.",
+            variant: "destructive"
+          });
+        }
       }
     },
     onConnect: () => {
