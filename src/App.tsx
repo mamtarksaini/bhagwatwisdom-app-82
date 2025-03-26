@@ -19,6 +19,11 @@ import BlogPage from "./pages/BlogPage";
 import SupportPage from "./pages/SupportPage";
 import DocumentationPage from "./pages/DocumentationPage";
 import { ThemeProvider } from "@/components/ui/ThemeProvider";
+import { ProblemSolverPage } from "./pages/ProblemSolverPage";
+import { DreamInterpreterPage } from "./pages/DreamInterpreterPage";
+import { MoodMantraPage } from "./pages/MoodMantraPage";
+import { AffirmationsPage } from "./pages/AffirmationsPage";
+import { SitemapPage } from "./pages/SitemapPage";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +47,11 @@ const App = () => (
               <Route path="/blog" element={<BlogPage />} />
               <Route path="/support" element={<SupportPage />} />
               <Route path="/documentation" element={<DocumentationPage />} />
+              <Route path="/problem-solver" element={<ProblemSolverPage />} />
+              <Route path="/dream-interpreter" element={<DreamInterpreterPage />} />
+              <Route path="/mood-mantra" element={<MoodMantraPage />} />
+              <Route path="/affirmations" element={<AffirmationsPage />} />
+              <Route path="/sitemap" element={<SitemapPage />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THIS LINE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
