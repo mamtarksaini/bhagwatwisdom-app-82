@@ -22,7 +22,8 @@ export function VoiceAgentPage() {
         <Alert variant="default" className="bg-amber-500/10 border border-amber-500/30 mb-6">
           <AlertCircle className="h-4 w-4 text-amber-500" />
           <AlertDescription>
-            Voice Agent is now using your browser's built-in speech recognition and synthesis. 
+            Just click the mic button and start speaking. The AI will automatically respond after you pause speaking for 2 seconds.
+            You can also click the mic-off button to manually stop and get a response immediately.
             Say "give me text" if you prefer text-only responses without audio.
             <span className="ml-2 text-green-500 font-medium">(Premium Mode Enabled for Testing)</span>
           </AlertDescription>

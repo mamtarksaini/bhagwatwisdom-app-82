@@ -25,19 +25,40 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
   const [userInput, setUserInput] = useState("");
   const [aiResponse, setAiResponse] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
-  // We don't need to manage free responses limit checks since we're in testing mode with premium enabled
   const [useTextOnly, setUseTextOnly] = useState(false);
   const [callTime, setCallTime] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const lastTranscriptRef = useRef<string>("");
+  const silenceThreshold = 2000; // 2 seconds of silence will trigger processing
   
   const speechRecognition = useSpeechRecognition(language);
   const speechSynthesis = useSpeechSynthesis(language);
   
-  // For testing mode, we can skip the usage checks since premium is always true
-  
   useEffect(() => {
     if (speechRecognition.isListening) {
       setUserInput(speechRecognition.transcript);
+      
+      // If we have a transcript, reset the silence timer
+      if (speechRecognition.transcript !== lastTranscriptRef.current) {
+        lastTranscriptRef.current = speechRecognition.transcript;
+        
+        // Clear any existing silence timer
+        if (silenceTimerRef.current) {
+          clearTimeout(silenceTimerRef.current);
+          silenceTimerRef.current = null;
+        }
+        
+        // Set a new silence timer
+        if (speechRecognition.transcript.trim()) {
+          silenceTimerRef.current = setTimeout(() => {
+            // Only auto-stop if we have some content and we're still listening
+            if (speechRecognition.isListening && speechRecognition.transcript.trim()) {
+              stopListening();
+            }
+          }, silenceThreshold);
+        }
+      }
     }
   }, [speechRecognition.transcript, speechRecognition.isListening]);
 
@@ -48,6 +69,9 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
       speechRecognition.stopListening();
       if (timerRef.current) {
         clearInterval(timerRef.current);
+      }
+      if (silenceTimerRef.current) {
+        clearTimeout(silenceTimerRef.current);
       }
     };
   }, [speechSynthesis, speechRecognition]);
@@ -84,11 +108,24 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
     speechRecognition.startListening();
     toast({
       title: "Listening",
-      description: "Speak now. I'm listening... Press the Stop button when you're done to get a response.",
+      description: "Speak now. I'm listening... I'll process after you pause speaking.",
     });
+    
+    // Reset refs
+    lastTranscriptRef.current = "";
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
   };
   
   const stopListening = async () => {
+    // Clear silence timer
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
+    
     speechRecognition.stopListening();
     setIsListening(false);
     
@@ -181,6 +218,10 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
+    }
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
     }
   };
   
