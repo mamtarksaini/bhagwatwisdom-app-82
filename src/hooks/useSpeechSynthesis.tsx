@@ -20,6 +20,7 @@ export function useSpeechSynthesis(language: Language = "english"): SpeechSynthe
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [isReading, setIsReading] = useState<boolean>(false);
   const [isSpeechSupported, setIsSpeechSupported] = useState<boolean>(false);
+  const [currentUtterance, setCurrentUtterance] = useState<SpeechSynthesisUtterance | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined" && window.speechSynthesis) {
@@ -28,7 +29,10 @@ export function useSpeechSynthesis(language: Language = "english"): SpeechSynthe
       // Load voices
       const loadVoices = () => {
         const availableVoices = window.speechSynthesis.getVoices();
-        setVoices(availableVoices);
+        if (availableVoices.length > 0) {
+          setVoices(availableVoices);
+          console.log("Available voices loaded:", availableVoices.length);
+        }
       };
 
       loadVoices();
@@ -37,6 +41,8 @@ export function useSpeechSynthesis(language: Language = "english"): SpeechSynthe
       if (window.speechSynthesis.onvoiceschanged !== undefined) {
         window.speechSynthesis.onvoiceschanged = loadVoices;
       }
+    } else {
+      console.warn("Speech synthesis not supported in this browser");
     }
 
     // Cleanup
@@ -50,10 +56,14 @@ export function useSpeechSynthesis(language: Language = "english"): SpeechSynthe
   // Get the best voice for current language
   const getBestVoice = useCallback(
     (text: string): SpeechSynthesisVoice | null => {
-      if (!voices.length) return null;
+      if (!voices.length) {
+        console.warn("No voices available");
+        return null;
+      }
 
       // Try to find a voice that matches the language
       const langCode = languageVoiceMap[language] || "en";
+      console.log(`Looking for voice with language code: ${langCode}`);
       
       // First try to find a perfect match
       let voice = voices.find(
@@ -79,6 +89,7 @@ export function useSpeechSynthesis(language: Language = "english"): SpeechSynthe
         voice = voices[0];
       }
       
+      console.log(`Selected voice: ${voice?.name} (${voice?.lang})`);
       return voice;
     },
     [voices, language]
@@ -86,38 +97,77 @@ export function useSpeechSynthesis(language: Language = "english"): SpeechSynthe
 
   const speak = useCallback(
     (text: string) => {
-      if (!isSpeechSupported) return;
+      if (!isSpeechSupported) {
+        console.warn("Speech synthesis not supported");
+        return;
+      }
 
       // Cancel any ongoing speech
       window.speechSynthesis.cancel();
+      setIsReading(false);
 
+      console.log("Starting speech synthesis");
+      
+      // Create a new utterance
       const utterance = new SpeechSynthesisUtterance(text);
       const voice = getBestVoice(text);
       
       if (voice) {
         utterance.voice = voice;
+        utterance.lang = voice.lang;
+      } else {
+        // Default to English if no appropriate voice found
+        utterance.lang = language === 'hindi' ? 'hi-IN' : 'en-US';
       }
 
       utterance.rate = 0.9; // Slightly slower for clarity
       utterance.pitch = 1;
       utterance.volume = 1;
 
-      utterance.onstart = () => setIsReading(true);
-      utterance.onend = () => setIsReading(false);
+      utterance.onstart = () => {
+        console.log("Speech started");
+        setIsReading(true);
+      };
+      
+      utterance.onend = () => {
+        console.log("Speech ended");
+        setIsReading(false);
+        setCurrentUtterance(null);
+      };
+      
       utterance.onerror = (event) => {
         console.error("Speech synthesis error:", event);
         setIsReading(false);
+        setCurrentUtterance(null);
       };
 
+      // Safari fix: create a dummy speak utterance first
+      if (/^((?!chrome|android).)*safari/i.test(navigator.userAgent)) {
+        console.log("Safari detected, applying fix");
+        window.speechSynthesis.speak(new SpeechSynthesisUtterance(''));
+      }
+      
+      // Set the current utterance and speak
+      setCurrentUtterance(utterance);
       window.speechSynthesis.speak(utterance);
+      
+      // Chrome bug fix: if speech doesn't start after 1 second, try again
+      setTimeout(() => {
+        if (!window.speechSynthesis.speaking && utterance === currentUtterance) {
+          console.log("Speech didn't start, trying again");
+          window.speechSynthesis.speak(utterance);
+        }
+      }, 1000);
     },
-    [isSpeechSupported, getBestVoice]
+    [isSpeechSupported, getBestVoice, language, currentUtterance]
   );
 
   const stop = useCallback(() => {
     if (isSpeechSupported) {
+      console.log("Stopping speech");
       window.speechSynthesis.cancel();
       setIsReading(false);
+      setCurrentUtterance(null);
     }
   }, [isSpeechSupported]);
 

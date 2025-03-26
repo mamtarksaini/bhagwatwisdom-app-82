@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,16 +41,22 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
         return;
       }
       
-      const canUse = await canUseVoiceAgent(user, isPremium);
-      setCanUseFreeResponse(canUse);
-      
-      if (!isPremium && user) {
-        const remaining = await getRemainingFreeResponses(user.id);
-        setRemainingResponses(remaining);
-        setShowPremiumOffer(remaining < 2);
-      } else {
-        setRemainingResponses(0);
-        setShowPremiumOffer(false);
+      try {
+        const canUse = await canUseVoiceAgent(user, isPremium);
+        setCanUseFreeResponse(canUse);
+        
+        if (!isPremium && user) {
+          const remaining = await getRemainingFreeResponses(user.id);
+          setRemainingResponses(remaining);
+          setShowPremiumOffer(remaining < 2);
+        } else {
+          setRemainingResponses(0);
+          setShowPremiumOffer(false);
+        }
+      } catch (error) {
+        console.error("Error checking voice agent usage:", error);
+        // Default to allowing usage if there's an error checking
+        setCanUseFreeResponse(true);
       }
     };
     
@@ -154,29 +161,37 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
             });
           }
         } else if (speechSynthesis.isSpeechSupported) {
-          speechSynthesis.speak(response);
+          // Auto-play the response using speech synthesis
+          setTimeout(() => {
+            speechSynthesis.speak(response);
+          }, 500);
         }
         
-        if (!isPremium && user) {
-          await incrementVoiceAgentUsage(user.id);
-          const remaining = await getRemainingFreeResponses(user.id);
-          setRemainingResponses(remaining);
-          setCanUseFreeResponse(remaining > 0);
-          
-          if (remaining === 0) {
-            setShowPremiumOffer(true);
-            toast({
-              title: "Usage Limit Reached",
-              description: "You've used all your free voice responses this month. Upgrade to Premium for unlimited access.",
-              variant: "destructive"
-            });
-          } else if (remaining === 1) {
-            toast({
-              title: "Almost Out of Free Responses",
-              description: "You have 1 free voice response remaining this month.",
-              variant: "destructive"
-            });
+        try {
+          if (!isPremium && user) {
+            await incrementVoiceAgentUsage(user.id);
+            const remaining = await getRemainingFreeResponses(user.id);
+            setRemainingResponses(remaining);
+            setCanUseFreeResponse(remaining > 0);
+            
+            if (remaining === 0) {
+              setShowPremiumOffer(true);
+              toast({
+                title: "Usage Limit Reached",
+                description: "You've used all your free voice responses this month. Upgrade to Premium for unlimited access.",
+                variant: "destructive"
+              });
+            } else if (remaining === 1) {
+              toast({
+                title: "Almost Out of Free Responses",
+                description: "You have 1 free voice response remaining this month.",
+                variant: "destructive"
+              });
+            }
           }
+        } catch (error) {
+          console.error("Error updating usage count:", error);
+          // Continue without blocking the user experience
         }
       } else {
         toast({

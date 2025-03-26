@@ -43,13 +43,17 @@ export const getUserVoiceAgentUsage = async (userId: string | null): Promise<Voi
         lastResetDate: getCurrentMonthStartDate() 
       };
       
-      await supabase
-        .from('voice_agent_usage')
-        .insert({
-          user_id: userId,
-          used_count: 0,
-          last_reset_date: newUsage.lastResetDate
-        });
+      try {
+        await supabase
+          .from('voice_agent_usage')
+          .insert({
+            user_id: userId,
+            used_count: 0,
+            last_reset_date: newUsage.lastResetDate
+          });
+      } catch (insertError) {
+        console.error('Error creating voice agent usage record:', insertError);
+      }
         
       return newUsage;
     }
@@ -65,13 +69,17 @@ export const getUserVoiceAgentUsage = async (userId: string | null): Promise<Voi
         lastResetDate: currentMonthStart 
       };
       
-      await supabase
-        .from('voice_agent_usage')
-        .update({
-          used_count: 0,
-          last_reset_date: currentMonthStart
-        })
-        .eq('user_id', userId);
+      try {
+        await supabase
+          .from('voice_agent_usage')
+          .update({
+            used_count: 0,
+            last_reset_date: currentMonthStart
+          })
+          .eq('user_id', userId);
+      } catch (updateError) {
+        console.error('Error resetting voice agent usage:', updateError);
+      }
         
       return updatedUsage;
     }
@@ -125,7 +133,8 @@ export const canUseVoiceAgent = async (
     return usedCount < FREE_VOICE_RESPONSES_LIMIT;
   } catch (error) {
     console.error('Error checking voice agent usage:', error);
-    return false;
+    // Default to allowing usage if there's an error checking
+    return true;
   }
 };
 
@@ -138,6 +147,7 @@ export const getRemainingFreeResponses = async (userId: string | null): Promise<
     return Math.max(0, FREE_VOICE_RESPONSES_LIMIT - usedCount);
   } catch (error) {
     console.error('Error getting remaining free responses:', error);
-    return 0;
+    // Default to giving the full limit if there's an error checking
+    return FREE_VOICE_RESPONSES_LIMIT;
   }
 };
