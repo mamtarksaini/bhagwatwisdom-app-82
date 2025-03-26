@@ -1,52 +1,45 @@
 
 import { Link } from "react-router-dom";
-import { Heart } from "lucide-react";
+import { Heart, Twitter, Instagram, Facebook, Youtube } from "lucide-react";
 
 export function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="mt-auto bg-secondary/50 dark:bg-gray-900/50 py-10">
+    <footer className="w-full py-10 bg-[#0f1525] text-white">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-4 lg:gap-12">
-          {/* Logo and description */}
-          <div className="space-y-3">
-            <Link to="/" className="flex items-center gap-2">
-              <img 
-                src="/lovable-uploads/c3d9b365-6fc8-4cba-bd7b-ea9317db1356.png" 
-                alt="Bhagwat Wisdom" 
-                className="w-8 h-8 object-contain"
-              />
-              <span className="font-heading text-xl font-bold text-foreground">
-                Bhagwat Wisdom
-              </span>
-            </Link>
-            <p className="text-sm text-muted-foreground mt-2 max-w-xs">
+          {/* Bhagwat Wisdom */}
+          <div className="space-y-4">
+            <h3 className="font-heading text-2xl font-bold">
+              Bhagwat Wisdom
+            </h3>
+            <p className="text-sm text-gray-300 max-w-xs leading-relaxed">
               Discover ancient wisdom for modern life through the timeless teachings of the Bhagavad Gita.
             </p>
           </div>
 
           {/* Features */}
-          <div>
-            <h3 className="font-heading text-lg font-semibold mb-4">Features</h3>
-            <ul className="space-y-2 text-sm">
+          <div className="space-y-4">
+            <h3 className="font-heading text-xl font-bold">Features</h3>
+            <ul className="space-y-3 text-sm text-gray-300">
               <li>
-                <Link to="/problem-solver" className="text-muted-foreground hover:text-foreground transition-colors">
+                <Link to="/problem-solver" className="hover:text-white transition-colors">
                   Problem Solver
                 </Link>
               </li>
               <li>
-                <Link to="/dream-interpreter" className="text-muted-foreground hover:text-foreground transition-colors">
+                <Link to="/dream-interpreter" className="hover:text-white transition-colors">
                   Dream Interpreter
                 </Link>
               </li>
               <li>
-                <Link to="/mantras" className="text-muted-foreground hover:text-foreground transition-colors">
+                <Link to="/mood-mantra" className="hover:text-white transition-colors">
                   Mood-Based Mantras
                 </Link>
               </li>
               <li>
-                <Link to="/affirmations" className="text-muted-foreground hover:text-foreground transition-colors">
+                <Link to="/affirmations" className="hover:text-white transition-colors">
                   Goal Affirmations
                 </Link>
               </li>
@@ -54,36 +47,36 @@ export function Footer() {
           </div>
 
           {/* Company */}
-          <div>
-            <h3 className="font-heading text-lg font-semibold mb-4">Company</h3>
-            <ul className="space-y-2 text-sm">
+          <div className="space-y-4">
+            <h3 className="font-heading text-xl font-bold">Company</h3>
+            <ul className="space-y-3 text-sm text-gray-300">
               <li>
-                <Link to="/about" className="text-muted-foreground hover:text-foreground transition-colors">
+                <Link to="/about" className="hover:text-white transition-colors">
                   About Us
                 </Link>
               </li>
               <li>
-                <Link to="/contact" className="text-muted-foreground hover:text-foreground transition-colors">
+                <Link to="/contact" className="hover:text-white transition-colors">
                   Contact
                 </Link>
               </li>
               <li>
-                <Link to="/blog" className="text-muted-foreground hover:text-foreground transition-colors">
+                <Link to="/blog" className="hover:text-white transition-colors">
                   Blog
                 </Link>
               </li>
               <li>
-                <Link to="/support" className="text-muted-foreground hover:text-foreground transition-colors">
+                <Link to="/support" className="hover:text-white transition-colors">
                   Support
                 </Link>
               </li>
               <li>
-                <Link to="/documentation" className="text-muted-foreground hover:text-foreground transition-colors">
+                <Link to="/documentation" className="hover:text-white transition-colors">
                   Documentation
                 </Link>
               </li>
               <li>
-                <Link to="/premium" className="text-muted-foreground hover:text-foreground transition-colors">
+                <Link to="/pricing" className="hover:text-white transition-colors">
                   Premium
                 </Link>
               </li>
@@ -91,26 +84,26 @@ export function Footer() {
           </div>
 
           {/* Legal */}
-          <div>
-            <h3 className="font-heading text-lg font-semibold mb-4">Legal</h3>
-            <ul className="space-y-2 text-sm">
+          <div className="space-y-4">
+            <h3 className="font-heading text-xl font-bold">Legal</h3>
+            <ul className="space-y-3 text-sm text-gray-300">
               <li>
-                <Link to="/terms" className="text-muted-foreground hover:text-foreground transition-colors">
+                <Link to="/terms" className="hover:text-white transition-colors">
                   Terms of Service
                 </Link>
               </li>
               <li>
-                <Link to="/privacy" className="text-muted-foreground hover:text-foreground transition-colors">
+                <Link to="/privacy" className="hover:text-white transition-colors">
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link to="/refund" className="text-muted-foreground hover:text-foreground transition-colors">
+                <Link to="/refund" className="hover:text-white transition-colors">
                   Refund Policy
                 </Link>
               </li>
               <li>
-                <Link to="/faq" className="text-muted-foreground hover:text-foreground transition-colors">
+                <Link to="/faq" className="hover:text-white transition-colors">
                   FAQ
                 </Link>
               </li>
@@ -118,33 +111,32 @@ export function Footer() {
           </div>
         </div>
 
-        {/* Social Media Links */}
-        <div className="mt-10 pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex space-x-4">
-            <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-twitter"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg>
-              <span className="sr-only">Twitter</span>
-            </a>
-            <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-instagram"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
-              <span className="sr-only">Instagram</span>
-            </a>
-            <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-facebook"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
-              <span className="sr-only">Facebook</span>
-            </a>
-            <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-youtube"><path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17"/><path d="m10 15 5-3-5-3z"/></svg>
-              <span className="sr-only">YouTube</span>
-            </a>
-          </div>
+        {/* Divider */}
+        <div className="mt-10 pt-8 border-t border-gray-700">
+          {/* Social Media Links */}
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex space-x-6">
+              <a href="#" className="text-gray-300 hover:text-white transition-colors">
+                <Twitter className="w-5 h-5" />
+                <span className="sr-only">Twitter</span>
+              </a>
+              <a href="#" className="text-gray-300 hover:text-white transition-colors">
+                <Instagram className="w-5 h-5" />
+                <span className="sr-only">Instagram</span>
+              </a>
+              <a href="#" className="text-gray-300 hover:text-white transition-colors">
+                <Facebook className="w-5 h-5" />
+                <span className="sr-only">Facebook</span>
+              </a>
+              <a href="#" className="text-gray-300 hover:text-white transition-colors">
+                <Youtube className="w-5 h-5" />
+                <span className="sr-only">YouTube</span>
+              </a>
+            </div>
 
-          <p className="text-sm text-muted-foreground">
-            © {year} Bhagwat Wisdom. All rights reserved.
-          </p>
-          
-          <div className="flex items-center text-sm text-muted-foreground">
-            Made with <Heart className="h-4 w-4 mx-1 text-red-500" /> for spiritual seekers everywhere
+            <p className="text-sm text-gray-400">
+              © {year} Bhagwat Wisdom. All rights reserved.
+            </p>
           </div>
         </div>
       </div>
