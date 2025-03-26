@@ -29,6 +29,11 @@ export function MoodMantraPage() {
     return location.pathname === "/mantras" ? "Mantras" : "Mood Mantra";
   };
 
+  // Log the current route for debugging
+  useEffect(() => {
+    console.log("Current route:", location.pathname);
+  }, [location.pathname]);
+
   return (
     <PageLayout
       title={getPageTitle()}
