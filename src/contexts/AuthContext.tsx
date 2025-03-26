@@ -109,7 +109,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
-      const { error } = await updateUserProfile(user, updates);
+      const { error } = await updateUserProfile(user.id, updates);
       
       if (!error) {
         console.log("AuthContext: Profile updated successfully, updating local state");
