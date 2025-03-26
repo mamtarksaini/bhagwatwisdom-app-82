@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Moon, Sun, Menu, X, Book, User, Settings, LogOut, MessageSquare, Globe } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/auth';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/components/ui/ThemeProvider';
 import { Separator } from '@/components/ui/separator';

@@ -24,7 +24,7 @@ import StressManagementPage from '@/pages/documentation/StressManagementPage';
 import PricingPage from '@/pages/PricingPage';
 import NotFound from '@/pages/NotFound';
 import { ThemeProvider } from '@/components/ui/ThemeProvider';
-import { AuthProvider } from '@/contexts/AuthContext';
+import { AuthProvider } from '@/contexts/auth';
 import { Toaster } from '@/components/ui/toaster';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
