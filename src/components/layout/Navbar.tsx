@@ -90,7 +90,7 @@ export function Navbar() {
                     <User className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56 bg-popover" align="end" forceMount>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
                   <DropdownMenuLabel>My Account</DropdownMenuLabel>
                   <DropdownMenuItem onClick={() => { window.location.href = '/profile'; }}>
                     <User className="mr-2 h-4 w-4" />
