@@ -124,7 +124,7 @@ export function RazorpayButton({ planId, text = 'Pay with Razorpay', className }
         },
         prefill: {
           email: user.email,
-          name: user.user_metadata?.full_name || '',
+          name: user.name || '',
         },
         theme: {
           color: '#3399cc',
