@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Check, CircleDollarSign, Crown, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { AuthModal } from '@/components/auth/AuthModal';
 import { useNavigate } from 'react-router-dom';
 import { PREMIUM_PRICE } from '@/utils/constants';
-import PageLayout from '@/components/layout/PageLayout';
+import { PageLayout } from '@/components/layout/PageLayout';
 
 export default function PricingPage() {
   const { user, isPremium, upgradeToPremium } = useAuth();
@@ -72,17 +71,11 @@ export default function PricingPage() {
   };
 
   return (
-    <PageLayout>
+    <PageLayout 
+      title="Pricing Plans" 
+      description="Choose the plan that best fits your spiritual journey"
+    >
       <div className="container py-10 px-4 md:px-6">
-        <div className="text-center mb-10">
-          <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl text-gradient mb-4">
-            Choose Your Spiritual Journey
-          </h1>
-          <p className="text-muted-foreground max-w-md mx-auto">
-            Select the plan that best fits your needs and begin your path to inner wisdom and peace.
-          </p>
-        </div>
-
         {/* Mobile View - Cards */}
         <div className="grid gap-6 md:hidden">
           {pricingPlans.map((plan) => (
@@ -290,3 +283,4 @@ const pricingPlans = [
     ],
   },
 ];
+
