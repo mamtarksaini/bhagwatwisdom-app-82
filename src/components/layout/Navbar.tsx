@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Moon, Sun, Menu, X, Book, User, Settings, LogOut, Volume2 } from 'lucide-react';
@@ -25,6 +26,10 @@ export function Navbar() {
   useEffect(() => {
     setIsMenuOpen(false);
   }, [location]);
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
 
   return (
     <header className="bg-background sticky top-0 z-50 border-b">

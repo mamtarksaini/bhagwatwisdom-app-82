@@ -15,7 +15,7 @@ import TermsPage from '@/pages/TermsPage';
 import PrivacyPage from '@/pages/PrivacyPage';
 import RefundPage from '@/pages/RefundPage';
 import SupportPage from '@/pages/SupportPage';
-import SitemapPage from '@/pages/SitemapPage';
+import { SitemapPage } from '@/pages/SitemapPage';
 import BlogPage from '@/pages/BlogPage';
 import DocumentationPage from '@/pages/DocumentationPage';
 import NotFound from '@/pages/NotFound';

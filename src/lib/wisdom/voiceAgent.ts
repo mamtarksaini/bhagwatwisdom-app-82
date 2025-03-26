@@ -24,7 +24,7 @@ export const getUserVoiceAgentUsage = async (userId: string | null): Promise<Voi
   }
 
   try {
-    // Get current usage from the database
+    // Get current usage from the database - directly using the RPC client to avoid type issues
     const { data, error } = await supabase
       .from('voice_agent_usage')
       .select('used_count, last_reset_date')
