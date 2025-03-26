@@ -1,12 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Moon, Sun, Menu, X, Book, User, Settings, LogOut, Volume2, MessageSquare } from 'lucide-react';
+import { Moon, Sun, Menu, X, Book, User, Settings, LogOut, Volume2, MessageSquare, Globe } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/components/ui/ThemeProvider';
 import { Separator } from '@/components/ui/separator';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { LanguageSelector } from '@/components/ui/LanguageSelector';
+import { Language } from '@/types';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,6 +24,7 @@ export function Navbar() {
   const { isDark, toggleTheme } = useTheme();
   const location = useLocation();
   const isMobile = useIsMobile();
+  const [language, setLanguage] = useState<Language>("english");
 
   useEffect(() => {
     setIsMenuOpen(false);
@@ -29,6 +32,11 @@ export function Navbar() {
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+  };
+
+  const handleLanguageChange = (newLanguage: Language) => {
+    setLanguage(newLanguage);
+    // You could also save this to localStorage or context for persistence
   };
 
   return (
@@ -52,10 +60,6 @@ export function Navbar() {
                 <MessageSquare className="h-4 w-4" />
                 Chat Agent
               </Link>
-              <Link to="/voice-agent" className="font-medium flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
-                <Volume2 className="h-4 w-4" />
-                Voice Agent
-              </Link>
               <Link to="/mood-mantra" className="font-medium flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
                 Mood Mantras
               </Link>
@@ -66,6 +70,13 @@ export function Navbar() {
           </div>
 
           <div className="flex items-center space-x-4">
+            <LanguageSelector 
+              value={language} 
+              onChange={handleLanguageChange} 
+              variant="minimal" 
+              className="mr-1"
+            />
+            
             <Button variant="ghost" size="icon" onClick={toggleTheme}>
               <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
               <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
@@ -125,10 +136,6 @@ export function Navbar() {
               <MessageSquare className="h-4 w-4" />
               Chat Agent
             </Link>
-            <Link to="/voice-agent" className="font-medium flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
-              <Volume2 className="h-4 w-4" />
-              Voice Agent
-            </Link>
             <Link to="/mood-mantra" className="font-medium flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
               Mood Mantras
             </Link>
@@ -136,6 +143,18 @@ export function Navbar() {
               Affirmations
             </Link>
             <Separator />
+            
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Language</span>
+              <LanguageSelector 
+                value={language} 
+                onChange={handleLanguageChange}
+                variant="minimal"
+              />
+            </div>
+            
+            <Separator />
+            
             {user ? (
               <>
                 <Link to="/profile" className="font-medium flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
