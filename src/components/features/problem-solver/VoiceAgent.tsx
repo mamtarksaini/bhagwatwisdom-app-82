@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,11 +29,9 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   
-  // Speech hooks
   const speechRecognition = useSpeechRecognition(language);
   const speechSynthesis = useSpeechSynthesis(language);
   
-  // Check user's voice agent usage
   useEffect(() => {
     const checkUsage = async () => {
       if (!user && !isPremium) {
@@ -49,7 +46,7 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
       if (!isPremium && user) {
         const remaining = await getRemainingFreeResponses(user.id);
         setRemainingResponses(remaining);
-        setShowPremiumOffer(remaining < 2); // Show premium offer when they're running low
+        setShowPremiumOffer(remaining < 2);
       } else {
         setRemainingResponses(0);
         setShowPremiumOffer(false);
@@ -59,14 +56,12 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
     checkUsage();
   }, [user, isPremium]);
   
-  // Update userInput when speech recognition transcribes
   useEffect(() => {
     if (speechRecognition.isListening) {
       setUserInput(speechRecognition.transcript);
     }
   }, [speechRecognition.transcript, speechRecognition.isListening]);
 
-  // Handle audio playback events
   useEffect(() => {
     const audioElement = audioRef.current;
     if (!audioElement) return;
@@ -117,8 +112,6 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
   const generateElevenLabsURL = (prompt: string) => {
     if (!elevenLabsAgentId) return null;
     
-    // This generates a URL that will open the Eleven Labs Chat widget
-    // We could alternatively use their JavaScript SDK for a more integrated experience
     const encodedPrompt = encodeURIComponent(prompt);
     return `https://elevenlabs.io/chat/${elevenLabsAgentId}?query=${encodedPrompt}`;
   };
@@ -140,22 +133,18 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
     setAiResponse("");
     
     try {
-      // Construct prompt with language and input
       const prompt = `You are a helpful assistant responding to voice input. 
                       Please provide a concise response to the following question or statement. 
                       Keep your answer under 100 words for better voice synthesis.
                       User input: ${input}
                       ${language === 'hindi' ? 'Please respond in Hindi.' : 'Please respond in English.'}`;
       
-      // Call AI API
       const response = await callGeminiDirectly(prompt);
       
       if (response) {
         setAiResponse(response);
         
-        // Play audio response based on which system we're using
         if (useElevenLabs && elevenLabsAgentId) {
-          // Open Eleven Labs in a new window or tab
           const elevenLabsURL = generateElevenLabsURL(input);
           if (elevenLabsURL) {
             window.open(elevenLabsURL, '_blank');
@@ -165,11 +154,9 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
             });
           }
         } else if (speechSynthesis.isSpeechSupported) {
-          // Fallback to browser speech synthesis
           speechSynthesis.speak(response);
         }
         
-        // If not premium, increment usage count
         if (!isPremium && user) {
           await incrementVoiceAgentUsage(user.id);
           const remaining = await getRemainingFreeResponses(user.id);
@@ -187,7 +174,7 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
             toast({
               title: "Almost Out of Free Responses",
               description: "You have 1 free voice response remaining this month.",
-              variant: "warning"
+              variant: "destructive"
             });
           }
         }
@@ -213,14 +200,12 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
   
   const toggleSpeech = () => {
     if (useElevenLabs) {
-      // For Eleven Labs, we would control the audio element
       if (isPlayingAudio && audioRef.current) {
         audioRef.current.pause();
       } else if (audioRef.current) {
         audioRef.current.play();
       }
     } else {
-      // For browser speech synthesis
       if (speechSynthesis.isReading) {
         speechSynthesis.stop();
       } else if (aiResponse) {
@@ -242,7 +227,6 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
       </CardHeader>
       
       <CardContent className="space-y-6">
-        {/* Usage limit indicator for free users */}
         {!isPremium && (
           <div className="text-sm text-muted-foreground flex items-center justify-between">
             <span>
@@ -259,7 +243,6 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
           </div>
         )}
         
-        {/* Voice input area */}
         <div className="border rounded-lg p-4 bg-background/50 min-h-24 relative">
           {isListening ? (
             <div className="flex flex-col items-center justify-center h-full">
@@ -298,7 +281,6 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
           )}
         </div>
         
-        {/* AI Response */}
         {aiResponse && (
           <div className="border rounded-lg p-4 bg-background/50 relative">
             <div className="prose dark:prose-invert">
@@ -325,12 +307,10 @@ export function VoiceAgent({ language, elevenLabsAgentId }: VoiceAgentProps) {
           </div>
         )}
 
-        {/* Hidden audio element for Eleven Labs */}
         <audio ref={audioRef} style={{ display: 'none' }} />
       </CardContent>
       
       <CardFooter className="flex flex-col">
-        {/* Show premium offer when appropriate */}
         {showPremiumOffer && !isPremium && (
           <div className="w-full mt-4">
             <PremiumUpgrade />

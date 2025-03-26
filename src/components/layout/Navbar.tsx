@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/components/ui/ThemeProvider';
 import { Separator } from '@/components/ui/separator';
-import { useMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,21 +18,13 @@ import {
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, signOut } = useAuth();
-  const { theme, setTheme } = useTheme();
+  const { isDark, toggleTheme } = useTheme();
   const location = useLocation();
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     setIsMenuOpen(false);
   }, [location]);
-
-  const toggleTheme = () => {
-    setTheme(theme === "light" ? "dark" : "light");
-  };
-
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
 
   return (
     <header className="bg-background sticky top-0 z-50 border-b">

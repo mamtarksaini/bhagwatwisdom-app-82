@@ -1,23 +1,24 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Index } from '@/pages/Index';
-import { AboutPage } from '@/pages/AboutPage';
-import { FAQPage } from '@/pages/FAQPage';
+import Index from '@/pages/Index';
+import AboutPage from '@/pages/AboutPage';
+import FAQPage from '@/pages/FAQPage';
 import { ProblemSolverPage } from '@/pages/ProblemSolverPage';
 import { DreamInterpreterPage } from '@/pages/DreamInterpreterPage';
-import { VoiceAgentPage } from '@/pages/VoiceAgentPage'; // New import
+import { VoiceAgentPage } from '@/pages/VoiceAgentPage';
 import { MoodMantraPage } from '@/pages/MoodMantraPage';
 import { AffirmationsPage } from '@/pages/AffirmationsPage';
-import { Profile } from '@/pages/Profile';
-import { ContactPage } from '@/pages/ContactPage';
-import { TermsPage } from '@/pages/TermsPage';
-import { PrivacyPage } from '@/pages/PrivacyPage';
-import { RefundPage } from '@/pages/RefundPage';
-import { SupportPage } from '@/pages/SupportPage';
-import { SitemapPage } from '@/pages/SitemapPage';
-import { BlogPage } from '@/pages/BlogPage';
-import { DocumentationPage } from '@/pages/DocumentationPage';
-import { NotFound } from '@/pages/NotFound';
+import Profile from '@/pages/Profile';
+import ContactPage from '@/pages/ContactPage';
+import TermsPage from '@/pages/TermsPage';
+import PrivacyPage from '@/pages/PrivacyPage';
+import RefundPage from '@/pages/RefundPage';
+import SupportPage from '@/pages/SupportPage';
+import SitemapPage from '@/pages/SitemapPage';
+import BlogPage from '@/pages/BlogPage';
+import DocumentationPage from '@/pages/DocumentationPage';
+import NotFound from '@/pages/NotFound';
 import { ThemeProvider } from '@/components/ui/ThemeProvider';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { Toaster } from '@/components/ui/toaster';
@@ -41,7 +42,7 @@ function App() {
                 <Route path="/faq" element={<FAQPage />} />
                 <Route path="/problem-solver" element={<ProblemSolverPage />} />
                 <Route path="/dream-interpreter" element={<DreamInterpreterPage />} />
-                <Route path="/voice-agent" element={<VoiceAgentPage />} /> {/* New route */}
+                <Route path="/voice-agent" element={<VoiceAgentPage />} />
                 <Route path="/mood-mantra" element={<MoodMantraPage />} />
                 <Route path="/affirmations" element={<AffirmationsPage />} />
                 <Route path="/profile" element={<Profile />} />
