@@ -40,13 +40,41 @@ export async function createUserProfile(userId: string, email: string, name?: st
     // This is a more reliable approach than trying to convert UUID to numeric ID
     const numericId = Math.floor(Math.random() * 1000000000);
     
-    const { error } = await supabase.from('profiles').insert({
+    // First check if the table structure has the columns we need
+    const { data: columnsCheck, error: columnsError } = await supabase
+      .from('profiles')
+      .select('*')
+      .limit(1);
+    
+    if (columnsError) {
+      console.error('authService: Error checking table structure:', columnsError);
+      throw columnsError;
+    }
+    
+    // Create the profile object with only the fields that exist in the table
+    const profileData: any = {
       id: numericId,
-      email: email,
-      name: name || null,
       created_at: new Date().toISOString(),
-      is_premium: false, // Default to false for new users
-    });
+    };
+    
+    // Add optional fields if they exist in the table structure
+    if (columnsCheck && columnsCheck.length > 0) {
+      const sampleRow = columnsCheck[0];
+      
+      if ('name' in sampleRow) {
+        profileData.name = name || null;
+      }
+      
+      if ('email' in sampleRow) {
+        profileData.email = email;
+      }
+      
+      if ('is_premium' in sampleRow) {
+        profileData.is_premium = false; // Default to false for new users
+      }
+    }
+    
+    const { error } = await supabase.from('profiles').insert(profileData);
     
     if (error) {
       console.error('authService: Error creating profile:', error);
@@ -173,14 +201,31 @@ export async function upgradeUserToPremium(userId: string): Promise<{ error: Err
   try {
     console.log('authService: Upgrading user to premium:', userId);
     
-    const { error } = await supabase
+    // Check if the is_premium column exists in the profiles table
+    const { data: columnsCheck, error: columnsError } = await supabase
       .from('profiles')
-      .update({ is_premium: true })
-      .eq('id', parseInt(userId, 10));
+      .select('*')
+      .limit(1);
+      
+    if (columnsError) {
+      console.error('authService: Error checking table structure:', columnsError);
+      return { error: columnsError };
+    }
     
-    if (error) {
-      console.error('authService: Error upgrading to premium:', error);
-      return { error };
+    // Only attempt to update is_premium if the column exists
+    if (columnsCheck && columnsCheck.length > 0 && 'is_premium' in columnsCheck[0]) {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_premium: true })
+        .eq('id', parseInt(userId, 10));
+      
+      if (error) {
+        console.error('authService: Error upgrading to premium:', error);
+        return { error };
+      }
+    } else {
+      console.error('authService: Cannot upgrade to premium - is_premium column not found');
+      return { error: new Error('is_premium column not found in profiles table') };
     }
     
     return { error: null };
