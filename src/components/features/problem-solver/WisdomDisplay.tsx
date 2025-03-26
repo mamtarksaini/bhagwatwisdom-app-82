@@ -2,10 +2,11 @@
 import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, Volume2, VolumeX } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle, Volume2, VolumeX, RefreshCw } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Language } from "@/types";
 import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis";
+import { toast } from "@/hooks/use-toast";
 
 interface WisdomDisplayProps {
   solution: string;
@@ -33,6 +34,7 @@ export function WisdomDisplay({
   errorDetails
 }: WisdomDisplayProps) {
   const { speak, stop, isReading } = useSpeechSynthesis(language);
+  const [showDetails, setShowDetails] = useState(false);
   
   const handleSpeak = () => {
     if (isReading) {
@@ -41,6 +43,20 @@ export function WisdomDisplay({
     }
     
     speak(solution);
+  };
+  
+  const handleRetryWithToast = () => {
+    toast({
+      title: "Retrying AI connection",
+      description: "Attempting to connect to the AI wisdom service...",
+      variant: "default"
+    });
+    
+    if (onRetry) onRetry();
+  };
+  
+  const toggleDetails = () => {
+    setShowDetails(!showDetails);
   };
 
   return (
@@ -66,13 +82,20 @@ export function WisdomDisplay({
       <p className="leading-relaxed">{solution}</p>
       
       {(networkError || aiServiceUnavailable) && (
-        <div className="mt-4 p-2 bg-amber-500/10 border border-amber-500/30 rounded-md text-sm">
-          <p className="text-amber-700 dark:text-amber-400">
-            {aiServiceUnavailable ? "AI service API key issue detected. Using offline wisdom." : 
-             networkError ? "Network connection issue detected. Using offline wisdom." : 
-             "Using offline wisdom due to AI service unavailability."}
-          </p>
-        </div>
+        <Alert className="mt-4 bg-amber-500/10 border border-amber-500/30">
+          <AlertCircle className="h-4 w-4 text-amber-500" />
+          <AlertTitle className="text-amber-700 dark:text-amber-400 font-medium">
+            {aiServiceUnavailable 
+              ? "AI Service Configuration Issue" 
+              : "Network Connection Issue"}
+          </AlertTitle>
+          <AlertDescription className="text-amber-700/80 dark:text-amber-400/80">
+            {aiServiceUnavailable 
+              ? "The AI service API key may need to be updated in Supabase Edge Function secrets." 
+              : "Unable to connect to the AI wisdom service. This could be due to network connectivity or server issues."}
+            {" "}Using offline wisdom for now.
+          </AlertDescription>
+        </Alert>
       )}
       
       {(networkError || aiServiceUnavailable) && retryCount < 2 && (
@@ -80,21 +103,35 @@ export function WisdomDisplay({
           <Button 
             variant="outline" 
             size="sm"
-            onClick={onRetry}
-            className="text-sm"
+            onClick={handleRetryWithToast}
+            className="text-sm flex items-center"
           >
+            <RefreshCw className="h-3 w-3 mr-2" />
             Retry with AI ({2 - retryCount} attempts left)
           </Button>
         </div>
       )}
       
       {errorDetails && (
-        <Alert className="mt-4 bg-red-500/10 border border-red-500/30">
-          <AlertCircle className="h-4 w-4 text-red-500" />
-          <AlertDescription className="text-xs overflow-auto max-h-24">
-            {errorDetails}
-          </AlertDescription>
-        </Alert>
+        <div className="mt-4">
+          <Button 
+            variant="link" 
+            size="sm" 
+            onClick={toggleDetails} 
+            className="text-xs text-muted-foreground p-0"
+          >
+            {showDetails ? "Hide technical details" : "Show technical details"}
+          </Button>
+          
+          {showDetails && (
+            <Alert className="mt-2 bg-red-500/10 border border-red-500/30">
+              <AlertCircle className="h-4 w-4 text-red-500" />
+              <AlertDescription className="text-xs overflow-auto max-h-24 font-mono">
+                {errorDetails}
+              </AlertDescription>
+            </Alert>
+          )}
+        </div>
       )}
     </div>
   );
