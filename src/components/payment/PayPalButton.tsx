@@ -132,6 +132,12 @@ export function PayPalButton({ planId, text = 'Pay with PayPal', className }: Pa
       // Create a PayPal order
       const order = await createPaymentOrder(planId, 'paypal');
       
+      // Check if the order and links property exist
+      if (!order || !order.links || !Array.isArray(order.links)) {
+        console.error('Invalid PayPal order response:', order);
+        throw new Error('Invalid payment response from server');
+      }
+      
       // Find the approval URL in the links array
       const approvalLink = order.links.find((link: any) => link.rel === 'approve');
       
@@ -139,6 +145,7 @@ export function PayPalButton({ planId, text = 'Pay with PayPal', className }: Pa
         // Redirect the user to PayPal for payment approval
         window.location.href = approvalLink.href;
       } else {
+        console.error('PayPal approval link not found in response:', order);
         throw new Error('PayPal approval link not found');
       }
       

@@ -1,5 +1,5 @@
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase";
 
 // Types for payment providers and responses
 export type PaymentProvider = 'paypal' | 'razorpay';
@@ -60,6 +60,14 @@ export async function createPaymentOrder(
       console.error('Error creating payment order:', invokeError);
       throw new Error(invokeError.message || 'Failed to create payment order');
     }
+    
+    // Validate the response data
+    if (!responseData) {
+      console.error('Empty response data received');
+      throw new Error('Invalid response from payment service');
+    }
+    
+    console.log('Payment order created successfully:', responseData);
     
     return {
       ...responseData,
