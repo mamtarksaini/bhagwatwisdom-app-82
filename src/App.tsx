@@ -44,6 +44,7 @@ function App() {
                 <Route path="/dream-interpreter" element={<DreamInterpreterPage />} />
                 <Route path="/chat-agent" element={<ChatAgentPage />} />
                 <Route path="/mood-mantra" element={<MoodMantraPage />} />
+                <Route path="/mantras" element={<MoodMantraPage />} />
                 <Route path="/affirmations" element={<AffirmationsPage />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/contact" element={<ContactPage />} />

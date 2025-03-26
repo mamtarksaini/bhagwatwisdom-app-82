@@ -6,12 +6,13 @@ import { LanguagePicker } from "@/components/features/LanguagePicker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { SendIcon, RefreshCw, Globe, Mic, MicOff } from "lucide-react";
+import { SendIcon, RefreshCw, Globe, Mic, MicOff, Volume2, VolumeX } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { callGeminiDirectly } from "@/lib/wisdom/geminiApi";
 import { useToast } from "@/hooks/use-toast";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
+import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis";
 
 export function ChatAgentPage() {
   const [language, setLanguage] = useState<Language>("english");
@@ -23,6 +24,7 @@ export function ChatAgentPage() {
     }
   ]);
   const [inputMessage, setInputMessage] = useState('');
+  const [currentlyReadingMessageIndex, setCurrentlyReadingMessageIndex] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -35,6 +37,9 @@ export function ChatAgentPage() {
     resetTranscript,
     error: speechError 
   } = useSpeechRecognition(language);
+  
+  // Speech synthesis hook
+  const { speak, stop, isReading } = useSpeechSynthesis(language);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -58,6 +63,34 @@ export function ChatAgentPage() {
         description: "Speak clearly to record your message",
       });
     }
+  };
+  
+  const handleReadMessage = (index: number, content: string) => {
+    // Stop any current reading
+    if (isReading) {
+      stop();
+      setCurrentlyReadingMessageIndex(null);
+      return;
+    }
+    
+    // If the message clicked is already being read, stop reading
+    if (currentlyReadingMessageIndex === index) {
+      stop();
+      setCurrentlyReadingMessageIndex(null);
+      return;
+    }
+    
+    // Start reading the selected message
+    setCurrentlyReadingMessageIndex(index);
+    speak(content);
+    
+    // When speech ends, reset the currently reading message
+    const checkSpeechStatus = setInterval(() => {
+      if (!isReading) {
+        setCurrentlyReadingMessageIndex(null);
+        clearInterval(checkSpeechStatus);
+      }
+    }, 500);
   };
 
   const handleSendMessage = async (e?: React.FormEvent) => {
@@ -142,7 +175,23 @@ export function ChatAgentPage() {
               >
                 <Card className={`max-w-[80%] ${message.role === 'user' ? 'bg-primary/10' : 'bg-secondary/50'}`}>
                   <CardContent className="p-3">
-                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                    <div className="flex justify-between items-start">
+                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                      {message.role === 'assistant' && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-6 w-6 ml-2 -mt-1"
+                          onClick={() => handleReadMessage(i, message.content)}
+                        >
+                          {isReading && currentlyReadingMessageIndex === i ? (
+                            <VolumeX className="h-3 w-3" />
+                          ) : (
+                            <Volume2 className="h-3 w-3" />
+                          )}
+                        </Button>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               </div>
