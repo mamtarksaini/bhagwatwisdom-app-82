@@ -7,7 +7,7 @@ import { fetchUserProfile } from '@/services/authService';
 export const useAuthState = () => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [status, setStatus] = useState<AuthStatus>('loading');
-  const [isPremium, setIsPremium] = useState<boolean>(true); // Set to true for testing mode
+  const [isPremium, setIsPremium] = useState<boolean>(false); // Set to false to start with basic plan
 
   const handleAuthStateChange = async (session: any) => {
     console.log("useAuthState: Auth state change detected, session:", session ? "exists" : "null");
@@ -22,12 +22,12 @@ export const useAuthState = () => {
           email: session.user.email,
           name: profile?.name || null,
           created_at: profile?.created_at || new Date().toISOString(),
-          is_premium: true // Always set to true in testing mode
+          is_premium: profile?.is_premium || false // Use actual premium status from profile or default to false
         };
         
         console.log("useAuthState: Profile fetched successfully, updating user state");
         setUser(updatedUser);
-        setIsPremium(true); // Always true in testing mode
+        setIsPremium(updatedUser.is_premium); // Set premium status based on profile data
         setStatus('authenticated');
       } catch (error) {
         console.error("useAuthState: Error handling auth state change:", error);
@@ -38,17 +38,17 @@ export const useAuthState = () => {
           email: session.user.email,
           name: null,
           created_at: new Date().toISOString(),
-          is_premium: true // Always set to true in testing mode
+          is_premium: false // Default to false for fallback
         };
         
         setUser(fallbackUser);
-        setIsPremium(true); // Always true in testing mode
+        setIsPremium(false); // Default to false
         setStatus('authenticated');
       }
     } else {
       console.log("useAuthState: No session, setting to unauthenticated");
       setUser(null);
-      setIsPremium(true); // Also set to true for anonymous users in testing mode
+      setIsPremium(false); // Set to false for anonymous users
       setStatus('unauthenticated');
     }
   };
