@@ -11,12 +11,14 @@ export const MOODS = [
   "Anxious",
   "Happy",
   "Sad",
+  "Crying",
   "Confused",
   "Motivated",
   "Fearful",
   "Grateful",
   "Peaceful",
-  "Energetic"
+  "Energetic",
+  "Grief"
 ];
 
 export const GOALS = [

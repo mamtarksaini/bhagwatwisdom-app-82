@@ -5,8 +5,8 @@ import { MoodMantra } from "@/components/features/MoodMantra";
 import { Language } from "@/types";
 import { LanguagePicker } from "@/components/features/LanguagePicker";
 import { useAuth } from "@/contexts/AuthContext";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Globe } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle, Globe, Info } from "lucide-react";
 import { useLocation } from "react-router-dom";
 
 export function MoodMantraPage() {
@@ -15,11 +15,11 @@ export function MoodMantraPage() {
   const location = useLocation();
   const [showStatusAlert, setShowStatusAlert] = useState(true);
 
-  // Hide the status alert after 10 seconds
+  // Hide the status alert after 15 seconds
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowStatusAlert(false);
-    }, 10000);
+    }, 15000);
     
     return () => clearTimeout(timer);
   }, []);
@@ -51,10 +51,13 @@ export function MoodMantraPage() {
         </div>
         
         {showStatusAlert && (
-          <Alert variant="default" className="bg-amber-500/10 border border-amber-500/30 mb-6">
-            <AlertCircle className="h-4 w-4 text-amber-500" />
+          <Alert variant="default" className="bg-gold/10 border border-gold/30 mb-6">
+            <Info className="h-4 w-4 text-gold" />
+            <AlertTitle>Authentic Vedic Mantras</AlertTitle>
             <AlertDescription>
-              Currently, our AI wisdom services are experiencing some connectivity issues. We're working to restore full functionality. You'll still receive wisdom, but some responses may be from our offline database rather than AI-generated content.
+              Our mantras are sourced from authentic Vedic texts including the Upanishads, Bhagavad Gita, and ancient Sanskrit traditions. 
+              Each mantra has been verified for authenticity and includes its source text. Custom mood entries are matched to genuine mantras 
+              rather than artificially generated.
             </AlertDescription>
           </Alert>
         )}
