@@ -77,7 +77,7 @@ async function makeGeminiApiCall(prompt: string, apiKey: string) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
     
-    // Use the correct API URL for Gemini model
+    // Ensure we're using the most up-to-date API URL and model name
     const response = await fetch('https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent', {
       method: 'POST',
       headers: {
@@ -111,6 +111,9 @@ async function makeGeminiApiCall(prompt: string, apiKey: string) {
     }
     
     const data = await response.json();
+    
+    // Log full response structure to debug any unexpected formats
+    console.log('Full Gemini API response:', JSON.stringify(data, null, 2));
     
     if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
       throw new Error('Invalid Gemini API response structure');

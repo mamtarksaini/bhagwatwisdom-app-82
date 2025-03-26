@@ -5,8 +5,7 @@ import { ProblemSolver } from "@/components/features/ProblemSolver";
 import { Language } from "@/types";
 import { LanguagePicker } from "@/components/features/LanguagePicker";
 import { useAuth } from "@/contexts/AuthContext";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Globe } from "lucide-react";
+import { Globe } from "lucide-react";
 
 export function ProblemSolverPage() {
   const [language, setLanguage] = useState<Language>("english");
@@ -26,13 +25,6 @@ export function ProblemSolverPage() {
         <div className="w-full max-w-xs mb-8">
           <LanguagePicker value={language} onValueChange={setLanguage} />
         </div>
-        
-        <Alert variant="default" className="bg-amber-500/10 border border-amber-500/30 mb-6">
-          <AlertCircle className="h-4 w-4 text-amber-500" />
-          <AlertDescription>
-            Currently, our AI wisdom services are experiencing some connectivity issues. We're working to restore full functionality. You'll still receive wisdom, but some responses may be from our offline database rather than AI-generated content.
-          </AlertDescription>
-        </Alert>
         
         <ProblemSolver language={language} isPremium={isPremium} />
       </div>

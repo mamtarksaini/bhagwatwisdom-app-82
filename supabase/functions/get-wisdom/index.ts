@@ -107,6 +107,7 @@ serve(async (req) => {
       };
       
       console.log('Sending request to Gemini API...');
+      console.log('Request body:', JSON.stringify(requestBody));
 
       // Gemini API endpoint
       const response = await fetch(apiUrl, {
@@ -169,6 +170,7 @@ serve(async (req) => {
 
       const data = await response.json();
       console.log('Received response from Gemini API');
+      console.log('Response data structure:', Object.keys(data));
       
       // Validate Gemini API response structure
       if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
