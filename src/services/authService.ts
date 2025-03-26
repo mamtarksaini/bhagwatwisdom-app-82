@@ -128,7 +128,7 @@ export async function signInWithEmail(email: string, password: string): Promise<
 
 export async function signUpWithEmail(email: string, password: string, name: string): Promise<{ error: Error | null }> {
   try {
-    console.log('authService: Signing up user with email:', email);
+    console.log('authService: Signing up user with email:', email, 'and name:', name);
     
     // Sign up the user with Supabase Auth
     const { data, error } = await supabase.auth.signUp({
@@ -149,6 +149,8 @@ export async function signUpWithEmail(email: string, password: string, name: str
     // If signup successful, create a profile in the profiles table
     if (data?.user) {
       console.log('authService: User created successfully with ID:', data.user.id);
+      console.log('authService: User email from sign up:', data.user.email);
+      console.log('authService: User metadata:', data.user.user_metadata);
       
       try {
         // Create the user profile after successful signup

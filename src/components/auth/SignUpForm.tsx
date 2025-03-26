@@ -42,6 +42,8 @@ export function SignUpForm({ onSuccess }: SignUpFormProps) {
     setIsLoading(true);
     
     try {
+      console.log("SignUpForm: About to call signUp with email:", values.email, "and name:", values.name);
+      
       // Call the signUp function from AuthContext
       const { error } = await signUp(values.email, values.password, values.name);
       
@@ -69,16 +71,20 @@ export function SignUpForm({ onSuccess }: SignUpFormProps) {
         const { data: sessionData } = await supabase.auth.getSession();
         console.log("SignUpForm: Current session after signup:", sessionData?.session ? "exists" : "null");
         
+        if (sessionData?.session) {
+          console.log("SignUpForm: User ID from session:", sessionData.session.user.id);
+          console.log("SignUpForm: User email from session:", sessionData.session.user.email);
+        }
+        
         // Show the verification alert and success toast
         setShowVerificationAlert(true);
         
         toast({
           title: "Account created",
-          description: "You can proceed with the app now. For production use, please check your email for verification.",
+          description: "You need to check your email for a verification link before you can log in. If you don't see it, check your spam folder.",
         });
         
-        // Still call onSuccess to proceed with the app
-        // In development, Supabase often doesn't enforce email verification
+        // In development environment, you might need to disable email verification in Supabase
         onSuccess();
       }
     } catch (error: any) {
@@ -98,9 +104,9 @@ export function SignUpForm({ onSuccess }: SignUpFormProps) {
       {showVerificationAlert && (
         <Alert>
           <InfoIcon className="h-4 w-4" />
-          <AlertTitle>Email Verification</AlertTitle>
+          <AlertTitle>Email Verification Required</AlertTitle>
           <AlertDescription>
-            For development purposes, email verification might be bypassed. In production, you would need to verify your email before proceeding.
+            Please check your email for a verification link. For development purposes, you might need to disable email verification in the Supabase Dashboard.
           </AlertDescription>
         </Alert>
       )}

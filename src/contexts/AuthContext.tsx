@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useCallback } from 'react';
 import { UserProfile } from '@/types';
 import { AuthContextType } from '@/types/auth';
@@ -56,8 +55,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Sign up with email and password
   const signUp = useCallback(async (email: string, password: string, name: string) => {
-    console.log("AuthContext: Starting sign up process for:", email);
-    return await signUpWithEmail(email, password, name);
+    console.log("AuthContext: Starting sign up process for:", email, "with name:", name);
+    
+    try {
+      const result = await signUpWithEmail(email, password, name);
+      
+      if (result.error) {
+        console.error("AuthContext: Sign up error:", result.error);
+        return { error: result.error };
+      }
+      
+      console.log("AuthContext: Sign up API call successful");
+      
+      toast({
+        title: "Account created",
+        description: "Please check your email for a verification link. If you don't see it, check your spam folder.",
+      });
+      
+      return { error: null };
+    } catch (error: any) {
+      console.error("AuthContext: Exception during sign up:", error);
+      return { error };
+    }
   }, []);
 
   // Sign out
