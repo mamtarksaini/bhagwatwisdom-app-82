@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useCallback } from 'react';
 import { UserProfile } from '@/types';
 import { AuthContextType } from '@/types/auth';
@@ -8,7 +9,7 @@ import {
   signOutUser, 
   updateUserProfile, 
   upgradeUserToPremium 
-} from '@/services/authService';
+} from '@/services/auth';
 import { toast } from '@/components/ui/use-toast';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
