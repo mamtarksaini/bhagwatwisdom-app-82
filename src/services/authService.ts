@@ -7,11 +7,17 @@ export async function fetchUserProfile(userId: string): Promise<UserProfile | nu
     console.log('authService: Fetching profile for user:', userId);
     
     // Convert string ID to number for database query
-    // Ensure we're using the proper type for the query
+    const numericId = Number(userId);
+    
+    if (isNaN(numericId)) {
+      console.error('authService: Invalid user ID format:', userId);
+      return null;
+    }
+    
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
-      .eq('id', userId)
+      .eq('id', numericId)
       .maybeSingle();
     
     if (error) {
@@ -23,7 +29,7 @@ export async function fetchUserProfile(userId: string): Promise<UserProfile | nu
     if (data) {
       return {
         ...data,
-        id: String(data.id),
+        id: String(data.id), // Convert numeric ID back to string for the app
       } as UserProfile;
     }
     
@@ -39,9 +45,17 @@ export async function createUserProfile(userId: string, email: string, name?: st
   try {
     console.log('authService: Creating profile for user:', userId, 'with email:', email);
     
+    // Convert string ID to number for database insert
+    const numericId = Number(userId);
+    
+    if (isNaN(numericId)) {
+      console.error('authService: Invalid user ID format:', userId);
+      throw new Error('Invalid user ID format');
+    }
+    
     // Insert the profile record
     const { error } = await supabase.from('profiles').insert({
-      id: userId,
+      id: numericId,
       email: email,
       name: name || null,
       created_at: new Date().toISOString(),
@@ -65,10 +79,18 @@ export async function updateUserProfile(userId: string, updates: Partial<UserPro
     // Remove id from updates if present, as we shouldn't be updating the primary key
     const { id, ...updateData } = updates;
     
+    // Convert string ID to number for database update
+    const numericId = Number(userId);
+    
+    if (isNaN(numericId)) {
+      console.error('authService: Invalid user ID format:', userId);
+      return { error: new Error('Invalid user ID format') };
+    }
+    
     const { error } = await supabase
       .from('profiles')
       .update(updateData)
-      .eq('id', userId);
+      .eq('id', numericId);
     
     if (error) {
       console.error('authService: Error updating profile:', error);
@@ -169,10 +191,18 @@ export async function upgradeUserToPremium(userId: string): Promise<{ error: Err
   try {
     console.log('authService: Upgrading user to premium:', userId);
     
+    // Convert string ID to number for database update
+    const numericId = Number(userId);
+    
+    if (isNaN(numericId)) {
+      console.error('authService: Invalid user ID format:', userId);
+      return { error: new Error('Invalid user ID format') };
+    }
+    
     const { error } = await supabase
       .from('profiles')
       .update({ is_premium: true })
-      .eq('id', Number(userId));
+      .eq('id', numericId);
     
     if (error) {
       console.error('authService: Error upgrading to premium:', error);
