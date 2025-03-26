@@ -1,10 +1,14 @@
 
 import { supabase } from '@/lib/supabase';
 
-export async function signInWithEmail(email: string, password: string): Promise<{ error: Error | null }> {
+export async function signInWithEmail(email: string, password: string): Promise<{ error: Error | null; userData?: any }> {
   try {
     console.log('authService: Signing in user with email:', email);
-    const { error } = await supabase.auth.signInWithPassword({
+    
+    // Clear any existing sessions first to avoid conflicts
+    await supabase.auth.signOut();
+    
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password
     });
@@ -14,7 +18,13 @@ export async function signInWithEmail(email: string, password: string): Promise<
       return { error };
     }
     
-    return { error: null };
+    console.log('authService: Sign in successful, session:', data?.session ? 'exists' : 'null');
+    
+    // Return user data with the response to avoid needing a separate fetch
+    return { 
+      error: null,
+      userData: data?.user || null
+    };
   } catch (error) {
     console.error('authService: Exception during sign in:', error);
     return { error: error as Error };
@@ -31,6 +41,7 @@ export async function signOutUser(): Promise<{ error: Error | null }> {
       return { error };
     }
     
+    console.log('authService: Sign out successful');
     return { error: null };
   } catch (error) {
     console.error('authService: Exception during sign out:', error);
