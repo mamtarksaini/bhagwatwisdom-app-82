@@ -1,4 +1,3 @@
-
 export type Language = "english" | "hindi";
 
 export interface Verse {
@@ -16,16 +15,14 @@ export interface Verse {
 
 export type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
 
-// Update UserProfile interface to include is_premium flag and use number for id
-export interface UserProfile {
+export type UserProfile = {
   id: string;
   email?: string;
-  name?: string;
-  created_at?: string;
-  is_premium?: boolean;
-}
+  name: string | null;
+  created_at: string;
+  is_premium: boolean;
+};
 
-// Add ThemeState interface
 export interface ThemeState {
   isDark: boolean;
 }
