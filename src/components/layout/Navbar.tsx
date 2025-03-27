@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Moon, Sun, Menu, X, Book, Globe, MessageSquare, LogIn, User } from 'lucide-react';
+import { Moon, Sun, Menu, X, Book, Globe, MessageSquare, LogIn, User, KeyRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/components/ui/ThemeProvider';
 import { Separator } from '@/components/ui/separator';
@@ -100,12 +100,20 @@ export function Navbar() {
                 )}
               </div>
             ) : (
-              <Button variant="default" size="sm" asChild>
-                <Link to="/auth" className="flex items-center gap-2">
-                  <LogIn className="h-4 w-4" />
-                  {isMobile ? null : "Sign In"}
-                </Link>
-              </Button>
+              <div className="flex items-center space-x-2">
+                <Button variant="outline" size="sm" asChild>
+                  <Link to="/auth" className="flex items-center gap-2">
+                    <LogIn className="h-4 w-4" />
+                    {isMobile ? null : "Sign In"}
+                  </Link>
+                </Button>
+                <Button variant="default" size="sm" asChild className="hidden md:flex">
+                  <Link to="/auth?tab=signup" className="flex items-center gap-2">
+                    <KeyRound className="h-4 w-4" />
+                    Sign Up
+                  </Link>
+                </Button>
+              </div>
             )}
 
             {isMobile && (
@@ -150,7 +158,18 @@ export function Navbar() {
                   Sign Out
                 </Button>
               </>
-            ) : null}
+            ) : (
+              <>
+                <Link to="/auth" className="font-medium flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
+                  <LogIn className="h-4 w-4" />
+                  Sign In
+                </Link>
+                <Link to="/auth?tab=signup" className="font-medium flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
+                  <KeyRound className="h-4 w-4" />
+                  Sign Up
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}
