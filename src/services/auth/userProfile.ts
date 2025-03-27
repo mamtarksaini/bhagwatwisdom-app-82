@@ -10,11 +10,15 @@ export async function fetchUserProfile(userId: string): Promise<UserProfile | nu
     const isNumeric = /^\d+$/.test(userId);
     const parsedId = isNumeric ? parseInt(userId, 10) : null;
     
-    // Use the parsed ID (number) if available, otherwise use the string directly
+    if (parsedId === null) {
+      console.error('authService: Invalid userId format - must be numeric');
+      return null;
+    }
+    
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
-      .eq('id', parsedId !== null ? parsedId : userId)
+      .eq('id', parsedId)
       .maybeSingle();
     
     if (error) {
