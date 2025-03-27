@@ -34,7 +34,7 @@ export async function fetchUserProfile(userId: string): Promise<UserProfile | nu
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
-      .eq('id', parsedId)
+      .eq('id', parsedId as number) // Explicit cast to number to satisfy TypeScript
       .maybeSingle();
     
     if (error) {
