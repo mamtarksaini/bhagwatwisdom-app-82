@@ -80,14 +80,14 @@ export function useSignIn({ onSuccess }: UseSignInProps) {
       } else {
         console.log("SignInForm: Sign in API call successful, waiting for auth state to update");
         
-        // Set a timeout for checking authentication state
+        // Set a timeout for checking authentication state - reduced from 5s to 3s
         timeoutRef.current = window.setTimeout(() => {
           if (status !== 'authenticated') {
             console.log("SignInForm: Auth state update timeout reached");
             setShowRetry(true);
             setIsLoading(false);
           }
-        }, 5000); // Shorter 5-second timeout for better UX
+        }, 3000); // Shorter 3-second timeout for better UX
       }
     } catch (error: any) {
       console.error("SignInForm: Exception during sign in:", error);

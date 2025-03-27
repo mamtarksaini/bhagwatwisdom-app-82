@@ -5,3 +5,4 @@ export * from './signInOut';
 export * from './verification';
 export * from './signUp';
 export * from './premium';
+export * from './resetPassword';

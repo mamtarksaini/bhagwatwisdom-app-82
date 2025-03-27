@@ -2,24 +2,18 @@
 import { supabase } from '@/lib/supabase';
 import { UserProfile } from '@/types';
 
+/**
+ * Fetch user profile from the database
+ */
 export async function fetchUserProfile(userId: string): Promise<UserProfile | null> {
   try {
     console.log('authService: Fetching profile for user:', userId);
     
-    // First check if it's a numeric string
-    const isNumeric = /^\d+$/.test(userId);
-    const parsedId = isNumeric ? parseInt(userId, 10) : null;
-    
-    if (parsedId === null) {
-      console.error('authService: Invalid userId format - must be numeric');
-      return null;
-    }
-    
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
-      .eq('id', parsedId)
-      .maybeSingle();
+      .eq('id', userId)
+      .single();
     
     if (error) {
       console.error('authService: Error fetching profile:', error);
@@ -28,31 +22,34 @@ export async function fetchUserProfile(userId: string): Promise<UserProfile | nu
     
     return data as UserProfile;
   } catch (error) {
-    console.error('authService: Error fetching profile:', error);
+    console.error('authService: Exception during profile fetch:', error);
     return null;
   }
 }
 
-export async function createUserProfile(userId: string, email: string, name?: string): Promise<void> {
+/**
+ * Create a new user profile in the database
+ */
+export async function createUserProfile(
+  userId: string, 
+  email: string, 
+  name?: string
+): Promise<UserProfile | null> {
   try {
     console.log('authService: Creating profile for user:', userId);
     
-    // Check if userId is a numeric string
-    const isNumeric = /^\d+$/.test(userId);
+    const newProfile = {
+      id: userId,
+      email,
+      name: name || email.split('@')[0],
+      is_premium: false
+    };
     
-    if (!isNumeric) {
-      throw new Error('Invalid userId format - must be parseable as a number');
-    }
-    
-    const parsedId = parseInt(userId, 10);
-    
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('profiles')
-      .insert({
-        id: parsedId,
-        email: email,
-        name: name || null
-      });
+      .insert([newProfile])
+      .select()
+      .single();
     
     if (error) {
       console.error('authService: Error creating profile:', error);
@@ -60,29 +57,27 @@ export async function createUserProfile(userId: string, email: string, name?: st
     }
     
     console.log('authService: Profile created successfully');
+    return data as UserProfile;
   } catch (error) {
     console.error('authService: Error creating profile:', error);
     throw error;
   }
 }
 
-export async function updateUserProfile(userId: string, updates: Partial<UserProfile>): Promise<{ error: Error | null }> {
+/**
+ * Update user profile in the database
+ */
+export async function updateUserProfile(
+  userId: string, 
+  updates: Partial<UserProfile>
+): Promise<{ error: Error | null }> {
   try {
-    console.log('authService: Updating profile for user:', userId, 'with updates:', updates);
-    
-    // Check if userId is a numeric string
-    const isNumeric = /^\d+$/.test(userId);
-    
-    if (!isNumeric) {
-      throw new Error('Invalid userId format - must be parseable as a number');
-    }
-    
-    const parsedId = parseInt(userId, 10);
+    console.log('authService: Updating profile for user:', userId);
     
     const { error } = await supabase
       .from('profiles')
       .update(updates)
-      .eq('id', parsedId);
+      .eq('id', userId);
     
     if (error) {
       console.error('authService: Error updating profile:', error);
@@ -92,7 +87,7 @@ export async function updateUserProfile(userId: string, updates: Partial<UserPro
     console.log('authService: Profile updated successfully');
     return { error: null };
   } catch (error) {
-    console.error('authService: Error updating profile:', error);
+    console.error('authService: Exception during profile update:', error);
     return { error: error as Error };
   }
 }
