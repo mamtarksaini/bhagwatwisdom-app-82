@@ -2,7 +2,7 @@
 import { supabase } from "@/lib/supabase";
 
 // Types for payment providers and responses
-export type PaymentProvider = 'paypal' | 'razorpay';
+export type PaymentProvider = 'paypal';
 
 export interface PaymentOrder {
   id: string;
@@ -20,7 +20,7 @@ export interface PaymentVerification {
 /**
  * Create a payment order with the specified provider
  * @param planId The ID of the subscription plan
- * @param provider The payment provider ('paypal' or 'razorpay')
+ * @param provider The payment provider ('paypal')
  * @returns The created order details
  */
 export async function createPaymentOrder(

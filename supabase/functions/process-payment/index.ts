@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 
@@ -12,8 +13,6 @@ const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
 // Use hardcoded test credentials for development
 const testPaypalClientId = 'AZkJGOXyW2yzZA_OJBGr5a0XPBYnDxOdxG1j-QQw6EiAFsN9udC3o-IVe0GiZQ5CYVKSiJDCpB0wkjG2';
 const testPaypalSecretKey = 'EK4RUikFjv30aw8jbneyCvCDmspGzSXC0rBQWlBgT8q6hzVXXw2sXh8nJyTDk1-tEjx46vjN5bm2hJ4p';
-const razorpayKeyId = Deno.env.get('RAZORPAY_KEY_ID') ?? '';
-const razorpayKeySecret = Deno.env.get('RAZORPAY_KEY_SECRET') ?? '';
 
 // Initialize Supabase client
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -119,59 +118,6 @@ async function createPayPalOrder(planId: string) {
   }
 }
 
-// Function to create a Razorpay order
-async function createRazorpayOrder(planId: string) {
-  try {
-    // Fetch plan details from database
-    const { data: planData, error: planError } = await supabase
-      .from('subscription_plans')
-      .select('*')
-      .eq('id', planId)
-      .single();
-
-    if (planError || !planData) {
-      throw new Error(`Error fetching plan: ${planError?.message || 'Plan not found'}`);
-    }
-
-    if (!razorpayKeyId || !razorpayKeySecret) {
-      throw new Error('Razorpay credentials not configured');
-    }
-
-    const auth = btoa(`${razorpayKeyId}:${razorpayKeySecret}`);
-    
-    const response = await fetch('https://api.razorpay.com/v1/orders', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Basic ${auth}`,
-      },
-      body: JSON.stringify({
-        amount: Math.round(planData.price * 100), // Amount in smallest currency unit (paise for INR)
-        currency: planData.currency,
-        receipt: `plan_${planId}_${Date.now()}`,
-        notes: {
-          plan_id: planId,
-          plan_name: planData.name,
-        },
-      }),
-    });
-
-    const data = await response.json();
-    return {
-      ...data,
-      key_id: razorpayKeyId,
-      plan_details: {
-        name: planData.name,
-        price: planData.price,
-        currency: planData.currency,
-      },
-    };
-  } catch (error) {
-    console.error('Error creating Razorpay order:', error);
-    throw error;
-  }
-}
-
 // Function to capture a PayPal payment
 async function capturePayPalPayment(orderId: string) {
   try {
@@ -189,31 +135,6 @@ async function capturePayPalPayment(orderId: string) {
     return data;
   } catch (error) {
     console.error('Error capturing PayPal payment:', error);
-    throw error;
-  }
-}
-
-// Function to verify a Razorpay payment
-async function verifyRazorpayPayment(paymentId: string, orderId: string, signature: string) {
-  try {
-    const crypto = await import('https://deno.land/std@0.168.0/node/crypto.ts');
-    
-    // Create the signature verification string
-    const body = orderId + "|" + paymentId;
-    
-    // Verify the signature
-    const expectedSignature = crypto.createHmac('sha256', razorpayKeySecret)
-      .update(body)
-      .digest('hex');
-    
-    // Compare the signatures
-    if (expectedSignature === signature) {
-      return { verified: true };
-    } else {
-      return { verified: false, message: "Invalid signature" };
-    }
-  } catch (error) {
-    console.error('Error verifying Razorpay payment:', error);
     throw error;
   }
 }
@@ -244,7 +165,7 @@ async function saveSubscription(userId: string, planId: string, provider: string
         user_id: userId,
         plan_id: planId,
         payment_provider: provider,
-        payment_id: provider === 'paypal' ? paymentDetails.id : paymentDetails.razorpay_payment_id,
+        payment_id: provider === 'paypal' ? paymentDetails.id : paymentDetails.payment_id,
         status: 'active',
         current_period_start: startDate.toISOString(),
         current_period_end: endDate.toISOString(),
@@ -263,7 +184,7 @@ async function saveSubscription(userId: string, planId: string, provider: string
         user_id: userId,
         subscription_id: subscriptionData.id,
         payment_provider: provider,
-        payment_id: provider === 'paypal' ? paymentDetails.id : paymentDetails.razorpay_payment_id,
+        payment_id: provider === 'paypal' ? paymentDetails.id : paymentDetails.payment_id,
         amount: planData.price,
         currency: planData.currency,
         status: 'completed',
@@ -372,19 +293,6 @@ serve(async (req) => {
                 { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
               );
             }
-          } else if (provider === 'razorpay') {
-            try {
-              orderResponse = await createRazorpayOrder(planId);
-            } catch (error) {
-              // If it's a credentials error, return a specific error response
-              if (error.message && error.message.includes('Razorpay credentials not configured')) {
-                return new Response(
-                  JSON.stringify({ error: 'Razorpay credentials not configured' }),
-                  { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-                );
-              }
-              throw error;
-            }
           } else {
             return new Response(
               JSON.stringify({ error: 'Invalid payment provider' }),
@@ -431,27 +339,6 @@ serve(async (req) => {
           }
           
           verificationResult = await capturePayPalPayment(orderId);
-        } else if (provider === 'razorpay') {
-          const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = paymentDetails;
-          if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature) {
-            return new Response(
-              JSON.stringify({ error: 'Missing Razorpay payment details' }),
-              { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            );
-          }
-          
-          verificationResult = await verifyRazorpayPayment(
-            razorpay_payment_id,
-            razorpay_order_id,
-            razorpay_signature
-          );
-          
-          if (!verificationResult.verified) {
-            return new Response(
-              JSON.stringify({ error: 'Payment verification failed', details: verificationResult.message }),
-              { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            );
-          }
         } else {
           return new Response(
             JSON.stringify({ error: 'Invalid payment provider' }),

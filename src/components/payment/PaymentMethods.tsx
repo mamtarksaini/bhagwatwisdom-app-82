@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { PayPalButton } from './PayPalButton';
-import { RazorpayButton } from './RazorpayButton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Loader2, AlertTriangle, Info } from 'lucide-react';
@@ -127,7 +126,7 @@ export function PaymentMethods({ planId, planName, price, currency }: PaymentMet
                 </div>
                 <p>
                   Payment processing with {paymentProvider} is taking longer than expected. 
-                  You may continue waiting or try again with the same or another payment method.
+                  You may continue waiting or try again.
                 </p>
                 <Button 
                   variant="outline" 
@@ -145,17 +144,6 @@ export function PaymentMethods({ planId, planName, price, currency }: PaymentMet
               className="w-full flex items-center justify-center"
               text="Pay with PayPal" 
               onProcessingStart={() => handleProcessingStart('PayPal')}
-              onProcessingEnd={handleProcessingEnd}
-              onPaymentError={handlePaymentError}
-            />
-            
-            <Separator />
-            
-            <RazorpayButton 
-              planId={planId} 
-              className="w-full flex items-center justify-center"
-              text="Pay with Razorpay"
-              onProcessingStart={() => handleProcessingStart('Razorpay')}
               onProcessingEnd={handleProcessingEnd}
               onPaymentError={handlePaymentError}
             />
