@@ -91,8 +91,15 @@ export function PayPalButton({
       if (!orderData || !orderData.id) {
         // Check if the error indicates missing PayPal credentials
         if (orderData && orderData.error === "PayPal credentials not configured") {
-          const errorMessage = 'PayPal payments are not configured. Please try another payment method or contact support.';
+          const errorMessage = 'PayPal payments are not configured in this demo environment. Please try another payment method or contact support.';
           if (onPaymentError) onPaymentError(errorMessage);
+          
+          toast({
+            title: "Demo Environment",
+            description: "PayPal payments are not configured in this demo. Please try Razorpay instead.",
+            variant: "default"
+          });
+          
           throw new Error(errorMessage);
         }
         throw new Error('Failed to create PayPal order');
@@ -118,11 +125,14 @@ export function PayPalButton({
         setTimeoutId(null);
       }
       
-      toast({
-        title: "Payment error",
-        description: error.message || "An error occurred initiating your payment.",
-        variant: "destructive"
-      });
+      // Only show error toast if it's not a credentials error (which is already handled)
+      if (!(error.message && error.message.includes('not configured'))) {
+        toast({
+          title: "Payment error",
+          description: error.message || "An error occurred initiating your payment.",
+          variant: "destructive"
+        });
+      }
     }
   };
 

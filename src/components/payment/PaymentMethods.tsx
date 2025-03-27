@@ -20,6 +20,7 @@ export function PaymentMethods({ planId, planName, price, currency }: PaymentMet
   const [processingTimeout, setProcessingTimeout] = useState(false);
   const [paymentProvider, setPaymentProvider] = useState<string | null>(null);
   const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [showDemoAlert, setShowDemoAlert] = useState(true);
 
   // Set a timeout for showing an error message if processing takes too long
   useEffect(() => {
@@ -84,6 +85,25 @@ export function PaymentMethods({ planId, planName, price, currency }: PaymentMet
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        {showDemoAlert && (
+          <Alert variant="info" className="mb-4">
+            <Info className="h-4 w-4" />
+            <AlertTitle>Demo Environment</AlertTitle>
+            <AlertDescription>
+              This is a demonstration environment. Payment gateways are in test mode and no actual payments will be processed.
+              Some payment methods may not be available in demo mode.
+            </AlertDescription>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="mt-2" 
+              onClick={() => setShowDemoAlert(false)}
+            >
+              Dismiss
+            </Button>
+          </Alert>
+        )}
+
         {paymentError && paymentError.includes("not configured") && (
           <Alert variant="info" className="mb-4">
             <Info className="h-4 w-4" />
