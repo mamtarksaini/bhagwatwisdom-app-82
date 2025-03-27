@@ -6,10 +6,10 @@ import { ProblemSolver } from "@/components/features/ProblemSolver";
 import { DreamInterpreter } from "@/components/features/DreamInterpreter";
 import { MoodMantra } from "@/components/features/MoodMantra";
 import { DailyVerse } from "@/components/features/DailyVerse";
-import { BookOpen, Moon, Sun, Heart, Globe, User, LogIn, Crown, Menu, X, MessageSquare, RefreshCw, Plus } from "lucide-react";
+import { BookOpen, Moon, Sun, Heart, Globe, User, LogIn, Crown, Menu, X, MessageSquare, RefreshCw, Plus, KeyRound, Mail } from "lucide-react";
 import { Language } from "@/types";
 import { Link } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { useTheme } from "@/components/ui/ThemeProvider";
 import { LanguagePicker } from "@/components/features/LanguagePicker";
@@ -34,7 +34,7 @@ const Index = () => {
   const [language, setLanguage] = useState<Language>("english");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { isDark, toggleTheme } = useTheme();
-  const { isPremium } = useAuth();
+  const { user, isPremium, status } = useAuth();
 
   const [randomAffirmationIndex, setRandomAffirmationIndex] = useState(0);
 
@@ -98,6 +98,32 @@ const Index = () => {
             />
           </div>
           
+          {status === 'authenticated' ? (
+            <div className="hidden md:flex items-center gap-2">
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/profile" className="flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  Profile
+                </Link>
+              </Button>
+            </div>
+          ) : (
+            <div className="hidden md:flex items-center gap-2">
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/auth" className="flex items-center gap-2">
+                  <LogIn className="h-4 w-4" />
+                  Sign In
+                </Link>
+              </Button>
+              <Button variant="default" size="sm" asChild>
+                <Link to="/auth?tab=signup" className="flex items-center gap-2">
+                  <KeyRound className="h-4 w-4" />
+                  Sign Up
+                </Link>
+              </Button>
+            </div>
+          )}
+          
           <Button 
             variant="ghost" 
             size="icon" 
@@ -134,6 +160,45 @@ const Index = () => {
                 {link.label}
               </Link>
             ))}
+            
+            {status === 'authenticated' ? (
+              <Link 
+                to="/profile" 
+                className="px-3 py-2 text-sm font-medium rounded-md hover:bg-secondary transition-colors flex items-center gap-2"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <User className="h-4 w-4" />
+                Profile
+              </Link>
+            ) : (
+              <>
+                <Link 
+                  to="/auth" 
+                  className="px-3 py-2 text-sm font-medium rounded-md hover:bg-secondary transition-colors flex items-center gap-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <LogIn className="h-4 w-4" />
+                  Sign In
+                </Link>
+                <Link 
+                  to="/auth?tab=signup" 
+                  className="px-3 py-2 text-sm font-medium rounded-md hover:bg-secondary transition-colors flex items-center gap-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <KeyRound className="h-4 w-4" />
+                  Sign Up
+                </Link>
+                <Link 
+                  to="/auth?showForgotPassword=true" 
+                  className="px-3 py-2 text-sm font-medium rounded-md hover:bg-secondary transition-colors flex items-center gap-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Mail className="h-4 w-4" />
+                  Forgot Password
+                </Link>
+              </>
+            )}
+            
             <div className="pt-2 border-t border-border mt-2">
               {footerLinks.map((link) => (
                 <Link 
@@ -173,6 +238,12 @@ const Index = () => {
               <Button className="button-gradient" onClick={() => {
                 document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
               }}>Get Started</Button>
+              
+              {status !== 'authenticated' && (
+                <Button variant="outline" asChild>
+                  <Link to="/auth">Sign In / Sign Up</Link>
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -347,6 +418,40 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {status !== 'authenticated' && (
+        <section className="w-full py-12 md:py-16 bg-primary/5">
+          <div className="container px-4 md:px-6">
+            <div className="flex flex-col items-center space-y-4 text-center">
+              <h2 className="text-2xl font-heading font-bold tracking-tighter sm:text-3xl">
+                Join Our Spiritual Community
+              </h2>
+              <p className="mx-auto max-w-[600px] text-muted-foreground">
+                Create an account to save your insights, track your spiritual progress, and receive personalized guidance.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 mt-4">
+                <Button asChild className="button-gradient">
+                  <Link to="/auth?tab=signup">
+                    Create Account
+                  </Link>
+                </Button>
+                <Button asChild variant="outline">
+                  <Link to="/auth">
+                    Already have an account? Sign In
+                  </Link>
+                </Button>
+              </div>
+              <div className="mt-2">
+                <Button asChild variant="link" className="text-sm">
+                  <Link to="/auth?showForgotPassword=true">
+                    Forgot Password?
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       <Footer />
     </div>

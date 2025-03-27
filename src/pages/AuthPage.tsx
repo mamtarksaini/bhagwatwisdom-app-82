@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { SignInForm } from '@/components/auth/SignInForm';
 import { SignUpForm } from '@/components/auth/SignUpForm';
 import { ForgotPasswordForm } from '@/components/auth/ForgotPasswordForm';
@@ -14,12 +14,28 @@ import { Button } from '@/components/ui/button';
 
 const AuthPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { status } = useAuth();
   const [activeTab, setActiveTab] = useState<string>('signin');
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetToken, setResetToken] = useState<string | null>(null);
 
   useEffect(() => {
+    // Check URL parameters
+    const searchParams = new URLSearchParams(location.search);
+    const tabParam = searchParams.get('tab');
+    const forgotPasswordParam = searchParams.get('showForgotPassword');
+    
+    // Set active tab from URL if specified
+    if (tabParam === 'signup') {
+      setActiveTab('signup');
+    }
+    
+    // Check if we should show forgot password form
+    if (forgotPasswordParam === 'true') {
+      setShowForgotPassword(true);
+    }
+    
     // Check if we're on a password reset flow
     const hash = window.location.hash;
     if (hash && hash.includes('type=recovery')) {
@@ -31,7 +47,7 @@ const AuthPage = () => {
     if (status === 'authenticated') {
       navigate('/');
     }
-  }, [status, navigate]);
+  }, [status, navigate, location.search]);
 
   const handleSignInSuccess = () => {
     navigate('/');
