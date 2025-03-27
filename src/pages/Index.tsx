@@ -34,6 +34,7 @@ const Index = () => {
   const [language, setLanguage] = useState<Language>("english");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { isDark, toggleTheme } = useTheme();
+  const { isPremium } = useAuth();
 
   const [randomAffirmationIndex, setRandomAffirmationIndex] = useState(0);
 

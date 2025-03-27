@@ -11,6 +11,7 @@ export const useAuthState = () => {
     user, 
     setUser, 
     status, 
+    setStatus,
     isPremium, 
     setIsPremium 
   };
