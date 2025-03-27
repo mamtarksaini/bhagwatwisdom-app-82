@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -7,7 +6,7 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Home, LogOut, User, Info } from "lucide-react";
 import { useAuth } from '@/contexts/auth';
 import { toast } from '@/hooks/use-toast';
-import PageLayout from '@/components/layout/PageLayout';
+import { PageLayout } from '@/components/layout/PageLayout';
 
 const Profile = () => {
   const navigate = useNavigate();

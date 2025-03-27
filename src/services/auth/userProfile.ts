@@ -57,10 +57,16 @@ export async function createUserProfile(userId: string, email: string, name?: st
   try {
     console.log('authService: Creating profile for user:', userId);
     
+    // Check if userId is a number and parse it
+    const parsedId = parseInt(userId, 10);
+    if (isNaN(parsedId)) {
+      throw new Error('Invalid userId format - must be parseable as a number');
+    }
+    
     const { error } = await supabase
       .from('profiles')
       .insert({
-        id: userId,
+        id: parsedId,
         email: email,
         name: name || null
       });
@@ -81,10 +87,16 @@ export async function updateUserProfile(userId: string, updates: Partial<UserPro
   try {
     console.log('authService: Updating profile for user:', userId, 'with updates:', updates);
     
+    // Parse the userId to a number
+    const parsedId = parseInt(userId, 10);
+    if (isNaN(parsedId)) {
+      throw new Error('Invalid userId format - must be parseable as a number');
+    }
+    
     const { error } = await supabase
       .from('profiles')
       .update(updates)
-      .eq('id', userId);
+      .eq('id', parsedId);
     
     if (error) {
       console.error('authService: Error updating profile:', error);
