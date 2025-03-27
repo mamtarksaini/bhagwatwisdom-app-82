@@ -6,40 +6,23 @@ export async function fetchUserProfile(userId: string): Promise<UserProfile | nu
   try {
     console.log('authService: Fetching profile for user:', userId);
     
-    // First check if it's a numeric string (can be parsed to a number)
+    // First check if it's a numeric string
     const isNumeric = /^\d+$/.test(userId);
+    const parsedId = isNumeric ? parseInt(userId, 10) : null;
     
-    if (isNumeric) {
-      // If it's numeric, parse it and use it
-      const parsedId = parseInt(userId, 10);
-      
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', parsedId)
-        .maybeSingle();
-      
-      if (error) {
-        console.error('authService: Error fetching profile with numeric ID:', error);
-        return null;
-      }
-      
-      return data as UserProfile;
-    } else {
-      // If not numeric, try using the string directly
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle();
-      
-      if (error) {
-        console.error('authService: Error fetching profile with string ID:', error);
-        return null;
-      }
-      
-      return data as UserProfile;
+    // Use the parsed ID (number) if available, otherwise use the string directly
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', parsedId !== null ? parsedId : userId)
+      .maybeSingle();
+    
+    if (error) {
+      console.error('authService: Error fetching profile:', error);
+      return null;
     }
+    
+    return data as UserProfile;
   } catch (error) {
     console.error('authService: Error fetching profile:', error);
     return null;
