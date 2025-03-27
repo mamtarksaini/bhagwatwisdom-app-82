@@ -5,9 +5,15 @@ import { Loader2 } from "lucide-react";
 
 interface SignInButtonProps {
   isLoading: boolean;
+  text?: string;
+  loadingText?: string;
 }
 
-export function SignInButton({ isLoading }: SignInButtonProps) {
+export function SignInButton({ 
+  isLoading, 
+  text = "Sign In", 
+  loadingText = "Signing in..." 
+}: SignInButtonProps) {
   return (
     <Button 
       type="submit" 
@@ -17,10 +23,10 @@ export function SignInButton({ isLoading }: SignInButtonProps) {
       {isLoading ? (
         <>
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          Signing in...
+          {loadingText}
         </>
       ) : (
-        "Sign In"
+        text
       )}
     </Button>
   );

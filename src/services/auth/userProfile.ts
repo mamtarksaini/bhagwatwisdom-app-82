@@ -34,7 +34,7 @@ export async function fetchUserProfile(userId: string): Promise<UserProfile | nu
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
-      .eq('id', parsedId as number) // Explicit cast to number to satisfy TypeScript
+      .eq('id', parsedId)
       .maybeSingle();
     
     if (error) {
@@ -54,13 +54,47 @@ export async function fetchUserProfile(userId: string): Promise<UserProfile | nu
 }
 
 export async function createUserProfile(userId: string, email: string, name?: string): Promise<void> {
-  // This function is now a no-op since we're removing authentication
-  console.log('Authentication disabled: createUserProfile called but not executed');
-  return;
+  try {
+    console.log('authService: Creating profile for user:', userId);
+    
+    const { error } = await supabase
+      .from('profiles')
+      .insert({
+        id: userId,
+        email: email,
+        name: name || null
+      });
+    
+    if (error) {
+      console.error('authService: Error creating profile:', error);
+      throw error;
+    }
+    
+    console.log('authService: Profile created successfully');
+  } catch (error) {
+    console.error('authService: Error creating profile:', error);
+    throw error;
+  }
 }
 
 export async function updateUserProfile(userId: string, updates: Partial<UserProfile>): Promise<{ error: Error | null }> {
-  // This function is now a no-op since we're removing authentication
-  console.log('Authentication disabled: updateUserProfile called but not executed');
-  return { error: null };
+  try {
+    console.log('authService: Updating profile for user:', userId, 'with updates:', updates);
+    
+    const { error } = await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('id', userId);
+    
+    if (error) {
+      console.error('authService: Error updating profile:', error);
+      return { error };
+    }
+    
+    console.log('authService: Profile updated successfully');
+    return { error: null };
+  } catch (error) {
+    console.error('authService: Error updating profile:', error);
+    return { error: error as Error };
+  }
 }

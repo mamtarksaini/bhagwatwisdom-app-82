@@ -10,6 +10,7 @@ import { ChatAgentPage } from '@/pages/ChatAgentPage';
 import { MoodMantraPage } from '@/pages/MoodMantraPage';
 import { AffirmationsPage } from '@/pages/AffirmationsPage';
 import Profile from '@/pages/Profile';
+import AuthPage from '@/pages/AuthPage';
 import ContactPage from '@/pages/ContactPage';
 import TermsPage from '@/pages/TermsPage';
 import PrivacyPage from '@/pages/PrivacyPage';
@@ -53,6 +54,8 @@ function App() {
                 <Route path="/mantras" element={<MoodMantraPage />} />
                 <Route path="/affirmations" element={<AffirmationsPage />} />
                 <Route path="/profile" element={<Profile />} />
+                <Route path="/auth" element={<AuthPage />} />
+                <Route path="/reset-password" element={<AuthPage />} />
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/terms" element={<TermsPage />} />
                 <Route path="/privacy" element={<PrivacyPage />} />
