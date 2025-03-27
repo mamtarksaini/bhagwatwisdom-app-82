@@ -13,6 +13,7 @@ interface PayPalButtonProps {
   className?: string;
   onProcessingStart?: () => void;
   onProcessingEnd?: () => void;
+  onPaymentError?: (error: string) => void;
 }
 
 export function PayPalButton({ 
@@ -20,7 +21,8 @@ export function PayPalButton({
   text = "Pay with PayPal", 
   className,
   onProcessingStart,
-  onProcessingEnd
+  onProcessingEnd,
+  onPaymentError
 }: PayPalButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { user, status } = useAuth();
@@ -89,7 +91,9 @@ export function PayPalButton({
       if (!orderData || !orderData.id) {
         // Check if the error indicates missing PayPal credentials
         if (orderData && orderData.error === "PayPal credentials not configured") {
-          throw new Error('PayPal payments are not configured. Please try another payment method or contact support.');
+          const errorMessage = 'PayPal payments are not configured. Please try another payment method or contact support.';
+          if (onPaymentError) onPaymentError(errorMessage);
+          throw new Error(errorMessage);
         }
         throw new Error('Failed to create PayPal order');
       }

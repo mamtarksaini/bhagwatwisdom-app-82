@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
@@ -14,6 +13,7 @@ interface RazorpayButtonProps {
   className?: string;
   onProcessingStart?: () => void;
   onProcessingEnd?: () => void;
+  onPaymentError?: (error: string) => void;
 }
 
 // Define Razorpay global type
@@ -28,7 +28,8 @@ export function RazorpayButton({
   text = 'Pay with Razorpay', 
   className,
   onProcessingStart,
-  onProcessingEnd
+  onProcessingEnd,
+  onPaymentError
 }: RazorpayButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isScriptLoaded, setIsScriptLoaded] = useState(false);
@@ -36,11 +37,9 @@ export function RazorpayButton({
   const { user, status } = useAuth();
   const navigate = useNavigate();
 
-  // Check authentication status on mount and when status changes
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // Double-check session state with Supabase directly
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -57,7 +56,6 @@ export function RazorpayButton({
     checkAuth();
   }, [status]);
 
-  // Load Razorpay script
   useEffect(() => {
     const loadRazorpayScript = () => {
       if (document.getElementById('razorpay-script')) {
@@ -83,7 +81,6 @@ export function RazorpayButton({
     loadRazorpayScript();
     
     return () => {
-      // Clean up any ongoing loading state on unmount
       if (isLoading && onProcessingEnd) {
         onProcessingEnd();
       }
@@ -91,7 +88,6 @@ export function RazorpayButton({
   }, [isLoading, onProcessingEnd]);
 
   const handleClick = async () => {
-    // Comprehensive auth check
     if (isAuthChecking) {
       toast({
         title: "Please wait",
@@ -102,7 +98,6 @@ export function RazorpayButton({
     }
     
     if (!user || status !== 'authenticated') {
-      // Direct check with Supabase as a last resort
       const { data, error } = await supabase.auth.getSession();
       
       if (error || !data.session) {
@@ -112,7 +107,6 @@ export function RazorpayButton({
           variant: "destructive"
         });
         
-        // Redirect to auth page
         navigate('/auth');
         return;
       }
@@ -133,10 +127,14 @@ export function RazorpayButton({
       
       console.log('RazorpayButton: Creating payment order for plan:', planId);
       
-      // Create a Razorpay order
       const orderData = await createPaymentOrder(planId, 'razorpay');
       
       if (!orderData || !orderData.id) {
+        if (orderData && orderData.error === "Razorpay credentials not configured") {
+          const errorMessage = 'Razorpay payments are not configured. Please try another payment method or contact support.';
+          if (onPaymentError) onPaymentError(errorMessage);
+          throw new Error(errorMessage);
+        }
         throw new Error('Failed to create payment order');
       }
       
@@ -149,7 +147,6 @@ export function RazorpayButton({
         order_id: orderData.id,
         handler: async function (response: any) {
           try {
-            // Verify the payment
             const result = await verifyPayment('razorpay', planId, response);
             
             if (result.success) {
@@ -159,7 +156,6 @@ export function RazorpayButton({
                 variant: "success"
               });
               
-              // Reload the page to update user's premium status
               setTimeout(() => {
                 window.location.reload();
               }, 1500);

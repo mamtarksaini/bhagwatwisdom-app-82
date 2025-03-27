@@ -126,6 +126,7 @@ export function PaymentMethods({ planId, planName, price, currency }: PaymentMet
               text="Pay with PayPal" 
               onProcessingStart={() => handleProcessingStart('PayPal')}
               onProcessingEnd={handleProcessingEnd}
+              onPaymentError={handlePaymentError}
             />
             
             <Separator />
@@ -136,6 +137,7 @@ export function PaymentMethods({ planId, planName, price, currency }: PaymentMet
               text="Pay with Razorpay"
               onProcessingStart={() => handleProcessingStart('Razorpay')}
               onProcessingEnd={handleProcessingEnd}
+              onPaymentError={handlePaymentError}
             />
           </div>
         </div>
