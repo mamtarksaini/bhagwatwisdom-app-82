@@ -76,6 +76,16 @@ export async function createPaymentOrder(
         throw new Error('Invalid response from payment service');
       }
       
+      // Check if the response contains an error field (which indicates a configuration issue)
+      if (responseData.error === 'PayPal credentials not configured') {
+        console.log('PayPal credentials not configured, returning structured response');
+        return {
+          error: 'PayPal credentials not configured',
+          message: 'The PayPal integration is not configured in this environment.',
+          provider
+        } as any;
+      }
+      
       console.log('Payment order created successfully:', responseData);
       
       return {

@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 
@@ -9,7 +10,8 @@ const corsHeaders = {
 // Get environment variables
 const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
 const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
-const paypalClientId = Deno.env.get('PAYPAL_CLIENT_ID') ?? '';
+// Check for either format of PayPal client ID (with hyphen or underscore)
+const paypalClientId = Deno.env.get('PAYPAL_CLIENT_ID') ?? Deno.env.get('PAYPAL_CLIENT-ID') ?? '';
 const paypalSecretKey = Deno.env.get('PAYPAL_SECRET_KEY') ?? '';
 const razorpayKeyId = Deno.env.get('RAZORPAY_KEY_ID') ?? '';
 const razorpayKeySecret = Deno.env.get('RAZORPAY_KEY_SECRET') ?? '';
@@ -23,6 +25,8 @@ const PAYPAL_API_URL = 'https://api-m.sandbox.paypal.com'; // For testing
 // Function to get PayPal access token
 async function getPayPalAccessToken() {
   try {
+    console.log(`PayPal Client ID available: ${paypalClientId ? 'Yes' : 'No'}`);
+    
     if (!paypalClientId || !paypalSecretKey) {
       // For testing purposes, use hardcoded sandbox credentials if none are provided
       // Note: In a production environment, you should NEVER hardcode credentials
@@ -57,6 +61,7 @@ async function getPayPalAccessToken() {
       return data.access_token;
     } else {
       // Use the provided credentials if available
+      console.log('Using provided PayPal credentials');
       const auth = btoa(`${paypalClientId}:${paypalSecretKey}`);
       
       const response = await fetch(`${PAYPAL_API_URL}/v1/oauth2/token`, {

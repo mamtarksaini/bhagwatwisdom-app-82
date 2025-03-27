@@ -127,7 +127,7 @@ export function PayPalButton({
               });
             } else {
               // For the first attempt, we'll suggest activating test mode
-              const errorMessage = 'PayPal credentials are not configured in this environment. Try activating test mode.';
+              const errorMessage = 'PayPal credentials need additional configuration. Click the button again to activate test mode.';
               if (onPaymentError) onPaymentError(errorMessage);
               
               toast({
