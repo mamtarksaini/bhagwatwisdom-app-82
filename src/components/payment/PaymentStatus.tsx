@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 export function PaymentStatus() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { refreshUserData } = useAuth();
+  const auth = useAuth();
   
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -31,9 +31,9 @@ export function PaymentStatus() {
           variant: "default"
         });
         
-        // Refresh user data to update premium status
-        if (refreshUserData) {
-          refreshUserData();
+        // Refresh user data to update premium status, if available
+        if (auth && typeof auth.refreshUserData === 'function') {
+          auth.refreshUserData();
         }
       }
       
@@ -60,7 +60,7 @@ export function PaymentStatus() {
       // Clear the URL parameters after processing
       navigate('/pricing', { replace: true });
     }
-  }, [location.search, navigate, refreshUserData]);
+  }, [location.search, navigate, auth]);
   
   return null;
 }

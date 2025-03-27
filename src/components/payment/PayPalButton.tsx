@@ -11,6 +11,7 @@ interface PayPalButtonProps {
   planId: string;
   text?: string;
   className?: string;
+  disabled?: boolean;
   onProcessingStart?: () => void;
   onProcessingEnd?: () => void;
   onPaymentError?: (error: string) => void;
@@ -20,6 +21,7 @@ export function PayPalButton({
   planId, 
   text = "Pay with PayPal", 
   className,
+  disabled = false,
   onProcessingStart,
   onProcessingEnd,
   onPaymentError
@@ -55,8 +57,8 @@ export function PayPalButton({
       return;
     }
     
-    if (isLoading) {
-      console.log('PayPalButton: Already processing a payment. Please wait...');
+    if (isLoading || disabled) {
+      console.log('PayPalButton: Already processing a payment or button is disabled. Please wait...');
       return;
     }
     
@@ -117,7 +119,7 @@ export function PayPalButton({
         
         if (!orderData || !orderData.id) {
           // Check if the error indicates missing PayPal credentials
-          if (orderData && orderData.error && orderData.error.includes("PayPal")) {
+          if (orderData && typeof orderData.error === 'string' && orderData.error.includes("PayPal")) {
             // Activate test mode and try again
             setTestModeActive(true);
             
@@ -175,13 +177,17 @@ export function PayPalButton({
         description: "An error occurred during payment processing. Please try again.",
         variant: "destructive"
       });
+      
+      if (onPaymentError) {
+        onPaymentError(error.message || "Unknown payment error");
+      }
     }
   };
 
   return (
     <Button
       onClick={handleClick}
-      disabled={isLoading || status === 'loading'}
+      disabled={isLoading || disabled || status === 'loading'}
       className={className}
       variant="outline"
     >
