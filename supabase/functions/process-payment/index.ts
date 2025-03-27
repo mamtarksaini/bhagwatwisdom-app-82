@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 
@@ -120,6 +121,10 @@ async function createRazorpayOrder(planId: string) {
 
     if (planError || !planData) {
       throw new Error(`Error fetching plan: ${planError?.message || 'Plan not found'}`);
+    }
+
+    if (!razorpayKeyId || !razorpayKeySecret) {
+      throw new Error('Razorpay credentials not configured');
     }
 
     const auth = btoa(`${razorpayKeyId}:${razorpayKeySecret}`);
@@ -331,9 +336,31 @@ serve(async (req) => {
         
         try {
           if (provider === 'paypal') {
-            orderResponse = await createPayPalOrder(planId);
+            try {
+              orderResponse = await createPayPalOrder(planId);
+            } catch (error) {
+              // If it's a credentials error, return a specific error response
+              if (error.message && error.message.includes('PayPal credentials not configured')) {
+                return new Response(
+                  JSON.stringify({ error: 'PayPal credentials not configured' }),
+                  { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                );
+              }
+              throw error;
+            }
           } else if (provider === 'razorpay') {
-            orderResponse = await createRazorpayOrder(planId);
+            try {
+              orderResponse = await createRazorpayOrder(planId);
+            } catch (error) {
+              // If it's a credentials error, return a specific error response
+              if (error.message && error.message.includes('Razorpay credentials not configured')) {
+                return new Response(
+                  JSON.stringify({ error: 'Razorpay credentials not configured' }),
+                  { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                );
+              }
+              throw error;
+            }
           } else {
             return new Response(
               JSON.stringify({ error: 'Invalid payment provider' }),

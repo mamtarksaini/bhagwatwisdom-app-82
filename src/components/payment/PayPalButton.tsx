@@ -28,6 +28,7 @@ export function PayPalButton({
   const { user, status } = useAuth();
   const navigate = useNavigate();
   const [timeoutId, setTimeoutId] = useState<number | null>(null);
+  const [hasAttempted, setHasAttempted] = useState(false);
 
   // Clean up any ongoing processing and timeouts on component unmount
   useEffect(() => {
@@ -59,8 +60,19 @@ export function PayPalButton({
       return;
     }
     
+    // If we've already attempted and likely got a credentials error, show a more helpful message
+    if (hasAttempted) {
+      toast({
+        title: "Demo Environment",
+        description: "PayPal payments are not configured in this demo. Please try Razorpay instead.",
+        variant: "default"
+      });
+      return;
+    }
+    
     try {
       setIsLoading(true);
+      setHasAttempted(true);
       if (onProcessingStart) onProcessingStart();
       
       // Set a timeout to cancel the operation if it takes too long
@@ -91,7 +103,7 @@ export function PayPalButton({
       if (!orderData || !orderData.id) {
         // Check if the error indicates missing PayPal credentials
         if (orderData && orderData.error === "PayPal credentials not configured") {
-          const errorMessage = 'PayPal payments are not configured in this demo environment. Please try another payment method or contact support.';
+          const errorMessage = 'PayPal payments are not configured in this demo environment. Please try Razorpay instead.';
           if (onPaymentError) onPaymentError(errorMessage);
           
           toast({

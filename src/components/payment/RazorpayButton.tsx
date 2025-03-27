@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
@@ -34,6 +35,7 @@ export function RazorpayButton({
   const [isLoading, setIsLoading] = useState(false);
   const [isScriptLoaded, setIsScriptLoaded] = useState(false);
   const [isAuthChecking, setIsAuthChecking] = useState(true);
+  const [hasAttempted, setHasAttempted] = useState(false);
   const { user, status } = useAuth();
   const navigate = useNavigate();
 
@@ -121,8 +123,19 @@ export function RazorpayButton({
       return;
     }
     
+    // If we've already attempted and likely got a credentials error, show a more helpful message
+    if (hasAttempted) {
+      toast({
+        title: "Demo Environment",
+        description: "This payment method is not configured in the demo environment.",
+        variant: "default"
+      });
+      return;
+    }
+    
     try {
       setIsLoading(true);
+      setHasAttempted(true);
       if (onProcessingStart) onProcessingStart();
       
       console.log('RazorpayButton: Creating payment order for plan:', planId);
@@ -131,8 +144,15 @@ export function RazorpayButton({
       
       if (!orderData || !orderData.id) {
         if (orderData && orderData.error === "Razorpay credentials not configured") {
-          const errorMessage = 'Razorpay payments are not configured. Please try another payment method or contact support.';
+          const errorMessage = 'Razorpay payments are not configured in this demo environment. Please contact support.';
           if (onPaymentError) onPaymentError(errorMessage);
+          
+          toast({
+            title: "Demo Environment",
+            description: "Razorpay payments are not configured in this demo environment.",
+            variant: "default"
+          });
+          
           throw new Error(errorMessage);
         }
         throw new Error('Failed to create payment order');
@@ -201,11 +221,14 @@ export function RazorpayButton({
       setIsLoading(false);
       if (onProcessingEnd) onProcessingEnd();
       
-      toast({
-        title: "Payment error",
-        description: error.message || "An error occurred initiating your payment.",
-        variant: "destructive"
-      });
+      // Only show error toast if it's not a credentials error (which is already handled)
+      if (!(error.message && error.message.includes('not configured'))) {
+        toast({
+          title: "Payment error",
+          description: error.message || "An error occurred initiating your payment.",
+          variant: "destructive"
+        });
+      }
     }
   };
 
