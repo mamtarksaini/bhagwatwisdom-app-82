@@ -54,78 +54,13 @@ export async function fetchUserProfile(userId: string): Promise<UserProfile | nu
 }
 
 export async function createUserProfile(userId: string, email: string, name?: string): Promise<void> {
-  try {
-    console.log('authService: Creating profile for user:', userId, 'with email:', email);
-    
-    // Generate a secure numeric ID
-    const numericId = Math.floor(Math.random() * 1000000000);
-    
-    // First check if a profile already exists for this user
-    const { data: existingProfile } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('email', email)
-      .maybeSingle();
-    
-    if (existingProfile) {
-      console.log('authService: Profile already exists for this email:', email);
-      return;
-    }
-    
-    // Create the profile object
-    const profileData = {
-      id: numericId,
-      email,
-      name: name || null,
-      created_at: new Date().toISOString(),
-      is_premium: false
-    };
-    
-    console.log('authService: Attempting to insert profile with data:', profileData);
-    const { error } = await supabase
-      .from('profiles')
-      .insert(profileData);
-    
-    if (error) {
-      console.error('authService: Error creating profile:', error);
-      throw error;
-    }
-    
-    console.log('authService: Profile created successfully with numeric ID:', numericId);
-  } catch (error) {
-    console.error('authService: Error creating profile:', error);
-    throw error;
-  }
+  // This function is now a no-op since we're removing authentication
+  console.log('Authentication disabled: createUserProfile called but not executed');
+  return;
 }
 
 export async function updateUserProfile(userId: string, updates: Partial<UserProfile>): Promise<{ error: Error | null }> {
-  try {
-    // Remove id from updates if present, as we shouldn't be updating the primary key
-    const { id, ...updateData } = updates;
-    
-    let parsedId: number;
-    try {
-      parsedId = parseInt(userId, 10);
-      if (isNaN(parsedId)) {
-        return { error: new Error('Invalid user ID format') };
-      }
-    } catch (e) {
-      return { error: new Error('Invalid user ID format') };
-    }
-    
-    const { error } = await supabase
-      .from('profiles')
-      .update(updateData)
-      .eq('id', parsedId);
-    
-    if (error) {
-      console.error('authService: Error updating profile:', error);
-      return { error };
-    }
-    
-    return { error: null };
-  } catch (error) {
-    console.error('authService: Error updating profile:', error);
-    return { error: error as Error };
-  }
+  // This function is now a no-op since we're removing authentication
+  console.log('Authentication disabled: updateUserProfile called but not executed');
+  return { error: null };
 }

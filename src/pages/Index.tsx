@@ -32,8 +32,6 @@ const affirmationsData = {
 
 const Index = () => {
   const [language, setLanguage] = useState<Language>("english");
-  const { user, isPremium } = useAuth();
-  const [authModalOpen, setAuthModalOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { isDark, toggleTheme } = useTheme();
 
@@ -111,26 +109,6 @@ const Index = () => {
             <span className="sr-only">Toggle theme</span>
           </Button>
           
-          {user ? (
-            <Link to="/profile">
-              <Button variant="ghost" size="sm" className="flex items-center gap-2">
-                <User className="h-4 w-4" />
-                {isPremium && <Crown className="h-4 w-4 text-gold" />}
-                <span className="hidden sm:inline">{user.name || 'Profile'}</span>
-              </Button>
-            </Link>
-          ) : (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => setAuthModalOpen(true)}
-              className="flex items-center gap-2"
-            >
-              <LogIn className="h-4 w-4" />
-              <span className="hidden sm:inline">Sign In</span>
-            </Button>
-          )}
-          
           <Button 
             variant="ghost" 
             size="icon" 
@@ -194,9 +172,6 @@ const Index = () => {
               <Button className="button-gradient" onClick={() => {
                 document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
               }}>Get Started</Button>
-              {!user && (
-                <Button variant="outline" onClick={() => setAuthModalOpen(true)}>Sign In</Button>
-              )}
             </div>
           </div>
         </div>
@@ -373,8 +348,6 @@ const Index = () => {
       </section>
 
       <Footer />
-
-      <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
     </div>
   );
 };

@@ -1,35 +1,16 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Moon, Sun, Menu, X, Book, User, Settings, LogOut, MessageSquare, Globe } from 'lucide-react';
-import { useAuth } from '@/contexts/auth';
+import { Moon, Sun, Menu, X, Book, Globe, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/components/ui/ThemeProvider';
 import { Separator } from '@/components/ui/separator';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { LanguageSelector } from '@/components/ui/LanguageSelector';
 import { Language } from '@/types';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-  navigationMenuTriggerStyle,
-} from "@/components/ui/navigation-menu";
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, signOut } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const location = useLocation();
   const isMobile = useIsMobile();
@@ -92,37 +73,6 @@ export function Navbar() {
               <span className="sr-only">Toggle theme</span>
             </Button>
 
-            {user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                    <User className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" forceMount>
-                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                  <DropdownMenuItem onClick={() => { window.location.href = '/profile'; }}>
-                    <User className="mr-2 h-4 w-4" />
-                    <span>Profile</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => { window.location.href = '/settings'; }}>
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={signOut}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Log out</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <Button variant="default" onClick={() => { window.location.href = '/profile'; }}>
-                Sign In
-              </Button>
-            )}
-
             {isMobile && (
               <Button variant="ghost" size="icon" onClick={toggleMenu}>
                 {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -151,22 +101,9 @@ export function Navbar() {
             <Link to="/affirmations" className="font-medium flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
               Affirmations
             </Link>
-            <Separator />
-            
-            {user ? (
-              <>
-                <Link to="/profile" className="font-medium flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
-                  Profile
-                </Link>
-                <Button variant="destructive" onClick={signOut}>
-                  Sign Out
-                </Button>
-              </>
-            ) : (
-              <Button variant="default" onClick={() => { window.location.href = '/profile'; }}>
-                Sign In
-              </Button>
-            )}
+            <Link to="/about" className="font-medium flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
+              About
+            </Link>
           </div>
         </div>
       )}

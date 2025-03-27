@@ -1,9 +1,8 @@
 
-import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { SignInForm } from "./SignInForm";
-import { SignUpForm } from "./SignUpForm";
+import React from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Info } from "lucide-react";
 
 interface AuthModalProps {
   open: boolean;
@@ -11,32 +10,23 @@ interface AuthModalProps {
 }
 
 export function AuthModal({ open, onOpenChange }: AuthModalProps) {
-  const [activeTab, setActiveTab] = useState<"signin" | "signup">("signin");
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="text-gradient">Welcome to Bhagwat Wisdom</DialogTitle>
+          <DialogTitle className="text-gradient">Authentication Disabled</DialogTitle>
           <DialogDescription>
-            Sign in or create an account to save your readings and access premium features.
+            Sign-in and sign-up features have been temporarily disabled.
           </DialogDescription>
         </DialogHeader>
         
-        <Tabs defaultValue={activeTab} onValueChange={(value) => setActiveTab(value as "signin" | "signup")}>
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="signin">Sign In</TabsTrigger>
-            <TabsTrigger value="signup">Sign Up</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="signin">
-            <SignInForm onSuccess={() => onOpenChange(false)} />
-          </TabsContent>
-          
-          <TabsContent value="signup">
-            <SignUpForm onSuccess={() => setActiveTab("signin")} />
-          </TabsContent>
-        </Tabs>
+        <Alert variant="info" className="mt-4">
+          <Info className="h-4 w-4" />
+          <AlertDescription>
+            Authentication features have been removed to resolve system issues. 
+            Please continue as a guest user.
+          </AlertDescription>
+        </Alert>
       </DialogContent>
     </Dialog>
   );
