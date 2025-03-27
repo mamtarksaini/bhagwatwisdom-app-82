@@ -28,7 +28,7 @@ export async function fetchUserProfile(userId: string): Promise<UserProfile | nu
         return null;
       }
       
-      return data as unknown as UserProfile;
+      return data as UserProfile;
     }
     
     const { data, error } = await supabase
@@ -43,7 +43,7 @@ export async function fetchUserProfile(userId: string): Promise<UserProfile | nu
     }
     
     if (data) {
-      return data as unknown as UserProfile;
+      return data as UserProfile;
     }
     
     return null;
