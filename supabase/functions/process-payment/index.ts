@@ -10,8 +10,8 @@ const corsHeaders = {
 // Get environment variables
 const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
 const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
-// Check for either format of PayPal client ID (with hyphen or underscore)
-const paypalClientId = Deno.env.get('PAYPAL_CLIENT_ID') ?? Deno.env.get('PAYPAL_CLIENT-ID') ?? '';
+// Check specifically for the correct PayPal client ID
+const paypalClientId = Deno.env.get('PAYPAL_CLIENT_ID') ?? '';
 const paypalSecretKey = Deno.env.get('PAYPAL_SECRET_KEY') ?? '';
 const razorpayKeyId = Deno.env.get('RAZORPAY_KEY_ID') ?? '';
 const razorpayKeySecret = Deno.env.get('RAZORPAY_KEY_SECRET') ?? '';
@@ -26,6 +26,7 @@ const PAYPAL_API_URL = 'https://api-m.sandbox.paypal.com'; // For testing
 async function getPayPalAccessToken() {
   try {
     console.log(`PayPal Client ID available: ${paypalClientId ? 'Yes' : 'No'}`);
+    console.log(`PayPal Client ID value: ${paypalClientId ? paypalClientId.substring(0, 5) + '...' : 'Not set'}`); // Log first 5 chars for debugging
     
     if (!paypalClientId || !paypalSecretKey) {
       // For testing purposes, use hardcoded sandbox credentials if none are provided
