@@ -4,14 +4,17 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { Home, LogOut, User, Info } from "lucide-react";
+import { Home, LogOut, User, Info, Crown } from "lucide-react";
 import { useAuth } from '@/contexts/auth';
 import { toast } from '@/hooks/use-toast';
 import { PageLayout } from '@/components/layout/PageLayout';
+import { PRICING_PLANS, ALL_FEATURES } from '@/constants/pricingPlans';
+import { PricingCard } from '@/components/pricing/PricingCard';
+import { Link } from 'react-router-dom';
 
 const Profile = () => {
   const navigate = useNavigate();
-  const { user, status, signOut } = useAuth();
+  const { user, status, signOut, isPremium } = useAuth();
 
   useEffect(() => {
     // If user is not authenticated and not in loading state, redirect to auth page
@@ -35,6 +38,24 @@ const Profile = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const handleUpgradeClick = (planId: string) => {
+    navigate('/pricing');
+  };
+
+  const isCurrentPlan = (planId: string) => {
+    if (!user) return false;
+    
+    if (isPremium && (planId === 'pro' || planId === 'enterprise')) {
+      return true;
+    }
+
+    if (!isPremium && planId === 'basic') {
+      return true;
+    }
+
+    return false;
   };
 
   if (status === 'loading') {
@@ -100,7 +121,13 @@ const Profile = () => {
               </div>
               <div>
                 <h3 className="font-medium text-sm text-muted-foreground">Account Type</h3>
-                <p className="text-lg">{user?.is_premium ? 'Premium' : 'Free'}</p>
+                <p className="text-lg flex items-center gap-2">
+                  {isPremium ? (
+                    <>
+                      <Crown className="h-4 w-4 text-gold" /> Premium
+                    </>
+                  ) : 'Free'}
+                </p>
               </div>
             </CardContent>
             <CardFooter className="flex justify-between">
@@ -118,6 +145,33 @@ const Profile = () => {
               </Button>
             </CardFooter>
           </Card>
+
+          <div className="max-w-3xl mx-auto mt-8 text-center">
+            <h2 className="text-2xl font-heading font-bold mb-4">Your Subscription Plan</h2>
+            <p className="text-muted-foreground mb-8">
+              Enhance your spiritual journey with our premium features
+            </p>
+
+            <div className="grid gap-6 md:grid-cols-3">
+              {PRICING_PLANS.map((plan) => (
+                <PricingCard
+                  key={plan.id}
+                  plan={plan}
+                  isCurrentPlan={isCurrentPlan(plan.id)}
+                  isUpgrading={false}
+                  onUpgradeClick={handleUpgradeClick}
+                />
+              ))}
+            </div>
+
+            <div className="mt-8">
+              <Link to="/pricing">
+                <Button className="button-gradient">
+                  View Detailed Pricing Plans
+                </Button>
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </PageLayout>
