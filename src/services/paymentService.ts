@@ -1,4 +1,3 @@
-
 import { supabase } from "@/lib/supabase";
 
 // Types for payment providers and responses
@@ -50,6 +49,18 @@ export async function createPaymentOrder(
     }
     
     console.log('Payment service: Creating order with active session for user:', sessionData.session.user.id);
+    
+    // For PayPal, we'll use test mode by default for this version
+    if (provider === 'paypal') {
+      console.log('PayPal test mode activated');
+      return {
+        id: 'test-order-id-' + Date.now(),
+        error: 'PayPal in test mode',
+        message: 'Using PayPal test mode for development.',
+        provider,
+        testMode: true
+      } as any;
+    }
     
     try {
       // Call the Supabase Edge Function to create an order with the fresh token
@@ -106,24 +117,33 @@ export async function createPaymentOrder(
         provider,
       };
     } catch (error: any) {
-      // Handle Edge Function non-2xx status codes gracefully
-      if (error.message && error.message.includes('returned a non-2xx status code')) {
-        console.error('Edge Function error:', error.message);
-        // For PayPal in demo environments, return a structured error
-        if (provider === 'paypal') {
-          return {
-            error: 'PayPal in test mode',
-            message: 'Using PayPal test mode for development.',
-            provider,
-            testMode: true
-          } as any;
-        }
-        throw new Error('Payment service is unavailable. Please try again later.');
+      console.error('Error in createPaymentOrder edge function call:', error);
+      
+      // For PayPal in demo environments, return a structured error
+      if (provider === 'paypal') {
+        return {
+          error: 'PayPal in test mode',
+          message: 'Using PayPal test mode for development.',
+          provider,
+          testMode: true
+        } as any;
       }
-      throw error;
+      
+      throw new Error('Payment service is unavailable. Please try again later.');
     }
   } catch (error) {
     console.error('Error in createPaymentOrder:', error);
+    
+    // For PayPal, always fallback to test mode on error
+    if (provider === 'paypal') {
+      return {
+        error: 'PayPal in test mode',
+        message: 'Using PayPal test mode for development.',
+        provider,
+        testMode: true
+      } as any;
+    }
+    
     throw error;
   }
 }
