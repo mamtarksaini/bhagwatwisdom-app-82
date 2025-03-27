@@ -12,9 +12,10 @@ interface PaymentMethodsProps {
   planName: string;
   price: number;
   currency: string;
+  onClose?: () => void;
 }
 
-export function PaymentMethods({ planId, planName, price, currency }: PaymentMethodsProps) {
+export function PaymentMethods({ planId, planName, price, currency, onClose }: PaymentMethodsProps) {
   const [paymentInitialized, setPaymentInitialized] = useState(false);
   const [processingTimeout, setProcessingTimeout] = useState(false);
   const [paymentProvider, setPaymentProvider] = useState<string | null>(null);
@@ -85,6 +86,9 @@ export function PaymentMethods({ planId, planName, price, currency }: PaymentMet
   const handleCancel = () => {
     console.log('PaymentMethods: Cancelling payment');
     handleRetry(); // Reuse the retry logic to reset the state
+    if (onClose) {
+      onClose();
+    }
   };
 
   const getProcessingTime = () => {
@@ -106,8 +110,7 @@ export function PaymentMethods({ planId, planName, price, currency }: PaymentMet
             <Info className="h-4 w-4" />
             <AlertTitle>Test Environment</AlertTitle>
             <AlertDescription>
-              This is a test/demo environment. For PayPal, click the button twice to activate sandbox test mode.
-              No actual payments will be processed.
+              This is a test/demo environment. No actual payments will be processed.
             </AlertDescription>
             <Button 
               variant="outline" 
@@ -120,13 +123,12 @@ export function PaymentMethods({ planId, planName, price, currency }: PaymentMet
           </Alert>
         )}
 
-        {paymentError && paymentError.includes("not configured") && (
-          <Alert variant="info" className="mb-4">
-            <Info className="h-4 w-4" />
-            <AlertTitle>Payment System Notice</AlertTitle>
+        {paymentError && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Payment Error</AlertTitle>
             <AlertDescription>
-              Click the PayPal button again to activate test mode with sandbox credentials.
-              This lets you test the flow without real payments.
+              {paymentError}
             </AlertDescription>
           </Alert>
         )}
@@ -192,22 +194,21 @@ export function PaymentMethods({ planId, planName, price, currency }: PaymentMet
               planId={planId} 
               className="w-full flex items-center justify-center"
               text="Pay with PayPal" 
-              onProcessingStart={() => handleProcessingStart('PayPal')}
+              onProcessingStart={handleProcessingStart}
               onProcessingEnd={handleProcessingEnd}
               onPaymentError={handlePaymentError}
               disabled={paymentInitialized}
             />
           </div>
         </div>
-
-        <CardFooter className="px-0 pt-4">
-          <div className="text-xs text-muted-foreground">
-            <p>By proceeding with the payment, you agree to our terms and conditions.</p>
-            <p className="mt-1">Your subscription will automatically renew each month. You can cancel anytime.</p>
-            <p className="mt-1 italic">Note: This is a test environment. No actual payments will be processed.</p>
-          </div>
-        </CardFooter>
       </CardContent>
+      <CardFooter className="px-6 pt-0">
+        <div className="text-xs text-muted-foreground w-full">
+          <p>By proceeding with the payment, you agree to our terms and conditions.</p>
+          <p className="mt-1">Your subscription will automatically renew each month. You can cancel anytime.</p>
+          <p className="mt-1 italic">Note: This is a test environment. No actual payments will be processed.</p>
+        </div>
+      </CardFooter>
     </Card>
   );
 }

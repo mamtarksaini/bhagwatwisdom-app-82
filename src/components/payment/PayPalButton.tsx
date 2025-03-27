@@ -64,7 +64,7 @@ export function PayPalButton({
     
     try {
       setIsLoading(true);
-      if (onProcessingStart) onProcessingStart();
+      if (onProcessingStart) onProcessingStart('PayPal');
       
       // Set a timeout to cancel the operation if it takes too long
       const newTimeoutId = window.setTimeout(() => {
@@ -83,32 +83,32 @@ export function PayPalButton({
       
       console.log('PayPalButton: Creating PayPal payment for plan:', planId);
       
-      try {
-        // In test mode, simulate a successful response
-        if (testModeActive) {
-          console.log('PayPalButton: Using PayPal test mode');
-          
-          // Clear the timeout
-          if (timeoutId) {
-            clearTimeout(timeoutId);
-            setTimeoutId(null);
-          }
-          
-          // Simulate a short delay
-          await new Promise(resolve => setTimeout(resolve, 1500));
-          
-          toast({
-            title: "Test Mode Active",
-            description: "This is a demo of the PayPal payment flow. No actual payment is processed.",
-            variant: "default"
-          });
-          
-          // Redirect to a simulated success page
-          navigate('/pricing?status=success&provider=paypal&token=TEST_TOKEN&planId=' + planId);
-          return;
+      // In test mode, simulate a successful response
+      if (testModeActive) {
+        console.log('PayPalButton: Using PayPal test mode');
+        
+        // Clear the timeout
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+          setTimeoutId(null);
         }
         
-        // Actual API call if not in test mode
+        // Simulate a short delay
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        toast({
+          title: "Test Mode Active",
+          description: "This is a demo of the PayPal payment flow. No actual payment is processed.",
+          variant: "default"
+        });
+        
+        // Redirect to a simulated success page
+        navigate('/pricing?status=success&provider=paypal&token=TEST_TOKEN&planId=' + planId);
+        return;
+      }
+      
+      // Actual API call if not in test mode
+      try {
         const orderData = await createPaymentOrder(planId, 'paypal');
         
         // Clear the timeout since we got a response
@@ -131,6 +131,8 @@ export function PayPalButton({
             
             setIsLoading(false);
             if (onProcessingEnd) onProcessingEnd();
+            // Try again immediately with test mode
+            setTimeout(() => handleClick(), 500);
             return;
           }
           throw new Error('Failed to create PayPal order');
@@ -146,7 +148,12 @@ export function PayPalButton({
         // Redirect to PayPal for payment approval
         window.location.href = approvalUrl;
       } catch (apiError: any) {
-        // Handle API errors gracefully
+        // Clear timeout
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+          setTimeoutId(null);
+        }
+        
         console.error('PayPalButton: API error:', apiError);
         
         // Activate test mode if it's a configuration issue
@@ -160,6 +167,8 @@ export function PayPalButton({
         
         setIsLoading(false);
         if (onProcessingEnd) onProcessingEnd();
+        // Try again immediately with test mode
+        setTimeout(() => handleClick(), 500);
       }
     } catch (error: any) {
       console.error('PayPalButton: Error initiating PayPal payment:', error);

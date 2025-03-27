@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { AuthModal } from '@/components/auth/AuthModal';
@@ -169,6 +170,7 @@ export default function PricingPage() {
               planName={selectedPlan.name}
               price={selectedPlan.price}
               currency={selectedPlan.currency || 'USD'}
+              onClose={closePaymentDialog}
             />
           )}
         </DialogContent>
