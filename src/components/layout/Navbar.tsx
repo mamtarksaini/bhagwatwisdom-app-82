@@ -18,6 +18,9 @@ export function Navbar() {
   const isMobile = useIsMobile();
   const [language, setLanguage] = useState<Language>("english");
   const { user, status, signOut } = useAuth();
+  
+  // Check if we're on the home page
+  const isHomePage = location.pathname === '/';
 
   useEffect(() => {
     setIsMenuOpen(false);
@@ -51,24 +54,26 @@ export function Navbar() {
               Bhagavad Wisdom
             </Link>
 
-            <div className="hidden md:flex items-center space-x-6 ml-8">
-              <Link to="/problem-solver" className="font-medium flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
-                Problem Solver
-              </Link>
-              <Link to="/dream-interpreter" className="font-medium flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
-                Dream Interpreter
-              </Link>
-              <Link to="/chat-agent" className="font-medium flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
-                <MessageSquare className="h-4 w-4" />
-                Chat Agent
-              </Link>
-              <Link to="/mood-mantra" className="font-medium flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
-                Mood Mantras
-              </Link>
-              <Link to="/affirmations" className="font-medium flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
-                Affirmations
-              </Link>
-            </div>
+            {isHomePage && (
+              <div className="hidden md:flex items-center space-x-6 ml-8">
+                <Link to="/problem-solver" className="font-medium flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
+                  Problem Solver
+                </Link>
+                <Link to="/dream-interpreter" className="font-medium flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
+                  Dream Interpreter
+                </Link>
+                <Link to="/chat-agent" className="font-medium flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
+                  <MessageSquare className="h-4 w-4" />
+                  Chat Agent
+                </Link>
+                <Link to="/mood-mantra" className="font-medium flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
+                  Mood Mantras
+                </Link>
+                <Link to="/affirmations" className="font-medium flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
+                  Affirmations
+                </Link>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center space-x-4">
@@ -116,7 +121,7 @@ export function Navbar() {
               </div>
             )}
 
-            {isMobile && (
+            {isMobile && isHomePage && (
               <Button variant="ghost" size="icon" onClick={toggleMenu}>
                 {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
               </Button>
@@ -125,7 +130,7 @@ export function Navbar() {
         </nav>
       </div>
 
-      {isMobile && isMenuOpen && (
+      {isMobile && isMenuOpen && isHomePage && (
         <div className="py-4 bg-background border-t">
           <div className="container flex flex-col space-y-4">
             <Link to="/problem-solver" className="font-medium flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
