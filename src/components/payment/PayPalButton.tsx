@@ -27,7 +27,7 @@ export function PayPalButton({
   onPaymentError
 }: PayPalButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const { user, status } = useAuth();
+  const { user, status, refreshUserData } = useAuth();
   const navigate = useNavigate();
   const [timeoutId, setTimeoutId] = useState<number | null>(null);
   const [testModeActive, setTestModeActive] = useState(true); // Always use test mode for now
