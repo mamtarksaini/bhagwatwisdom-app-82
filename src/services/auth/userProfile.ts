@@ -11,6 +11,9 @@ export async function fetchUserProfile(userId: string): Promise<UserProfile | nu
     
     try {
       parsedId = parseInt(userId, 10);
+      if (isNaN(parsedId)) {
+        throw new Error('Invalid userId format');
+      }
     } catch (e) {
       console.error('authService: Error parsing userId as integer:', e);
       // If parse fails, try direct lookup
@@ -103,6 +106,9 @@ export async function updateUserProfile(userId: string, updates: Partial<UserPro
     let parsedId: number;
     try {
       parsedId = parseInt(userId, 10);
+      if (isNaN(parsedId)) {
+        return { error: new Error('Invalid user ID format') };
+      }
     } catch (e) {
       return { error: new Error('Invalid user ID format') };
     }
