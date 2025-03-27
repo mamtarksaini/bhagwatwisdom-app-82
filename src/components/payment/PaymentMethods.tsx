@@ -2,10 +2,11 @@
 import React, { useState, useEffect } from 'react';
 import { PayPalButton } from './PayPalButton';
 import { RazorpayButton } from './RazorpayButton';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, AlertTriangle } from 'lucide-react';
+import { Loader2, AlertTriangle, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 interface PaymentMethodsProps {
   planId: string;
@@ -18,6 +19,7 @@ export function PaymentMethods({ planId, planName, price, currency }: PaymentMet
   const [paymentInitialized, setPaymentInitialized] = useState(false);
   const [processingTimeout, setProcessingTimeout] = useState(false);
   const [paymentProvider, setPaymentProvider] = useState<string | null>(null);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
 
   // Set a timeout for showing an error message if processing takes too long
   useEffect(() => {
@@ -41,6 +43,7 @@ export function PaymentMethods({ planId, planName, price, currency }: PaymentMet
       setPaymentInitialized(false);
       setProcessingTimeout(false);
       setPaymentProvider(null);
+      setPaymentError(null);
     };
   }, []);
 
@@ -49,13 +52,19 @@ export function PaymentMethods({ planId, planName, price, currency }: PaymentMet
     setPaymentProvider(provider);
     setPaymentInitialized(true);
     setProcessingTimeout(false); // Reset timeout state
+    setPaymentError(null); // Clear any previous errors
   };
 
   const handleProcessingEnd = () => {
     console.log('PaymentMethods: Payment processing ended');
     setPaymentInitialized(false);
     setProcessingTimeout(false);
-    setPaymentProvider(null);
+  };
+
+  const handlePaymentError = (error: string) => {
+    setPaymentError(error);
+    setPaymentInitialized(false);
+    setProcessingTimeout(false);
   };
 
   const handleRetry = () => {
@@ -63,6 +72,7 @@ export function PaymentMethods({ planId, planName, price, currency }: PaymentMet
     setPaymentInitialized(false);
     setProcessingTimeout(false);
     setPaymentProvider(null);
+    setPaymentError(null);
   };
 
   return (
@@ -74,6 +84,17 @@ export function PaymentMethods({ planId, planName, price, currency }: PaymentMet
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        {paymentError && paymentError.includes("not configured") && (
+          <Alert variant="warning" className="mb-4">
+            <Info className="h-4 w-4" />
+            <AlertTitle>Payment System Notice</AlertTitle>
+            <AlertDescription>
+              The payment system is currently in demo mode. In a production environment, 
+              this would connect to actual payment gateways. Please try Razorpay or contact support.
+            </AlertDescription>
+          </Alert>
+        )}
+
         <div className="space-y-3">
           <h3 className="text-sm font-medium">Select a payment method:</h3>
           
@@ -118,11 +139,14 @@ export function PaymentMethods({ planId, planName, price, currency }: PaymentMet
             />
           </div>
         </div>
-        
-        <div className="text-xs text-muted-foreground">
-          <p>By proceeding with the payment, you agree to our terms and conditions.</p>
-          <p className="mt-1">Your subscription will automatically renew each month. You can cancel anytime.</p>
-        </div>
+
+        <CardFooter className="px-0 pt-4">
+          <div className="text-xs text-muted-foreground">
+            <p>By proceeding with the payment, you agree to our terms and conditions.</p>
+            <p className="mt-1">Your subscription will automatically renew each month. You can cancel anytime.</p>
+            <p className="mt-1 italic">Note: This is a demonstration environment. No actual payments will be processed.</p>
+          </div>
+        </CardFooter>
       </CardContent>
     </Card>
   );

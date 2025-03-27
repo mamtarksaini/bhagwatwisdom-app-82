@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertCircle } from 'lucide-react';
 import { createPaymentOrder, verifyPayment } from '@/services/paymentService';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
@@ -87,6 +87,10 @@ export function PayPalButton({
       }
       
       if (!orderData || !orderData.id) {
+        // Check if the error indicates missing PayPal credentials
+        if (orderData && orderData.error === "PayPal credentials not configured") {
+          throw new Error('PayPal payments are not configured. Please try another payment method or contact support.');
+        }
         throw new Error('Failed to create PayPal order');
       }
       
