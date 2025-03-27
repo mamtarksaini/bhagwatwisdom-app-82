@@ -34,6 +34,7 @@ export function PaymentStatus() {
         // Refresh user data to update premium status, if available
         if (auth && typeof auth.refreshUserData === 'function') {
           try {
+            // Call refreshUserData without arguments
             auth.refreshUserData();
           } catch (error) {
             console.error('Error refreshing user data:', error);

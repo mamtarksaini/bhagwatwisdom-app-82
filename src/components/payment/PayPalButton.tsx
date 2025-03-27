@@ -12,7 +12,7 @@ interface PayPalButtonProps {
   text?: string;
   className?: string;
   disabled?: boolean;
-  onProcessingStart?: () => void;
+  onProcessingStart?: (provider: string) => void;
   onProcessingEnd?: () => void;
   onPaymentError?: (error: string) => void;
 }
