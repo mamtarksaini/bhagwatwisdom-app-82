@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -38,7 +39,7 @@ const Profile = () => {
 
   if (status === 'loading') {
     return (
-      <PageLayout>
+      <PageLayout title="Loading Profile">
         <div className="container px-4 md:px-6 py-8">
           <div className="flex flex-col items-center justify-center min-h-[50vh]">
             <div className="animate-pulse text-center">
@@ -52,7 +53,7 @@ const Profile = () => {
 
   if (status === 'unauthenticated') {
     return (
-      <PageLayout>
+      <PageLayout title="Authentication Required">
         <div className="container px-4 md:px-6 py-8">
           <div className="flex flex-col items-center space-y-8">
             <Alert variant="info" className="max-w-lg">
@@ -73,7 +74,7 @@ const Profile = () => {
   }
 
   return (
-    <PageLayout>
+    <PageLayout title="Your Profile">
       <div className="container px-4 md:px-6 py-8">
         <div className="flex flex-col items-center space-y-8">
           <h1 className="text-3xl font-heading font-bold tracking-tighter sm:text-4xl md:text-5xl text-gradient">
