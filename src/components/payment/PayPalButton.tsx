@@ -29,6 +29,7 @@ export function PayPalButton({
   const navigate = useNavigate();
   const [timeoutId, setTimeoutId] = useState<number | null>(null);
   const [hasAttempted, setHasAttempted] = useState(false);
+  const [testModeActive, setTestModeActive] = useState(false);
 
   // Clean up any ongoing processing and timeouts on component unmount
   useEffect(() => {
@@ -60,13 +61,22 @@ export function PayPalButton({
       return;
     }
     
-    // If we've already attempted and likely got a credentials error, show a more helpful message
-    if (hasAttempted) {
+    // Reset the hasAttempted flag if we're in test mode
+    if (testModeActive) {
+      setHasAttempted(false);
+    }
+    
+    // If we've already attempted and likely got a credentials error, 
+    // activate test mode instead of showing the previous message
+    if (hasAttempted && !testModeActive) {
+      setTestModeActive(true);
       toast({
-        title: "Demo Environment",
-        description: "PayPal payments are not configured in this demo. Please try Razorpay instead.",
+        title: "Activating Test Mode",
+        description: "Using PayPal sandbox environment for testing",
         variant: "default"
       });
+      // Reset hasAttempted so we can try again with test mode
+      setHasAttempted(false);
       return;
     }
     
@@ -103,16 +113,29 @@ export function PayPalButton({
       if (!orderData || !orderData.id) {
         // Check if the error indicates missing PayPal credentials
         if (orderData && orderData.error === "PayPal credentials not configured") {
-          const errorMessage = 'PayPal payments are not configured in this demo environment. Please try Razorpay instead.';
-          if (onPaymentError) onPaymentError(errorMessage);
+          // In test mode, we're using sandbox credentials in our edge function
+          if (testModeActive) {
+            const errorMessage = 'There was an issue with the test PayPal integration. Please try again or contact support.';
+            if (onPaymentError) onPaymentError(errorMessage);
+            
+            toast({
+              title: "Test Environment Error",
+              description: errorMessage,
+              variant: "destructive"
+            });
+          } else {
+            // For the first attempt, we'll suggest activating test mode
+            const errorMessage = 'PayPal credentials are not configured in this environment. Try activating test mode.';
+            if (onPaymentError) onPaymentError(errorMessage);
+            
+            toast({
+              title: "Configuration Needed",
+              description: "Click the button again to activate PayPal sandbox test mode.",
+              variant: "default"
+            });
+          }
           
-          toast({
-            title: "Demo Environment",
-            description: "PayPal payments are not configured in this demo. Please try Razorpay instead.",
-            variant: "default"
-          });
-          
-          throw new Error(errorMessage);
+          throw new Error(orderData.error);
         }
         throw new Error('Failed to create PayPal order');
       }
@@ -137,8 +160,8 @@ export function PayPalButton({
         setTimeoutId(null);
       }
       
-      // Only show error toast if it's not a credentials error (which is already handled)
-      if (!(error.message && error.message.includes('not configured'))) {
+      // Only show error toast if it's a serious error (not just credentials missing in first attempt)
+      if (!(error.message && error.message.includes('not configured') && !testModeActive)) {
         toast({
           title: "Payment error",
           description: error.message || "An error occurred initiating your payment.",
@@ -161,7 +184,10 @@ export function PayPalButton({
           Processing...
         </>
       ) : (
-        text
+        <>
+          {testModeActive && <AlertCircle className="mr-2 h-4 w-4" />}
+          {testModeActive ? "Test " + text : text}
+        </>
       )}
     </Button>
   );

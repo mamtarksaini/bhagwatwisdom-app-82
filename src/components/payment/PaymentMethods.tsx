@@ -88,10 +88,10 @@ export function PaymentMethods({ planId, planName, price, currency }: PaymentMet
         {showDemoAlert && (
           <Alert variant="info" className="mb-4">
             <Info className="h-4 w-4" />
-            <AlertTitle>Demo Environment</AlertTitle>
+            <AlertTitle>Test Environment</AlertTitle>
             <AlertDescription>
-              This is a demonstration environment. Payment gateways are in test mode and no actual payments will be processed.
-              Some payment methods may not be available in demo mode.
+              This is a test/demo environment. For PayPal, click the button twice to activate sandbox test mode.
+              No actual payments will be processed.
             </AlertDescription>
             <Button 
               variant="outline" 
@@ -109,8 +109,8 @@ export function PaymentMethods({ planId, planName, price, currency }: PaymentMet
             <Info className="h-4 w-4" />
             <AlertTitle>Payment System Notice</AlertTitle>
             <AlertDescription>
-              The payment system is currently in demo mode. In a production environment, 
-              this would connect to actual payment gateways. Please try Razorpay or contact support.
+              Click the PayPal button again to activate test mode with sandbox credentials.
+              This lets you test the flow without real payments.
             </AlertDescription>
           </Alert>
         )}
@@ -166,7 +166,7 @@ export function PaymentMethods({ planId, planName, price, currency }: PaymentMet
           <div className="text-xs text-muted-foreground">
             <p>By proceeding with the payment, you agree to our terms and conditions.</p>
             <p className="mt-1">Your subscription will automatically renew each month. You can cancel anytime.</p>
-            <p className="mt-1 italic">Note: This is a demonstration environment. No actual payments will be processed.</p>
+            <p className="mt-1 italic">Note: This is a test environment. No actual payments will be processed.</p>
           </div>
         </CardFooter>
       </CardContent>
