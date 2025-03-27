@@ -85,7 +85,7 @@ export function PaymentMethods({ planId, planName, price, currency }: PaymentMet
       </CardHeader>
       <CardContent className="space-y-6">
         {paymentError && paymentError.includes("not configured") && (
-          <Alert variant="warning" className="mb-4">
+          <Alert variant="info" className="mb-4">
             <Info className="h-4 w-4" />
             <AlertTitle>Payment System Notice</AlertTitle>
             <AlertDescription>
