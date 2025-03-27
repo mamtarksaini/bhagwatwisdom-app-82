@@ -102,53 +102,78 @@ export function PayPalButton({
       
       console.log('PayPalButton: Creating PayPal payment for plan:', planId);
       
-      const orderData = await createPaymentOrder(planId, 'paypal');
-      
-      // Clear the timeout since we got a response
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-        setTimeoutId(null);
-      }
-      
-      if (!orderData || !orderData.id) {
-        // Check if the error indicates missing PayPal credentials
-        if (orderData && orderData.error === "PayPal credentials not configured") {
-          // In test mode, we're using sandbox credentials in our edge function
-          if (testModeActive) {
-            const errorMessage = 'There was an issue with the test PayPal integration. Please try again or contact support.';
-            if (onPaymentError) onPaymentError(errorMessage);
+      // Add more error handling for the Edge Function call
+      try {
+        const orderData = await createPaymentOrder(planId, 'paypal');
+        
+        // Clear the timeout since we got a response
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+          setTimeoutId(null);
+        }
+        
+        if (!orderData || !orderData.id) {
+          // Check if the error indicates missing PayPal credentials
+          if (orderData && orderData.error === "PayPal credentials not configured") {
+            // In test mode, we're using sandbox credentials in our edge function
+            if (testModeActive) {
+              const errorMessage = 'There was an issue with the test PayPal integration. Please try again or contact support.';
+              if (onPaymentError) onPaymentError(errorMessage);
+              
+              toast({
+                title: "Test Environment Error",
+                description: errorMessage,
+                variant: "destructive"
+              });
+            } else {
+              // For the first attempt, we'll suggest activating test mode
+              const errorMessage = 'PayPal credentials are not configured in this environment. Try activating test mode.';
+              if (onPaymentError) onPaymentError(errorMessage);
+              
+              toast({
+                title: "Configuration Needed",
+                description: "Click the button again to activate PayPal sandbox test mode.",
+                variant: "default"
+              });
+            }
             
+            throw new Error(orderData.error);
+          }
+          throw new Error('Failed to create PayPal order');
+        }
+        
+        // Find the approval URL in the links array
+        const approvalUrl = orderData.links?.find((link: any) => link.rel === 'approve')?.href;
+        
+        if (!approvalUrl) {
+          throw new Error('PayPal approval URL not found in the response');
+        }
+        
+        // Redirect to PayPal for payment approval
+        window.location.href = approvalUrl;
+      } catch (apiError: any) {
+        // Handle Edge Function errors (non-2xx status codes)
+        console.error('PayPalButton: API error:', apiError);
+        
+        if (apiError.message && apiError.message.includes('status code')) {
+          if (testModeActive) {
             toast({
               title: "Test Environment Error",
-              description: errorMessage,
+              description: "Our PayPal test environment is currently unavailable. Please try again later or contact support.",
               variant: "destructive"
             });
           } else {
-            // For the first attempt, we'll suggest activating test mode
-            const errorMessage = 'PayPal credentials are not configured in this environment. Try activating test mode.';
-            if (onPaymentError) onPaymentError(errorMessage);
-            
             toast({
               title: "Configuration Needed",
-              description: "Click the button again to activate PayPal sandbox test mode.",
+              description: "PayPal integration needs configuration. Click the button again to try test mode.",
               variant: "default"
             });
           }
-          
-          throw new Error(orderData.error);
+        } else {
+          // Re-throw for the outer catch to handle
+          throw apiError;
         }
-        throw new Error('Failed to create PayPal order');
       }
-      
-      // Find the approval URL in the links array
-      const approvalUrl = orderData.links?.find((link: any) => link.rel === 'approve')?.href;
-      
-      if (!approvalUrl) {
-        throw new Error('PayPal approval URL not found in the response');
-      }
-      
-      // Redirect to PayPal for payment approval
-      window.location.href = approvalUrl;
     } catch (error: any) {
       console.error('PayPalButton: Error initiating PayPal payment:', error);
       setIsLoading(false);

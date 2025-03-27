@@ -51,36 +51,53 @@ export async function createPaymentOrder(
     
     console.log('Payment service: Creating order with active session for user:', sessionData.session.user.id);
     
-    // Call the Supabase Edge Function to create an order with the fresh token
-    const { data: responseData, error: invokeError } = await supabase.functions.invoke('process-payment', {
-      body: {
-        planId,
+    try {
+      // Call the Supabase Edge Function to create an order with the fresh token
+      const { data: responseData, error: invokeError } = await supabase.functions.invoke('process-payment', {
+        body: {
+          planId,
+          provider,
+          action: 'create-order',
+        },
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${sessionData.session.access_token}`,
+        },
+      });
+      
+      if (invokeError) {
+        console.error('Error creating payment order:', invokeError);
+        throw new Error(invokeError.message || 'Failed to create payment order');
+      }
+      
+      // Validate the response data
+      if (!responseData) {
+        console.error('Empty response data received');
+        throw new Error('Invalid response from payment service');
+      }
+      
+      console.log('Payment order created successfully:', responseData);
+      
+      return {
+        ...responseData,
         provider,
-        action: 'create-order',
-      },
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${sessionData.session.access_token}`,
-      },
-    });
-    
-    if (invokeError) {
-      console.error('Error creating payment order:', invokeError);
-      throw new Error(invokeError.message || 'Failed to create payment order');
+      };
+    } catch (error: any) {
+      // Handle Edge Function non-2xx status codes gracefully
+      if (error.message && error.message.includes('returned a non-2xx status code')) {
+        console.error('Edge Function error:', error.message);
+        // For PayPal in demo environments, return a structured error
+        if (provider === 'paypal') {
+          return {
+            error: 'PayPal credentials not configured',
+            message: 'The PayPal integration is not configured in this environment.',
+            provider
+          } as any;
+        }
+        throw new Error('Payment service is unavailable. Please try again later.');
+      }
+      throw error;
     }
-    
-    // Validate the response data
-    if (!responseData) {
-      console.error('Empty response data received');
-      throw new Error('Invalid response from payment service');
-    }
-    
-    console.log('Payment order created successfully:', responseData);
-    
-    return {
-      ...responseData,
-      provider,
-    };
   } catch (error) {
     console.error('Error in createPaymentOrder:', error);
     throw error;
