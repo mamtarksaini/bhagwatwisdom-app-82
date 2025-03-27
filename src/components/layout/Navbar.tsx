@@ -1,20 +1,23 @@
 
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Moon, Sun, Menu, X, Book, Globe, MessageSquare } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Moon, Sun, Menu, X, Book, Globe, MessageSquare, LogIn, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/components/ui/ThemeProvider';
 import { Separator } from '@/components/ui/separator';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { LanguageSelector } from '@/components/ui/LanguageSelector';
 import { Language } from '@/types';
+import { useAuth } from '@/contexts/auth';
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { isDark, toggleTheme } = useTheme();
   const location = useLocation();
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [language, setLanguage] = useState<Language>("english");
+  const { user, status, signOut } = useAuth();
 
   useEffect(() => {
     setIsMenuOpen(false);
@@ -27,6 +30,15 @@ export function Navbar() {
   const handleLanguageChange = (newLanguage: Language) => {
     setLanguage(newLanguage);
     // You could also save this to localStorage or context for persistence
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      navigate('/');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
 
   return (
@@ -73,6 +85,29 @@ export function Navbar() {
               <span className="sr-only">Toggle theme</span>
             </Button>
 
+            {status === 'authenticated' ? (
+              <div className="flex items-center space-x-2">
+                <Button variant="ghost" size="sm" asChild>
+                  <Link to="/profile" className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    {isMobile ? null : "Profile"}
+                  </Link>
+                </Button>
+                {!isMobile && (
+                  <Button variant="outline" size="sm" onClick={handleSignOut}>
+                    Sign Out
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <Button variant="default" size="sm" asChild>
+                <Link to="/auth" className="flex items-center gap-2">
+                  <LogIn className="h-4 w-4" />
+                  {isMobile ? null : "Sign In"}
+                </Link>
+              </Button>
+            )}
+
             {isMobile && (
               <Button variant="ghost" size="icon" onClick={toggleMenu}>
                 {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -104,6 +139,18 @@ export function Navbar() {
             <Link to="/about" className="font-medium flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
               About
             </Link>
+            
+            {status === 'authenticated' ? (
+              <>
+                <Link to="/profile" className="font-medium flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
+                  <User className="h-4 w-4" />
+                  Profile
+                </Link>
+                <Button variant="outline" size="sm" onClick={handleSignOut} className="justify-start">
+                  Sign Out
+                </Button>
+              </>
+            ) : null}
           </div>
         </div>
       )}
