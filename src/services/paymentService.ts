@@ -1,3 +1,4 @@
+
 import { supabase } from "@/lib/supabase";
 
 // Types for payment providers and responses
@@ -100,7 +101,7 @@ export async function createPaymentOrder(
       
       // Check if the response contains an error field (which indicates a configuration issue)
       if (responseData.error === 'PayPal credentials not configured' || 
-          responseData.error?.includes('PayPal')) {
+          (responseData.error && responseData.error.includes('PayPal'))) {
         console.log('PayPal test mode activated:', responseData);
         return {
           error: 'PayPal in test mode',

@@ -32,7 +32,9 @@ export function PaymentStatus() {
         });
         
         // Refresh user data to update premium status
-        refreshUserData?.();
+        if (refreshUserData) {
+          refreshUserData();
+        }
       }
       
       // Clear the URL parameters after processing

@@ -10,4 +10,5 @@ export interface AuthContextValue {
   updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
   isPremium: boolean;
   upgradeToPremium: () => Promise<void>;
+  refreshUserData?: () => Promise<void>;
 }

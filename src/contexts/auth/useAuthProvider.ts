@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { UserProfile } from '@/types';
 import { AuthContextValue } from './types';
@@ -77,6 +76,27 @@ export const useAuthProvider = (): AuthContextValue => {
       subscription.unsubscribe();
     };
   }, []);
+
+  // Function to refresh user data
+  const refreshUserData = async () => {
+    console.log('AuthProvider: Refreshing user data');
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        console.log('AuthProvider: No active session found during refresh');
+        return;
+      }
+      
+      const profile = await fetchUserProfile(session.user.id);
+      if (profile) {
+        console.log('AuthProvider: User profile refreshed successfully');
+        setUser(profile);
+        setIsPremium(profile.is_premium || false);
+      }
+    } catch (error) {
+      console.error('AuthProvider: Error refreshing user data:', error);
+    }
+  };
 
   // Sign in function
   const signIn = async (email: string, password: string) => {
@@ -183,5 +203,6 @@ export const useAuthProvider = (): AuthContextValue => {
     updateProfile,
     isPremium,
     upgradeToPremium,
+    refreshUserData,
   };
 };
