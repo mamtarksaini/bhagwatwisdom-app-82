@@ -96,6 +96,10 @@ export function PayPalButton({
         // Simulate a short delay
         await new Promise(resolve => setTimeout(resolve, 1500));
         
+        // Make sure to end the processing state before navigating
+        setIsLoading(false);
+        if (onProcessingEnd) onProcessingEnd();
+        
         toast({
           title: "Test Mode Active",
           description: "This is a demo of the PayPal payment flow. No actual payment is processed.",

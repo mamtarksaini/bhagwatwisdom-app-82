@@ -33,7 +33,7 @@ export function PaymentMethods({ planId, planName, price, currency, onClose }: P
       timer = window.setTimeout(() => {
         console.log('PaymentMethods: Payment processing timeout reached');
         setProcessingTimeout(true);
-      }, 12000); // 12-second timeout
+      }, 5000); // Reduced to 5 seconds for testing
     }
 
     return () => {
