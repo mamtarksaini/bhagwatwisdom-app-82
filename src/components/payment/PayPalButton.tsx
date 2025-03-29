@@ -35,15 +35,21 @@ export function PayPalButton({
   // Clean up any ongoing processing and timeouts on component unmount
   useEffect(() => {
     return () => {
-      if (isLoading && onProcessingEnd) {
-        onProcessingEnd();
-      }
-      
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
+      cleanupProcessing();
     };
-  }, [isLoading, onProcessingEnd, timeoutId]);
+  }, []);
+
+  const cleanupProcessing = () => {
+    if (isLoading && onProcessingEnd) {
+      onProcessingEnd();
+      setIsLoading(false);
+    }
+    
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+      setTimeoutId(null);
+    }
+  };
 
   const handleClick = async () => {
     if (!user) {
@@ -78,7 +84,7 @@ export function PayPalButton({
           description: "The payment process took too long. Please try again.",
           variant: "destructive"
         });
-      }, 10000); // 10-second timeout
+      }, 7000); // 7-second timeout
       
       setTimeoutId(newTimeoutId);
       
@@ -97,30 +103,36 @@ export function PayPalButton({
         // Simulate a short delay
         await new Promise(resolve => setTimeout(resolve, 1000));
         
-        // IMPORTANT: Make sure to end the processing state before showing the toast
-        setIsLoading(false);
-        if (onProcessingEnd) onProcessingEnd();
-        
+        // Show test mode toast BEFORE ending the processing state
         toast({
           title: "Test Mode Active",
           description: "This is a demo of the PayPal payment flow. No actual payment is processed.",
-          variant: "default"
+          variant: "info"
         });
+
+        // Wait a moment for the toast to be visible
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // IMPORTANT: Make sure to end the processing state
+        setIsLoading(false);
+        if (onProcessingEnd) onProcessingEnd();
         
         // Simulate premium access activation
         if (refreshUserData) {
           try {
-            refreshUserData();
+            await refreshUserData();
           } catch (error) {
             console.error('PayPalButton: Error refreshing user data:', error);
           }
         }
         
-        // Use a short delay before redirecting to ensure toasts are visible
+        // Use a direct window location change to ensure reliable redirect
+        // We add a small delay to make sure the toast is visible
         setTimeout(() => {
-          // Redirect to the success URL with relevant parameters
-          window.location.href = '/pricing?status=success&provider=paypal&token=TEST_TOKEN&planId=' + planId;
-        }, 500);
+          // Set the URL parameters directly
+          const redirectUrl = '/pricing?status=success&provider=paypal&token=TEST_TOKEN&planId=' + planId;
+          window.location.href = redirectUrl;
+        }, 1000);
         
         return;
       }

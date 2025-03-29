@@ -1,13 +1,17 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Info } from 'lucide-react';
 
 export function PaymentStatus() {
   const location = useLocation();
   const navigate = useNavigate();
   const { refreshUserData } = useAuth();
+  const [processed, setProcessed] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
   
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -16,29 +20,28 @@ export function PaymentStatus() {
     
     console.log('PaymentStatus: Processing status:', status, 'provider:', provider);
     
-    if (!status) return;
+    if (!status || processed) return;
     
-    // Use a single execution flag to prevent multiple toast/redirect cycles
-    const processOnce = () => {
+    // Process the payment status once
+    const processStatus = async () => {
+      setProcessed(true);
+      
       if (status === 'success') {
+        // Show toast notification
         toast({
           title: "Payment successful",
           description: "Thank you for your purchase! Your premium access has been activated.",
           variant: "success"
         });
         
-        // For demo purposes, simulate premium access activation
+        // For demo purposes, show info about the demo payment flow
         if (provider === 'paypal') {
-          toast({
-            title: "Demo Mode",
-            description: "This is a demo payment flow. Premium features would normally be activated now.",
-            variant: "default"
-          });
+          setMessage("This is a demo payment flow. Premium features would normally be activated now.");
           
           // Refresh user data to update premium status
           if (refreshUserData) {
             try {
-              refreshUserData();
+              await refreshUserData();
               console.log('PaymentStatus: User data refreshed after payment');
             } catch (error) {
               console.error('Error refreshing user data:', error);
@@ -46,10 +49,10 @@ export function PaymentStatus() {
           }
         }
         
-        // Clear the URL parameters after processing
+        // Clear the URL parameters after processing with a delay
         setTimeout(() => {
           navigate('/pricing', { replace: true });
-        }, 1000);
+        }, 3000);
       } else if (status === 'cancelled') {
         toast({
           title: "Payment cancelled",
@@ -60,34 +63,43 @@ export function PaymentStatus() {
         // Clear the URL parameters after processing
         setTimeout(() => {
           navigate('/pricing', { replace: true });
-        }, 1000);
+        }, 3000);
       } else if (status === 'error') {
-        const message = params.get('message') || 'There was an error processing your payment.';
+        const errorMessage = params.get('message') || 'There was an error processing your payment.';
         
         toast({
           title: "Payment error",
-          description: message,
+          description: errorMessage,
           variant: "destructive"
         });
         
         // Clear the URL parameters after processing
         setTimeout(() => {
           navigate('/pricing', { replace: true });
-        }, 1000);
+        }, 3000);
       }
     };
     
-    // Execute once when the component mounts with a status
-    processOnce();
+    // Execute the processing with a slight delay to ensure UI is ready
+    const timer = setTimeout(() => {
+      processStatus();
+    }, 500);
     
-    // Cleanup function that does nothing - just to satisfy the useEffect dependency
     return () => {
-      // No cleanup needed
+      clearTimeout(timer);
     };
-    
-  // Run this effect ONLY once per status change
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [location.search, navigate, refreshUserData, processed]);
+  
+  // If we have a message to display, show it in an alert
+  if (message) {
+    return (
+      <Alert variant="info" className="mb-4">
+        <Info className="h-4 w-4" />
+        <AlertTitle>Test Mode Active</AlertTitle>
+        <AlertDescription>{message}</AlertDescription>
+      </Alert>
+    );
+  }
   
   return null;
 }

@@ -23,6 +23,7 @@ export function Toaster() {
                 <div className="flex items-center gap-2">
                   {variant === "destructive" && <AlertCircle className="h-4 w-4" />}
                   {variant === "success" && <CheckCircle className="h-4 w-4 text-green-500" />}
+                  {variant === "info" && <Info className="h-4 w-4 text-blue-500" />}
                   {(!variant || variant === "default") && <Info className="h-4 w-4 text-blue-500" />}
                   <ToastTitle>{title}</ToastTitle>
                 </div>
