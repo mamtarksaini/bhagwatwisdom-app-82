@@ -14,6 +14,8 @@ export function PaymentStatus() {
     const status = params.get('status');
     const provider = params.get('provider');
     
+    console.log('PaymentStatus: Processing status:', status, 'provider:', provider);
+    
     if (!status) return;
     
     if (status === 'success') {
@@ -35,6 +37,7 @@ export function PaymentStatus() {
         if (refreshUserData) {
           try {
             refreshUserData();
+            console.log('PaymentStatus: User data refreshed after payment');
           } catch (error) {
             console.error('Error refreshing user data:', error);
           }
@@ -42,7 +45,10 @@ export function PaymentStatus() {
       }
       
       // Clear the URL parameters after processing
-      navigate('/pricing', { replace: true });
+      // Use setTimeout to ensure toast messages are visible before navigation
+      setTimeout(() => {
+        navigate('/pricing', { replace: true });
+      }, 500);
     } else if (status === 'cancelled') {
       toast({
         title: "Payment cancelled",
@@ -51,7 +57,9 @@ export function PaymentStatus() {
       });
       
       // Clear the URL parameters after processing
-      navigate('/pricing', { replace: true });
+      setTimeout(() => {
+        navigate('/pricing', { replace: true });
+      }, 500);
     } else if (status === 'error') {
       const message = params.get('message') || 'There was an error processing your payment.';
       
@@ -62,7 +70,9 @@ export function PaymentStatus() {
       });
       
       // Clear the URL parameters after processing
-      navigate('/pricing', { replace: true });
+      setTimeout(() => {
+        navigate('/pricing', { replace: true });
+      }, 500);
     }
   }, [location.search, navigate, refreshUserData]);
   

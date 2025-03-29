@@ -106,8 +106,11 @@ export function PayPalButton({
           variant: "default"
         });
         
-        // Redirect to a simulated success page
-        navigate('/pricing?status=success&provider=paypal&token=TEST_TOKEN&planId=' + planId);
+        // Redirect to a simulated success page with status=success parameter
+        // We're using replaceState to prevent back button issues
+        window.history.replaceState({}, '', '/pricing?status=success&provider=paypal&token=TEST_TOKEN&planId=' + planId);
+        // Force a navigation to ensure the PaymentStatus component processes the status
+        navigate('/pricing?status=success&provider=paypal&token=TEST_TOKEN&planId=' + planId, { replace: true });
         return;
       }
       
@@ -176,6 +179,7 @@ export function PayPalButton({
       }
     } catch (error: any) {
       console.error('PayPalButton: Error initiating PayPal payment:', error);
+      // Ensure we clear loading state
       setIsLoading(false);
       if (onProcessingEnd) onProcessingEnd();
       
