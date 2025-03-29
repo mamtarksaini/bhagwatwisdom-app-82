@@ -71,13 +71,14 @@ export function PayPalButton({
         console.log('PayPalButton: Payment initiation timeout reached');
         setIsLoading(false);
         if (onProcessingEnd) onProcessingEnd();
+        setTimeoutId(null);
         
         toast({
           title: "Payment timeout",
           description: "The payment process took too long. Please try again.",
           variant: "destructive"
         });
-      }, 15000); // 15-second timeout
+      }, 10000); // 10-second timeout
       
       setTimeoutId(newTimeoutId);
       
@@ -94,9 +95,9 @@ export function PayPalButton({
         }
         
         // Simulate a short delay
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        await new Promise(resolve => setTimeout(resolve, 1000));
         
-        // Make sure to end the processing state before navigating
+        // IMPORTANT: Make sure to end the processing state before showing the toast
         setIsLoading(false);
         if (onProcessingEnd) onProcessingEnd();
         
@@ -106,11 +107,21 @@ export function PayPalButton({
           variant: "default"
         });
         
-        // Redirect to a simulated success page with status=success parameter
-        // We're using replaceState to prevent back button issues
-        window.history.replaceState({}, '', '/pricing?status=success&provider=paypal&token=TEST_TOKEN&planId=' + planId);
-        // Force a navigation to ensure the PaymentStatus component processes the status
-        navigate('/pricing?status=success&provider=paypal&token=TEST_TOKEN&planId=' + planId, { replace: true });
+        // Simulate premium access activation
+        if (refreshUserData) {
+          try {
+            refreshUserData();
+          } catch (error) {
+            console.error('PayPalButton: Error refreshing user data:', error);
+          }
+        }
+        
+        // Use a short delay before redirecting to ensure toasts are visible
+        setTimeout(() => {
+          // Redirect to the success URL with relevant parameters
+          window.location.href = '/pricing?status=success&provider=paypal&token=TEST_TOKEN&planId=' + planId;
+        }, 500);
+        
         return;
       }
       
@@ -179,15 +190,16 @@ export function PayPalButton({
       }
     } catch (error: any) {
       console.error('PayPalButton: Error initiating PayPal payment:', error);
-      // Ensure we clear loading state
-      setIsLoading(false);
-      if (onProcessingEnd) onProcessingEnd();
       
       // Clear any pending timeout
       if (timeoutId) {
         clearTimeout(timeoutId);
         setTimeoutId(null);
       }
+      
+      // Ensure we clear loading state
+      setIsLoading(false);
+      if (onProcessingEnd) onProcessingEnd();
       
       toast({
         title: "Payment error",
