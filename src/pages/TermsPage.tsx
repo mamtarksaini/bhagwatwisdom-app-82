@@ -1,4 +1,3 @@
-
 import { PageLayout } from "@/components/layout/PageLayout";
 
 const TermsPage = () => {
@@ -9,7 +8,7 @@ const TermsPage = () => {
     >
       <div className="prose prose-lg dark:prose-invert max-w-none">
         <p className="lead">
-          These Terms of Service ("Terms") govern your access to and use of Bhagwat Wisdom website and services ("Services"). By accessing or using our Services, you agree to be bound by these Terms.
+          These Terms of Service ("Terms") govern your access to and use of Bhagavad Wisdom website and services ("Services"). By accessing or using our Services, you agree to be bound by these Terms.
         </p>
 
         <h2>1. Acceptance of Terms</h2>
@@ -121,7 +120,7 @@ const TermsPage = () => {
 
         <h2>15. Contact Information</h2>
         <p>
-          If you have any questions about these Terms, please contact us at legal@bhagwatwisdom.com.
+          If you have any questions about these Terms, please contact us at legal@bhagavadwisdom.com.
         </p>
 
         <p className="text-muted-foreground mt-8">Last Updated: June 1, 2023</p>

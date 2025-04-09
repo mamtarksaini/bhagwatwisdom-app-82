@@ -1,4 +1,3 @@
-
 import { PageLayout } from "@/components/layout/PageLayout";
 
 const PrivacyPage = () => {
@@ -9,7 +8,7 @@ const PrivacyPage = () => {
     >
       <div className="prose prose-lg dark:prose-invert max-w-none">
         <p className="lead">
-          This Privacy Policy explains how Bhagwat Wisdom ("we", "our", or "us") collects, uses, and protects your personal information when you use our website and services.
+          This Privacy Policy explains how Bhagavad Wisdom ("we", "our", or "us") collects, uses, and protects your personal information when you use our website and services.
         </p>
 
         <h2>1. Information We Collect</h2>
@@ -76,7 +75,7 @@ const PrivacyPage = () => {
           <li>Data portability</li>
           <li>Withdraw consent (where processing is based on consent)</li>
         </ul>
-        <p>To exercise these rights, please contact us at privacy@bhagwatwisdom.com.</p>
+        <p>To exercise these rights, please contact us at privacy@bhagavadwisdom.com.</p>
 
         <h2>6. Cookies and Similar Technologies</h2>
         <p>
@@ -103,7 +102,7 @@ const PrivacyPage = () => {
           If you have any questions or concerns about this Privacy Policy or our privacy practices, please contact us at:
         </p>
         <p>
-          Email: privacy@bhagwatwisdom.com<br />
+          Email: privacy@bhagavadwisdom.com<br />
           Address: 123 Spiritual Way, Wisdom Valley, Enlightenment City, 10001, India
         </p>
 
