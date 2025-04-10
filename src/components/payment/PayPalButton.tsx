@@ -31,6 +31,7 @@ export function PayPalButton({
   const navigate = useNavigate();
   const [timeoutId, setTimeoutId] = useState<number | null>(null);
   const [testModeActive, setTestModeActive] = useState(true); // Always use test mode for now
+  const [processingStage, setProcessingStage] = useState<string | null>(null);
   
   // Clean up any ongoing processing and timeouts on component unmount
   useEffect(() => {
@@ -49,6 +50,24 @@ export function PayPalButton({
       clearTimeout(timeoutId);
       setTimeoutId(null);
     }
+  };
+
+  const simulateProcessingStages = async () => {
+    // Simulate different stages of payment processing with realistic delays
+    setProcessingStage('initializing');
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    setProcessingStage('connecting');
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    setProcessingStage('processing');
+    await new Promise(resolve => setTimeout(resolve, 3000));
+    
+    setProcessingStage('confirming');
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    setProcessingStage('completing');
+    await new Promise(resolve => setTimeout(resolve, 1000));
   };
 
   const handleClick = async () => {
@@ -78,13 +97,14 @@ export function PayPalButton({
         setIsLoading(false);
         if (onProcessingEnd) onProcessingEnd();
         setTimeoutId(null);
+        setProcessingStage(null);
         
         toast({
           title: "Payment timeout",
           description: "The payment process took too long. Please try again.",
           variant: "destructive"
         });
-      }, 7000); // 7-second timeout
+      }, 15000); // 15-second timeout
       
       setTimeoutId(newTimeoutId);
       
@@ -100,8 +120,8 @@ export function PayPalButton({
           setTimeoutId(null);
         }
         
-        // Simulate a longer delay for more realistic payment flow (2-3 seconds)
-        await new Promise(resolve => setTimeout(resolve, 2500));
+        // Simulate payment processing stages
+        await simulateProcessingStages();
         
         // Show test mode toast BEFORE ending the processing state
         toast({
@@ -116,6 +136,7 @@ export function PayPalButton({
         
         // IMPORTANT: Make sure to end the processing state
         setIsLoading(false);
+        setProcessingStage(null);
         if (onProcessingEnd) onProcessingEnd();
         
         // Use a direct window location change to ensure reliable redirect
@@ -123,7 +144,7 @@ export function PayPalButton({
         setTimeout(() => {
           // Simulate PayPal redirect and redirect back to our site with parameters
           // Include user ID in redirect for premium activation
-          const redirectUrl = `/pricing?status=success&provider=paypal&token=TEST_TOKEN_${Math.floor(Math.random() * 1000000)}&planId=${planId}&userId=${user.id}`;
+          const redirectUrl = `/pricing?status=success&provider=paypal&token=TEST_TOKEN_${Math.floor(Math.random() * 1000000)}&planId=${planId}&userId=${user.id}&activated=true`;
           window.location.href = redirectUrl;
         }, 1000);
         
@@ -153,6 +174,7 @@ export function PayPalButton({
             });
             
             setIsLoading(false);
+            setProcessingStage(null);
             if (onProcessingEnd) onProcessingEnd();
             // Try again immediately with test mode
             setTimeout(() => handleClick(), 500);
@@ -193,6 +215,7 @@ export function PayPalButton({
         });
         
         setIsLoading(false);
+        setProcessingStage(null);
         if (onProcessingEnd) onProcessingEnd();
         // Try again immediately with test mode
         setTimeout(() => handleClick(), 500);
@@ -208,6 +231,7 @@ export function PayPalButton({
       
       // Ensure we clear loading state
       setIsLoading(false);
+      setProcessingStage(null);
       if (onProcessingEnd) onProcessingEnd();
       
       toast({
@@ -222,6 +246,23 @@ export function PayPalButton({
     }
   };
 
+  const getProcessingStageText = () => {
+    switch (processingStage) {
+      case 'initializing':
+        return 'Initializing payment...';
+      case 'connecting':
+        return 'Connecting to PayPal...';
+      case 'processing':
+        return 'Processing payment...';
+      case 'confirming':
+        return 'Confirming transaction...';
+      case 'completing':
+        return 'Completing payment...';
+      default:
+        return 'Processing...';
+    }
+  };
+
   return (
     <Button
       onClick={handleClick}
@@ -232,7 +273,7 @@ export function PayPalButton({
       {isLoading ? (
         <>
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          Processing...
+          {getProcessingStageText()}
         </>
       ) : (
         <>

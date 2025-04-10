@@ -27,8 +27,9 @@ serve(async (req) => {
     const status = searchParams.get('status');
     const planId = searchParams.get('plan');
     const userId = searchParams.get('userId');
+    const token = searchParams.get('token');
 
-    console.log(`Payment callback: Processing ${provider} payment with status ${status} for user ${userId}`);
+    console.log(`Payment callback: Processing ${provider} payment with status ${status} for user ${userId} with token ${token}`);
 
     // For PayPal payments
     if (provider === 'paypal') {
@@ -43,8 +44,6 @@ serve(async (req) => {
           },
         });
       }
-
-      const token = searchParams.get('token');
 
       if (!token) {
         console.log('Payment callback: Missing token');
@@ -63,8 +62,9 @@ serve(async (req) => {
         try {
           console.log(`Payment callback: Attempting to upgrade user ${userId} to premium`);
           
-          // Add a delay to simulate payment processing
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          // Add a significant delay to simulate payment processing in a real system
+          console.log(`Payment callback: Processing payment with a simulated delay...`);
+          await new Promise(resolve => setTimeout(resolve, 3000));
           
           // Update user profile to premium
           const { error: profileError } = await supabase
@@ -97,6 +97,8 @@ serve(async (req) => {
               
             if (paymentError) {
               console.log(`Note: Payment history not recorded: ${paymentError.message}`);
+            } else {
+              console.log(`Payment history recorded successfully`);
             }
           } catch (paymentHistoryError) {
             // Ignore errors here, the table might not exist
@@ -107,6 +109,9 @@ serve(async (req) => {
           // Continue with redirect despite error
         }
       }
+
+      // Add another delay before redirecting
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Redirect to frontend with success status
       return new Response(null, {

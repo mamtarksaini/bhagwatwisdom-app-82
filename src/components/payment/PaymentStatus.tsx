@@ -29,6 +29,9 @@ export function PaymentStatus() {
       setProcessed(true);
       
       if (status === 'success') {
+        // Add a delay before showing success message to simulate processing time
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
         // Check if premium was activated
         if (activated === 'true') {
           setActivationSuccess(true);
@@ -60,7 +63,7 @@ export function PaymentStatus() {
         // Clear the URL parameters after processing with a delay
         setTimeout(() => {
           navigate('/pricing', { replace: true });
-        }, 5000); // Increased timeout for better visibility
+        }, 10000); // Increased timeout for better visibility of the success message
       } else if (status === 'cancelled') {
         toast({
           title: "Payment cancelled",
