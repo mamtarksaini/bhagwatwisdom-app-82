@@ -107,7 +107,8 @@ export function PayPalButton({
         toast({
           title: "Test Mode Active",
           description: "This is a demo of the PayPal payment flow. No actual payment is processed.",
-          variant: "info"
+          variant: "info",
+          duration: 5000, // Increased duration for visibility
         });
 
         // Wait a moment for the toast to be visible
@@ -117,20 +118,11 @@ export function PayPalButton({
         setIsLoading(false);
         if (onProcessingEnd) onProcessingEnd();
         
-        // Simulate premium access activation
-        if (refreshUserData) {
-          try {
-            await refreshUserData();
-          } catch (error) {
-            console.error('PayPalButton: Error refreshing user data:', error);
-          }
-        }
-        
         // Use a direct window location change to ensure reliable redirect
         // We add a small delay to make sure the toast is visible
         setTimeout(() => {
-          // Set the URL parameters directly
-          const redirectUrl = '/pricing?status=success&provider=paypal&token=TEST_TOKEN&planId=' + planId;
+          // Include user ID in redirect for premium activation
+          const redirectUrl = `/pricing?status=success&provider=paypal&token=TEST_TOKEN&planId=${planId}&userId=${user.id}`;
           window.location.href = redirectUrl;
         }, 1000);
         
@@ -175,8 +167,12 @@ export function PayPalButton({
           throw new Error('PayPal approval URL not found in the response');
         }
         
+        // Add userId to the approval URL for premium activation
+        const separator = approvalUrl.includes('?') ? '&' : '?';
+        const modifiedUrl = `${approvalUrl}${separator}userId=${user.id}`;
+        
         // Redirect to PayPal for payment approval
-        window.location.href = approvalUrl;
+        window.location.href = modifiedUrl;
       } catch (apiError: any) {
         // Clear timeout
         if (timeoutId) {

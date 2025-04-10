@@ -26,6 +26,7 @@ serve(async (req) => {
     const provider = searchParams.get('provider');
     const status = searchParams.get('status');
     const planId = searchParams.get('plan');
+    const userId = searchParams.get('userId');
 
     // For PayPal payments
     if (provider === 'paypal') {
@@ -53,12 +54,33 @@ serve(async (req) => {
         });
       }
 
+      // If we have a user ID, attempt to activate premium
+      if (userId) {
+        try {
+          // Update user profile to premium
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .update({ is_premium: true })
+            .eq('id', userId);
+
+          if (profileError) {
+            console.error(`Error updating user profile: ${profileError.message}`);
+            // Continue despite error to maintain flow
+          } else {
+            console.log(`Successfully upgraded user ${userId} to premium`);
+          }
+        } catch (activationError) {
+          console.error('Error activating premium:', activationError);
+          // Continue with redirect despite error
+        }
+      }
+
       // Redirect to frontend with success status
       return new Response(null, {
         status: 302,
         headers: {
           ...corsHeaders,
-          'Location': `${frontendUrl}/pricing?status=success&provider=paypal&token=${token}&planId=${planId}`,
+          'Location': `${frontendUrl}/pricing?status=success&provider=paypal&token=${token}&planId=${planId}&activated=true`,
         },
       });
     }

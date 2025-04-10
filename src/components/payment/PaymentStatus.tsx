@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { Info } from 'lucide-react';
+import { Info, CheckCircle } from 'lucide-react';
 
 export function PaymentStatus() {
   const location = useLocation();
@@ -12,13 +12,15 @@ export function PaymentStatus() {
   const { refreshUserData } = useAuth();
   const [processed, setProcessed] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [activationSuccess, setActivationSuccess] = useState(false);
   
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const status = params.get('status');
     const provider = params.get('provider');
+    const activated = params.get('activated');
     
-    console.log('PaymentStatus: Processing status:', status, 'provider:', provider);
+    console.log('PaymentStatus: Processing status:', status, 'provider:', provider, 'activated:', activated);
     
     if (!status || processed) return;
     
@@ -27,16 +29,22 @@ export function PaymentStatus() {
       setProcessed(true);
       
       if (status === 'success') {
+        // Check if premium was activated
+        if (activated === 'true') {
+          setActivationSuccess(true);
+        }
+        
         // Show toast notification
         toast({
           title: "Payment successful",
           description: "Thank you for your purchase! Your premium access has been activated.",
-          variant: "success"
+          variant: "success",
+          duration: 8000 // Increased duration for better visibility
         });
         
         // For demo purposes, show info about the demo payment flow
         if (provider === 'paypal') {
-          setMessage("This is a demo payment flow. Premium features would normally be activated now.");
+          setMessage("Your premium features are now active! This is a demo payment flow that simulates a real payment process.");
           
           // Refresh user data to update premium status
           if (refreshUserData) {
@@ -52,12 +60,13 @@ export function PaymentStatus() {
         // Clear the URL parameters after processing with a delay
         setTimeout(() => {
           navigate('/pricing', { replace: true });
-        }, 3000);
+        }, 5000); // Increased timeout for better visibility
       } else if (status === 'cancelled') {
         toast({
           title: "Payment cancelled",
           description: "Your payment process was cancelled. No charges were made.",
-          variant: "default"
+          variant: "default",
+          duration: 5000
         });
         
         // Clear the URL parameters after processing
@@ -70,7 +79,8 @@ export function PaymentStatus() {
         toast({
           title: "Payment error",
           description: errorMessage,
-          variant: "destructive"
+          variant: "destructive",
+          duration: 8000
         });
         
         // Clear the URL parameters after processing
@@ -93,9 +103,12 @@ export function PaymentStatus() {
   // If we have a message to display, show it in an alert
   if (message) {
     return (
-      <Alert variant="info" className="mb-4">
-        <Info className="h-4 w-4" />
-        <AlertTitle>Test Mode Active</AlertTitle>
+      <Alert variant={activationSuccess ? "success" : "info"} className="mb-4">
+        {activationSuccess ? 
+          <CheckCircle className="h-4 w-4" /> : 
+          <Info className="h-4 w-4" />
+        }
+        <AlertTitle>{activationSuccess ? "Premium Activated" : "Test Mode Active"}</AlertTitle>
         <AlertDescription>{message}</AlertDescription>
       </Alert>
     );
