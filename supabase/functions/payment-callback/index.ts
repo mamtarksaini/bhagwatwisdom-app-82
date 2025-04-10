@@ -29,7 +29,7 @@ serve(async (req) => {
     const userId = searchParams.get('userId');
     const token = searchParams.get('token');
 
-    console.log(`Payment callback: Processing ${provider} payment with status ${status} for user ${userId} with token ${token}`);
+    console.log(`Payment callback: Processing ${provider} payment with status ${status} for user ${userId} with token ${token}, plan ${planId}`);
 
     // For PayPal payments
     if (provider === 'paypal') {
@@ -60,11 +60,11 @@ serve(async (req) => {
       // If we have a user ID, attempt to activate premium
       if (userId) {
         try {
-          console.log(`Payment callback: Attempting to upgrade user ${userId} to premium`);
+          console.log(`Payment callback: Attempting to upgrade user ${userId} to premium with plan ${planId}`);
           
           // Add a significant delay to simulate payment processing in a real system
           console.log(`Payment callback: Processing payment with a simulated delay...`);
-          await new Promise(resolve => setTimeout(resolve, 5000));
+          await new Promise(resolve => setTimeout(resolve, 7000));
           
           // Update user profile to premium
           const { error: profileError } = await supabase
@@ -111,7 +111,8 @@ serve(async (req) => {
       }
 
       // Add another delay before redirecting
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log('Payment callback: Adding final delay before redirect');
+      await new Promise(resolve => setTimeout(resolve, 3000));
 
       // Redirect to frontend with success status
       return new Response(null, {

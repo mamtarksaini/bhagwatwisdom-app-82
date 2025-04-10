@@ -62,12 +62,6 @@ export function PayPalButton({
     
     setProcessingStage('processing');
     await new Promise(resolve => setTimeout(resolve, 3000));
-    
-    setProcessingStage('confirming');
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    setProcessingStage('completing');
-    await new Promise(resolve => setTimeout(resolve, 1000));
   };
 
   const handleClick = async () => {
@@ -104,109 +98,241 @@ export function PayPalButton({
           description: "The payment process took too long. Please try again.",
           variant: "destructive"
         });
-      }, 15000); // 15-second timeout
+      }, 30000); // 30-second timeout for entire process
       
       setTimeoutId(newTimeoutId);
       
       console.log('PayPalButton: Creating PayPal payment for plan:', planId);
       
-      // In test mode, simulate a successful response with realistic delays
+      // In test mode, simulate the initial stages of processing
       if (testModeActive) {
         console.log('PayPalButton: Using PayPal test mode');
         
-        // Clear the timeout
-        if (timeoutId) {
-          clearTimeout(timeoutId);
-          setTimeoutId(null);
-        }
-        
-        // Simulate payment processing stages
+        // Simulate early processing stages with delays
         await simulateProcessingStages();
         
-        // Show test mode toast BEFORE ending the processing state
-        toast({
-          title: "Test Mode Active",
-          description: "This is a demo of the PayPal payment flow. No actual payment is processed.",
-          variant: "info",
-          duration: 5000, // Increased duration for visibility
-        });
-
-        // Wait a moment for the toast to be visible
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Now open a new window with simulated PayPal interface
+        const paypalWindow = window.open('', '_blank');
         
-        // IMPORTANT: Make sure to end the processing state
-        setIsLoading(false);
-        setProcessingStage(null);
-        if (onProcessingEnd) onProcessingEnd();
-        
-        // Instead of directly changing the window location, open a new window/tab
-        // This simulates being redirected to PayPal's site
-        const paypalSimWindow = window.open('about:blank', '_blank');
-        
-        if (paypalSimWindow) {
-          // Add some PayPal simulation content
-          paypalSimWindow.document.write(`
+        if (paypalWindow) {
+          // Write content to the window - a simple PayPal payment simulation
+          paypalWindow.document.write(`
             <html>
               <head>
-                <title>PayPal Payment Simulation</title>
+                <title>PayPal Checkout</title>
                 <style>
-                  body { font-family: Arial, sans-serif; background-color: #f5f5f5; text-align: center; padding: 50px; }
-                  .logo { font-size: 24px; font-weight: bold; color: #003087; margin-bottom: 30px; }
-                  .container { background: white; padding: 30px; border-radius: 10px; max-width: 500px; margin: 0 auto; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-                  .amount { font-size: 20px; margin: 20px 0; }
-                  .button { background: #0070ba; color: white; border: none; padding: 12px 30px; border-radius: 25px; font-size: 16px; cursor: pointer; transition: background 0.3s; }
-                  .button:hover { background: #003087; }
-                  .info { margin-top: 20px; color: #666; font-size: 14px; }
+                  body { 
+                    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+                    background-color: #f5f5f5; 
+                    display: flex; 
+                    justify-content: center; 
+                    padding-top: 50px;
+                    margin: 0;
+                  }
+                  .container {
+                    background-color: white;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                    padding: 30px;
+                    max-width: 480px;
+                    width: 100%;
+                  }
+                  .header {
+                    text-align: center;
+                    margin-bottom: 30px;
+                  }
+                  .logo {
+                    font-size: 26px;
+                    font-weight: bold;
+                    color: #003087;
+                    margin-bottom: 5px;
+                  }
+                  .paypal-logo {
+                    display: inline-block;
+                    background: linear-gradient(to right, #009cde 0%, #003087 100%);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    font-weight: bold;
+                  }
+                  .sub-header {
+                    color: #666;
+                    font-size: 14px;
+                  }
+                  .payment-details {
+                    border: 1px solid #e0e0e0;
+                    border-radius: 4px;
+                    padding: 20px;
+                    margin-bottom: 25px;
+                  }
+                  .amount {
+                    font-size: 24px;
+                    font-weight: bold;
+                    text-align: center;
+                    margin: 15px 0;
+                  }
+                  .merchant {
+                    text-align: center;
+                    color: #666;
+                    margin-bottom: 20px;
+                  }
+                  .button-container {
+                    text-align: center;
+                    margin: 30px 0 20px;
+                  }
+                  .pay-button {
+                    background-color: #0070ba;
+                    color: white;
+                    border: none;
+                    border-radius: 24px;
+                    padding: 12px 35px;
+                    font-size: 16px;
+                    cursor: pointer;
+                    transition: background-color 0.2s;
+                  }
+                  .pay-button:hover {
+                    background-color: #005ea6;
+                  }
+                  .footer {
+                    text-align: center;
+                    font-size: 12px;
+                    color: #666;
+                    margin-top: 30px;
+                  }
+                  .loading {
+                    text-align: center;
+                    padding: 30px;
+                  }
+                  .spinner {
+                    border: 4px solid #f3f3f3;
+                    border-top: 4px solid #0070ba;
+                    border-radius: 50%;
+                    width: 30px;
+                    height: 30px;
+                    animation: spin 1s linear infinite;
+                    margin: 0 auto 20px;
+                  }
+                  @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                  }
+                  .success-container {
+                    text-align: center;
+                    padding: 30px;
+                  }
+                  .success-icon {
+                    width: 60px;
+                    height: 60px;
+                    border-radius: 50%;
+                    background-color: #28a745;
+                    color: white;
+                    font-size: 36px;
+                    line-height: 60px;
+                    text-align: center;
+                    margin: 0 auto 20px;
+                  }
                 </style>
               </head>
               <body>
-                <div class="container">
-                  <div class="logo">PayPal</div>
-                  <h2>Complete Your Payment</h2>
-                  <p>You are paying:</p>
-                  <div class="amount"><strong>$9.99 USD</strong></div>
-                  <p>to <strong>Bhagwat Wisdom</strong> for Premium Plan Subscription</p>
-                  <button class="button" id="completePayment">Complete Payment</button>
-                  <p class="info">This is a simulated payment page. No actual payment will be processed.</p>
-                  <p class="info">Demo environment for development and testing only.</p>
+                <div class="container" id="main-content">
+                  <div class="header">
+                    <div class="logo"><span class="paypal-logo">PayPal</span></div>
+                    <div class="sub-header">Secure Checkout</div>
+                  </div>
+                  
+                  <div class="payment-details">
+                    <div class="amount">$9.99 USD</div>
+                    <div class="merchant">Payment to: Bhagwat Wisdom</div>
+                    <div style="font-size: 14px; color: #666; text-align: center;">Premium Plan - Monthly Subscription</div>
+                  </div>
+                  
+                  <div class="button-container">
+                    <button class="pay-button" id="pay-button">Pay Now</button>
+                  </div>
+                  
+                  <div class="footer">
+                    <p>This is a simulated payment page for demonstration purposes.</p>
+                    <p>No actual payment will be processed.</p>
+                  </div>
                 </div>
+                
                 <script>
-                  document.getElementById('completePayment').addEventListener('click', function() {
-                    document.body.innerHTML = '<div class="container"><div class="logo">PayPal</div><h2>Payment Processing</h2><p>Please wait while we process your payment...</p></div>';
+                  // Handle the payment button click
+                  document.getElementById('pay-button').addEventListener('click', function() {
+                    // Show loading state
+                    document.getElementById('main-content').innerHTML = \`
+                      <div class="loading">
+                        <div class="spinner"></div>
+                        <h2>Processing Payment</h2>
+                        <p>Please wait while we process your payment...</p>
+                      </div>
+                    \`;
+                    
+                    // Simulate processing time
                     setTimeout(function() {
-                      document.body.innerHTML = '<div class="container"><div class="logo">PayPal</div><h2>Payment Successful!</h2><p>Your payment has been processed successfully.</p><p>Redirecting you back to Bhagwat Wisdom...</p></div>';
+                      // Show success message
+                      document.getElementById('main-content').innerHTML = \`
+                        <div class="success-container">
+                          <div class="success-icon">✓</div>
+                          <h2>Payment Successful!</h2>
+                          <p>Your payment has been processed successfully.</p>
+                          <p>You will be redirected back to Bhagwat Wisdom in a moment...</p>
+                        </div>
+                      \`;
+                      
+                      // Redirect back to the application after a delay
                       setTimeout(function() {
-                        window.location.href = '${window.location.origin}/pricing?status=success&provider=paypal&token=TEST_TOKEN_${Math.floor(Math.random() * 1000000)}&planId=${planId}&userId=${user.id}&activated=true';
+                        window.location.href = "${window.location.origin}/pricing?status=success&provider=paypal&token=TEST_TOKEN_${Math.floor(Math.random() * 1000000)}&planId=${planId}&userId=${user.id}&activated=true";
                       }, 3000);
-                    }, 2000);
+                    }, 3000);
                   });
                 </script>
               </body>
             </html>
           `);
-          paypalSimWindow.document.close();
-        } else {
-          // If popup was blocked, redirect in same window after a delay
-          console.log('PayPalButton: Popup blocked, redirecting in same window');
+          paypalWindow.document.close();
           
+          // Clear the timeout as we've successfully opened the PayPal window
+          if (timeoutId) {
+            clearTimeout(timeoutId);
+            setTimeoutId(null);
+          }
+          
+          // End processing on this end
+          setIsLoading(false);
+          setProcessingStage(null);
+          if (onProcessingEnd) onProcessingEnd();
+        } else {
+          // If popup was blocked, show a message and redirect in the same window
           toast({
-            title: "Simulating PayPal redirect",
-            description: "In a real environment, you would be redirected to PayPal's website.",
-            variant: "info",
-            duration: 3000,
+            title: "Popup Blocked",
+            description: "Please allow popups for this site to complete the payment process.",
+            variant: "destructive"
           });
           
-          // Wait for toast to be visible
-          await new Promise(resolve => setTimeout(resolve, 3000));
+          // Wait a moment for the toast to be visible
+          await new Promise(resolve => setTimeout(resolve, 2000));
           
-          // Redirect to same URL as in the popup flow
-          window.location.href = `/pricing?status=success&provider=paypal&token=TEST_TOKEN_${Math.floor(Math.random() * 1000000)}&planId=${planId}&userId=${user.id}&activated=true`;
+          // Clear the timeout
+          if (timeoutId) {
+            clearTimeout(timeoutId);
+            setTimeoutId(null);
+          }
+          
+          // End processing
+          setIsLoading(false);
+          setProcessingStage(null);
+          if (onProcessingEnd) onProcessingEnd();
+          
+          // Direct the current window to the PayPal payment URL with a delay
+          setTimeout(() => {
+            window.location.href = `/pricing?status=success&provider=paypal&token=TEST_TOKEN_${Math.floor(Math.random() * 1000000)}&planId=${planId}&userId=${user.id}&activated=true`;
+          }, 1000);
         }
         
         return;
       }
       
-      // Actual API call if not in test mode
+      // Actual API call if not in test mode - left as is
       try {
         const orderData = await createPaymentOrder(planId, 'paypal');
         
@@ -309,10 +435,6 @@ export function PayPalButton({
         return 'Connecting to PayPal...';
       case 'processing':
         return 'Processing payment...';
-      case 'confirming':
-        return 'Confirming transaction...';
-      case 'completing':
-        return 'Completing payment...';
       default:
         return 'Processing...';
     }
