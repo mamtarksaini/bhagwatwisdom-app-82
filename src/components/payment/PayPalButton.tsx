@@ -90,7 +90,7 @@ export function PayPalButton({
       
       console.log('PayPalButton: Creating PayPal payment for plan:', planId);
       
-      // In test mode, simulate a successful response
+      // In test mode, simulate a successful response with a realistic delay
       if (testModeActive) {
         console.log('PayPalButton: Using PayPal test mode');
         
@@ -100,8 +100,8 @@ export function PayPalButton({
           setTimeoutId(null);
         }
         
-        // Simulate a short delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Simulate a longer delay for more realistic payment flow (2-3 seconds)
+        await new Promise(resolve => setTimeout(resolve, 2500));
         
         // Show test mode toast BEFORE ending the processing state
         toast({
@@ -121,8 +121,9 @@ export function PayPalButton({
         // Use a direct window location change to ensure reliable redirect
         // We add a small delay to make sure the toast is visible
         setTimeout(() => {
+          // Simulate PayPal redirect and redirect back to our site with parameters
           // Include user ID in redirect for premium activation
-          const redirectUrl = `/pricing?status=success&provider=paypal&token=TEST_TOKEN&planId=${planId}&userId=${user.id}`;
+          const redirectUrl = `/pricing?status=success&provider=paypal&token=TEST_TOKEN_${Math.floor(Math.random() * 1000000)}&planId=${planId}&userId=${user.id}`;
           window.location.href = redirectUrl;
         }, 1000);
         

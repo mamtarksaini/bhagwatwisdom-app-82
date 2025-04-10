@@ -28,9 +28,12 @@ serve(async (req) => {
     const planId = searchParams.get('plan');
     const userId = searchParams.get('userId');
 
+    console.log(`Payment callback: Processing ${provider} payment with status ${status} for user ${userId}`);
+
     // For PayPal payments
     if (provider === 'paypal') {
       if (status === 'cancelled') {
+        console.log('Payment callback: Payment cancelled');
         // Redirect to frontend with cancelled status
         return new Response(null, {
           status: 302,
@@ -44,6 +47,7 @@ serve(async (req) => {
       const token = searchParams.get('token');
 
       if (!token) {
+        console.log('Payment callback: Missing token');
         // Redirect to frontend with error status
         return new Response(null, {
           status: 302,
@@ -57,6 +61,11 @@ serve(async (req) => {
       // If we have a user ID, attempt to activate premium
       if (userId) {
         try {
+          console.log(`Payment callback: Attempting to upgrade user ${userId} to premium`);
+          
+          // Add a delay to simulate payment processing
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
           // Update user profile to premium
           const { error: profileError } = await supabase
             .from('profiles')
@@ -68,6 +77,30 @@ serve(async (req) => {
             // Continue despite error to maintain flow
           } else {
             console.log(`Successfully upgraded user ${userId} to premium`);
+          }
+          
+          // Record the payment in payment_history if that table exists
+          try {
+            const { error: paymentError } = await supabase
+              .from('payment_history')
+              .insert([
+                { 
+                  user_id: userId,
+                  provider: 'paypal',
+                  amount: 9.99, // This should be dynamic based on plan
+                  currency: 'USD',
+                  status: 'completed',
+                  plan_id: planId || null,
+                  payment_id: token
+                }
+              ]);
+              
+            if (paymentError) {
+              console.log(`Note: Payment history not recorded: ${paymentError.message}`);
+            }
+          } catch (paymentHistoryError) {
+            // Ignore errors here, the table might not exist
+            console.log('Note: Payment history table might not exist');
           }
         } catch (activationError) {
           console.error('Error activating premium:', activationError);

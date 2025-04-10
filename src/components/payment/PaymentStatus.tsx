@@ -103,7 +103,7 @@ export function PaymentStatus() {
   // If we have a message to display, show it in an alert
   if (message) {
     return (
-      <Alert variant={activationSuccess ? "success" : "info"} className="mb-4">
+      <Alert variant={activationSuccess ? "default" : "info"} className={`mb-4 ${activationSuccess ? "border-green-500 bg-green-50 text-green-800 dark:bg-green-950 dark:text-green-300 dark:border-green-800" : ""}`}>
         {activationSuccess ? 
           <CheckCircle className="h-4 w-4" /> : 
           <Info className="h-4 w-4" />
