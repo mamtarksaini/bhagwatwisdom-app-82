@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { Info, CheckCircle } from 'lucide-react';
+import { Info, CheckCircle, Loader2 } from 'lucide-react';
 
 export function PaymentStatus() {
   const location = useLocation();
@@ -13,6 +13,7 @@ export function PaymentStatus() {
   const [processed, setProcessed] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [activationSuccess, setActivationSuccess] = useState(false);
+  const [processing, setProcessing] = useState(false);
   
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -28,9 +29,17 @@ export function PaymentStatus() {
     const processStatus = async () => {
       setProcessed(true);
       
+      // First show the processing state
+      if (status === 'success') {
+        setProcessing(true);
+      }
+      
       if (status === 'success') {
         // Add a delay before showing success message to simulate processing time
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        
+        // Now turn off processing state
+        setProcessing(false);
         
         // Check if premium was activated
         if (activated === 'true') {
@@ -42,7 +51,7 @@ export function PaymentStatus() {
           title: "Payment successful",
           description: "Thank you for your purchase! Your premium access has been activated.",
           variant: "success",
-          duration: 8000 // Increased duration for better visibility
+          duration: 10000 // Increased duration for better visibility
         });
         
         // For demo purposes, show info about the demo payment flow
@@ -63,7 +72,7 @@ export function PaymentStatus() {
         // Clear the URL parameters after processing with a delay
         setTimeout(() => {
           navigate('/pricing', { replace: true });
-        }, 10000); // Increased timeout for better visibility of the success message
+        }, 15000); // Increased timeout for better visibility of the success message
       } else if (status === 'cancelled') {
         toast({
           title: "Payment cancelled",
@@ -103,10 +112,21 @@ export function PaymentStatus() {
     };
   }, [location.search, navigate, refreshUserData, processed]);
   
+  // If we are still processing, show a processing message
+  if (processing) {
+    return (
+      <Alert className="mb-4 border-blue-500 bg-blue-50 text-blue-800 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800">
+        <Loader2 className="h-4 w-4 animate-spin" />
+        <AlertTitle>Processing Your Payment</AlertTitle>
+        <AlertDescription>Please wait while we finalize your payment and activate your premium features...</AlertDescription>
+      </Alert>
+    );
+  }
+  
   // If we have a message to display, show it in an alert
   if (message) {
     return (
-      <Alert variant={activationSuccess ? "default" : "info"} className={`mb-4 ${activationSuccess ? "border-green-500 bg-green-50 text-green-800 dark:bg-green-950 dark:text-green-300 dark:border-green-800" : ""}`}>
+      <Alert variant={activationSuccess ? "success" : "info"} className={`mb-4 ${activationSuccess ? "border-green-500 bg-green-50 text-green-800 dark:bg-green-950 dark:text-green-300 dark:border-green-800" : ""}`}>
         {activationSuccess ? 
           <CheckCircle className="h-4 w-4" /> : 
           <Info className="h-4 w-4" />

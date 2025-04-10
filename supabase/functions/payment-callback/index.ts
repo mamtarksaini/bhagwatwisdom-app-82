@@ -64,7 +64,7 @@ serve(async (req) => {
           
           // Add a significant delay to simulate payment processing in a real system
           console.log(`Payment callback: Processing payment with a simulated delay...`);
-          await new Promise(resolve => setTimeout(resolve, 3000));
+          await new Promise(resolve => setTimeout(resolve, 5000));
           
           // Update user profile to premium
           const { error: profileError } = await supabase
@@ -111,7 +111,7 @@ serve(async (req) => {
       }
 
       // Add another delay before redirecting
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
       // Redirect to frontend with success status
       return new Response(null, {

@@ -110,7 +110,7 @@ export function PayPalButton({
       
       console.log('PayPalButton: Creating PayPal payment for plan:', planId);
       
-      // In test mode, simulate a successful response with a realistic delay
+      // In test mode, simulate a successful response with realistic delays
       if (testModeActive) {
         console.log('PayPalButton: Using PayPal test mode');
         
@@ -139,14 +139,69 @@ export function PayPalButton({
         setProcessingStage(null);
         if (onProcessingEnd) onProcessingEnd();
         
-        // Use a direct window location change to ensure reliable redirect
-        // We add a small delay to make sure the toast is visible
-        setTimeout(() => {
-          // Simulate PayPal redirect and redirect back to our site with parameters
-          // Include user ID in redirect for premium activation
-          const redirectUrl = `/pricing?status=success&provider=paypal&token=TEST_TOKEN_${Math.floor(Math.random() * 1000000)}&planId=${planId}&userId=${user.id}&activated=true`;
-          window.location.href = redirectUrl;
-        }, 1000);
+        // Instead of directly changing the window location, open a new window/tab
+        // This simulates being redirected to PayPal's site
+        const paypalSimWindow = window.open('about:blank', '_blank');
+        
+        if (paypalSimWindow) {
+          // Add some PayPal simulation content
+          paypalSimWindow.document.write(`
+            <html>
+              <head>
+                <title>PayPal Payment Simulation</title>
+                <style>
+                  body { font-family: Arial, sans-serif; background-color: #f5f5f5; text-align: center; padding: 50px; }
+                  .logo { font-size: 24px; font-weight: bold; color: #003087; margin-bottom: 30px; }
+                  .container { background: white; padding: 30px; border-radius: 10px; max-width: 500px; margin: 0 auto; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+                  .amount { font-size: 20px; margin: 20px 0; }
+                  .button { background: #0070ba; color: white; border: none; padding: 12px 30px; border-radius: 25px; font-size: 16px; cursor: pointer; transition: background 0.3s; }
+                  .button:hover { background: #003087; }
+                  .info { margin-top: 20px; color: #666; font-size: 14px; }
+                </style>
+              </head>
+              <body>
+                <div class="container">
+                  <div class="logo">PayPal</div>
+                  <h2>Complete Your Payment</h2>
+                  <p>You are paying:</p>
+                  <div class="amount"><strong>$9.99 USD</strong></div>
+                  <p>to <strong>Bhagwat Wisdom</strong> for Premium Plan Subscription</p>
+                  <button class="button" id="completePayment">Complete Payment</button>
+                  <p class="info">This is a simulated payment page. No actual payment will be processed.</p>
+                  <p class="info">Demo environment for development and testing only.</p>
+                </div>
+                <script>
+                  document.getElementById('completePayment').addEventListener('click', function() {
+                    document.body.innerHTML = '<div class="container"><div class="logo">PayPal</div><h2>Payment Processing</h2><p>Please wait while we process your payment...</p></div>';
+                    setTimeout(function() {
+                      document.body.innerHTML = '<div class="container"><div class="logo">PayPal</div><h2>Payment Successful!</h2><p>Your payment has been processed successfully.</p><p>Redirecting you back to Bhagwat Wisdom...</p></div>';
+                      setTimeout(function() {
+                        window.location.href = '${window.location.origin}/pricing?status=success&provider=paypal&token=TEST_TOKEN_${Math.floor(Math.random() * 1000000)}&planId=${planId}&userId=${user.id}&activated=true';
+                      }, 3000);
+                    }, 2000);
+                  });
+                </script>
+              </body>
+            </html>
+          `);
+          paypalSimWindow.document.close();
+        } else {
+          // If popup was blocked, redirect in same window after a delay
+          console.log('PayPalButton: Popup blocked, redirecting in same window');
+          
+          toast({
+            title: "Simulating PayPal redirect",
+            description: "In a real environment, you would be redirected to PayPal's website.",
+            variant: "info",
+            duration: 3000,
+          });
+          
+          // Wait for toast to be visible
+          await new Promise(resolve => setTimeout(resolve, 3000));
+          
+          // Redirect to same URL as in the popup flow
+          window.location.href = `/pricing?status=success&provider=paypal&token=TEST_TOKEN_${Math.floor(Math.random() * 1000000)}&planId=${planId}&userId=${user.id}&activated=true`;
+        }
         
         return;
       }
