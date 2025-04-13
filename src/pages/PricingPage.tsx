@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -14,7 +13,7 @@ import { PaymentMethods } from '@/components/payment/PaymentMethods';
 import { PaymentStatus } from '@/components/payment/PaymentStatus';
 import { getSubscriptionPlans } from '@/services/paymentService';
 import { Button } from '@/components/ui/button';
-import { Loader2, CheckCircle } from 'lucide-react';
+import { Loader2, CheckCircle, AlertCircle, CreditCard } from 'lucide-react';
 
 export default function PricingPage() {
   const { user, isPremium, refreshUserData } = useAuth();
@@ -27,6 +26,8 @@ export default function PricingPage() {
   const [simulationProcessing, setSimulationProcessing] = useState(false);
   const [simulationComplete, setSimulationComplete] = useState(false);
   const [simulationParams, setSimulationParams] = useState<any>(null);
+  const [paymentConfirmed, setPaymentConfirmed] = useState(false);
+  const [showSecurityCheck, setShowSecurityCheck] = useState(false);
   
   const location = useLocation();
   const navigate = useNavigate();
@@ -66,7 +67,21 @@ export default function PricingPage() {
   const processPayPalSimulation = async () => {
     if (!simulationParams) return;
     
+    // Only process if payment is confirmed
+    if (!paymentConfirmed) {
+      setPaymentConfirmed(true);
+      return;
+    }
+    
     try {
+      // Show security check screen
+      setShowSecurityCheck(true);
+      
+      // Simulate security check delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Now start the actual processing
+      setShowSecurityCheck(false);
       setSimulationProcessing(true);
       
       // Simulate processing time
@@ -198,12 +213,53 @@ export default function PricingPage() {
               <h3 className="text-xl font-medium mb-2">Payment Successful!</h3>
               <p className="text-gray-600 dark:text-gray-400 mb-4">Redirecting you back to Bhagwat Wisdom...</p>
             </div>
+          ) : showSecurityCheck ? (
+            <div className="text-center">
+              <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CreditCard className="w-10 h-10 text-white" />
+              </div>
+              <h3 className="text-xl font-medium mb-2">Verifying Payment Method</h3>
+              <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-blue-600 dark:text-blue-400" />
+              <p className="text-gray-600 dark:text-gray-400">Performing security check...</p>
+            </div>
+          ) : simulationProcessing ? (
+            <div className="text-center">
+              <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4 text-blue-600 dark:text-blue-400" />
+              <p className="text-gray-600 dark:text-gray-400">Processing your payment...</p>
+            </div>
           ) : (
             <>
-              {simulationProcessing ? (
-                <div className="text-center">
-                  <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4 text-blue-600 dark:text-blue-400" />
-                  <p className="text-gray-600 dark:text-gray-400">Processing your payment...</p>
+              {paymentConfirmed ? (
+                <div className="space-y-4">
+                  <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-md mb-2">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400 mt-0.5" />
+                      <div>
+                        <h4 className="font-medium text-amber-800 dark:text-amber-300">Confirm Payment</h4>
+                        <p className="text-sm text-amber-700 dark:text-amber-400 mt-1">
+                          You are about to authorize a payment of <strong>$9.99 USD</strong> to Bhagwat Wisdom for a Premium Plan monthly subscription.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <Button 
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-full mb-4"
+                    onClick={processPayPalSimulation}
+                  >
+                    Confirm Payment
+                  </Button>
+                  
+                  <Button 
+                    variant="outline"
+                    className="w-full" 
+                    onClick={() => {
+                      setShowPayPalSimulation(false);
+                      navigate('/pricing');
+                    }}
+                  >
+                    Cancel
+                  </Button>
                 </div>
               ) : (
                 <>
