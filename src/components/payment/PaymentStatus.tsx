@@ -50,7 +50,7 @@ export function PaymentStatus() {
         toast({
           title: "Payment successful",
           description: "Thank you for your purchase! Your premium access has been activated.",
-          variant: "default", // Changed from "success" to "default" to fix type error
+          variant: "default", 
           duration: 10000 // Increased duration for better visibility
         });
         
@@ -126,7 +126,7 @@ export function PaymentStatus() {
   // If we have a message to display, show it in an alert
   if (message) {
     return (
-      <Alert variant={activationSuccess ? "default" : "info"} className={`mb-4 ${activationSuccess ? "border-green-500 bg-green-50 text-green-800 dark:bg-green-950 dark:text-green-300 dark:border-green-800" : ""}`}>
+      <Alert className={`mb-4 ${activationSuccess ? "border-green-500 bg-green-50 text-green-800 dark:bg-green-950 dark:text-green-300 dark:border-green-800" : ""}`}>
         {activationSuccess ? 
           <CheckCircle className="h-4 w-4" /> : 
           <Info className="h-4 w-4" />
