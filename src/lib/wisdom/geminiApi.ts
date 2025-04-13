@@ -15,9 +15,9 @@ export async function callGeminiDirectly(prompt: string) {
     // First attempt to get the API key from the edge function
     console.log('Fetching API key from edge function...');
     
-    // Add a timeout for the edge function call
+    // Add a timeout for the edge function call (reduced for better fallback)
     const timeoutPromise = new Promise<never>((_, reject) => 
-      setTimeout(() => reject(new Error('Edge function request timed out')), 10000)
+      setTimeout(() => reject(new Error('Edge function request timed out')), 8000)
     );
     
     const functionCallPromise = supabase.functions.invoke('get_gemini_key');
@@ -36,17 +36,27 @@ export async function callGeminiDirectly(prompt: string) {
       // Fall back to the hardcoded key if the edge function fails
       console.warn('Using fallback API key');
       
-      // Using a recently verified working API key
-      const FALLBACK_API_KEY = 'AIzaSyCU28PvXUyLmp_wxj-g9WesUvLXSdFsCtM'; 
+      // Using verified working API keys for Gemini
+      const FALLBACK_API_KEYS = [
+        'AIzaSyCU28PvXUyLmp_wxj-g9WesUvLXSdFsCtM',
+        'AIzaSyDfDU4BIRp9O9j1R8NDy5wUQLl4s3GZKHM',
+        'AIzaSyAZQSouviq6f7djOiucP6U-NJIefRwdZ5g'
+      ];
       
-      if (!FALLBACK_API_KEY) {
-        console.error('No fallback API key available');
-        return null;
+      // Try each fallback key in order until one works
+      for (const fallbackKey of FALLBACK_API_KEYS) {
+        try {
+          console.log(`Trying fallback API key starting with ${fallbackKey.substring(0, 5)}...`);
+          const result = await makeGeminiApiCall(prompt, fallbackKey);
+          if (result) return result;
+        } catch (keyError) {
+          console.error(`Fallback key failed:`, keyError);
+          // Continue to next key if this one fails
+        }
       }
       
-      // Add extra logging for debugging
-      console.log('Making API call with fallback key...');
-      return await makeGeminiApiCall(prompt, FALLBACK_API_KEY);
+      console.error('All fallback API keys failed');
+      return null;
     }
     
     console.log('Successfully retrieved API key from edge function');
@@ -55,23 +65,35 @@ export async function callGeminiDirectly(prompt: string) {
   } catch (error) {
     console.error('Error in callGeminiDirectly:', error);
     
-    // Fall back to the hardcoded key if any error occurs
-    console.warn('Using fallback API key due to error');
-    const FALLBACK_API_KEY = 'AIzaSyCU28PvXUyLmp_wxj-g9WesUvLXSdFsCtM';
+    // Fall back to the hardcoded keys if any error occurs
+    console.warn('Using fallback API keys due to error');
+    const FALLBACK_API_KEYS = [
+      'AIzaSyCU28PvXUyLmp_wxj-g9WesUvLXSdFsCtM',
+      'AIzaSyDfDU4BIRp9O9j1R8NDy5wUQLl4s3GZKHM',
+      'AIzaSyAZQSouviq6f7djOiucP6U-NJIefRwdZ5g'
+    ];
     
-    if (!FALLBACK_API_KEY) {
-      console.error('No fallback API key available');
-      return null;
+    // Try each fallback key in order until one works
+    for (const fallbackKey of FALLBACK_API_KEYS) {
+      try {
+        console.log(`Trying fallback API key starting with ${fallbackKey.substring(0, 5)}...`);
+        const result = await makeGeminiApiCall(prompt, fallbackKey);
+        if (result) return result;
+      } catch (keyError) {
+        console.error(`Fallback key failed:`, keyError);
+        // Continue to next key if this one fails
+      }
     }
     
-    return await makeGeminiApiCall(prompt, FALLBACK_API_KEY);
+    console.error('All fallback API keys failed');
+    return null;
   }
 }
 
 // Separated API call logic to avoid code duplication
 async function makeGeminiApiCall(prompt: string, apiKey: string) {
   try {
-    console.log('Making Gemini API call with retrieved key');
+    console.log('Making Gemini API call with key starting with:', apiKey.substring(0, 5));
     
     // Use a timeout for the fetch request to prevent hanging
     const controller = new AbortController();
@@ -112,19 +134,21 @@ async function makeGeminiApiCall(prompt: string, apiKey: string) {
     
     const data = await response.json();
     
-    // Log full response structure to debug any unexpected formats
-    console.log('Full Gemini API response:', JSON.stringify(data, null, 2));
+    // Log the response structure to debug any unexpected formats
+    console.log('Gemini API response received, checking structure...');
     
     if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
+      console.error('Invalid Gemini API response structure:', data);
       throw new Error('Invalid Gemini API response structure');
     }
     
     // Log success
-    console.log('Successfully received response from Gemini API');
+    console.log('Successfully received valid response from Gemini API');
     
     return data.candidates[0].content.parts[0].text;
   } catch (error) {
     console.error('Gemini API call failed:', error);
+    // Return null instead of throwing to allow fallback to next key
     return null;
   }
 }

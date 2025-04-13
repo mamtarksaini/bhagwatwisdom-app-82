@@ -6,9 +6,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Language } from "@/types";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis";
-import { Mic, MicOff, Volume2, VolumeX, RotateCcw, Send } from "lucide-react";
+import { Mic, MicOff, Volume2, VolumeX, RotateCcw, Send, RefreshCw } from "lucide-react";
 import { getWisdomResponse } from "@/lib/wisdom";
 import { toast } from "@/hooks/use-toast";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle, Info } from 'lucide-react';
 
 interface DreamInterpreterProps {
   language: Language;
@@ -22,6 +24,11 @@ export function DreamInterpreter({ language, isPremium = false }: DreamInterpret
   const [usingFallback, setUsingFallback] = useState(false);
   const [networkError, setNetworkError] = useState(false);
   const [apiKeyError, setApiKeyError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const [directApiUsed, setDirectApiUsed] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
+  const [errorDetails, setErrorDetails] = useState("");
+  
   const { isListening, transcript, startListening, stopListening, resetTranscript, error } = useSpeechRecognition(language);
   const { speak, stop, isReading } = useSpeechSynthesis(language);
 
@@ -42,23 +49,44 @@ export function DreamInterpreter({ language, isPremium = false }: DreamInterpret
     setUsingFallback(false);
     setNetworkError(false);
     setApiKeyError(false);
+    setDirectApiUsed(false);
+    setErrorDetails("");
+    setRetryCount(0);
   };
 
-  const handleSubmit = async () => {
+  const handleRetry = async () => {
     if (!dream.trim() || isLoading) return;
     
+    setRetryCount(prev => prev + 1);
     setIsLoading(true);
     setInterpretation("");
     setUsingFallback(false);
     setNetworkError(false);
     setApiKeyError(false);
+    setDirectApiUsed(false);
+    setErrorDetails("");
     
-    const loadingToast = toast({
-      title: "Interpreting your dream",
-      description: "Finding spiritual meaning in your dream...",
+    toast({
+      title: "Retrying AI connection",
+      description: "Attempting to connect to wisdom services again.",
       variant: "default"
     });
     
+    try {
+      await handleSubmitInternal(true);
+    } catch (error) {
+      console.error("Retry failed:", error);
+      toast({
+        title: "Retry failed",
+        description: "Unable to connect to any wisdom service. Using offline guidance.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSubmitInternal = async (isRetry = false) => {
     try {
       const dreamPrompt = `Interpret this dream through the lens of Bhagavad Gita and spiritual wisdom in a formal, respectful tone: "${dream}"
       
@@ -70,12 +98,16 @@ export function DreamInterpreter({ language, isPremium = false }: DreamInterpret
       3. Connects to authentic Bhagavad Gita teachings when appropriate
       4. Offers practical wisdom without casual language`;
       
+      console.log('Calling getWisdomResponse with dream prompt:', dreamPrompt.substring(0, 50) + '...');
       const response = await getWisdomResponse('spirituality', language, dreamPrompt);
+      console.log('Response from getWisdomResponse:', response);
       
       setInterpretation(response.answer);
       setUsingFallback(response.isFallback || false);
       setNetworkError(response.isNetworkIssue || false);
       setApiKeyError(response.isApiKeyIssue || false);
+      setDirectApiUsed(response.isDirectApiUsed || false);
+      setErrorDetails(response.errorDetails || "");
       
       if (response.isFallback) {
         if (response.isApiKeyIssue) {
@@ -108,13 +140,37 @@ export function DreamInterpreter({ language, isPremium = false }: DreamInterpret
     } catch (error) {
       console.error("Error interpreting dream:", error);
       setUsingFallback(true);
+      setErrorDetails(error instanceof Error ? error.message : String(error));
       
       toast({
         title: "Interpretation Error",
         description: "Could not connect to AI service. Using offline interpretation.",
         variant: "destructive"
       });
-      
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!dream.trim() || isLoading) return;
+    
+    setIsLoading(true);
+    setInterpretation("");
+    setUsingFallback(false);
+    setNetworkError(false);
+    setApiKeyError(false);
+    setDirectApiUsed(false);
+    setErrorDetails("");
+    
+    const loadingToast = toast({
+      title: "Interpreting your dream",
+      description: "Finding spiritual meaning in your dream...",
+      variant: "default"
+    });
+    
+    console.log('Submitting dream:', { dream, language });
+    
+    try {
+      await handleSubmitInternal();
     } finally {
       loadingToast.dismiss();
       setIsLoading(false);
@@ -130,6 +186,10 @@ export function DreamInterpreter({ language, isPremium = false }: DreamInterpret
     
     speak(interpretation);
   };
+  
+  const toggleDetails = () => {
+    setShowDetails(!showDetails);
+  };
 
   useEffect(() => {
     if (isListening) {
@@ -140,6 +200,44 @@ export function DreamInterpreter({ language, isPremium = false }: DreamInterpret
   return (
     <Card className="glass-card border border-gold/30">
       <CardContent className="space-y-6 pt-6">
+        {networkError && !isLoading && (
+          <Alert variant="default" className="bg-amber-500/10 border border-amber-500/30">
+            <AlertCircle className="h-4 w-4 text-amber-500" />
+            <AlertDescription>
+              {language === 'hindi' 
+                ? "एज फंक्शन कनेक्शन में समस्या। प्रश्न उत्तर के लिए अतिरिक्त विकल्पों का उपयोग किया जा रहा है।" 
+                : "Edge Function connection issues. Using alternative methods for responses."}
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {apiKeyError && !isLoading && (
+          <Alert variant="destructive" className="bg-red-500/10 border border-red-500/30">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>
+              {language === 'hindi' 
+                ? "API कुंजी समस्या" 
+                : "API Key Issue"}
+            </AlertTitle>
+            <AlertDescription>
+              {language === 'hindi' 
+                ? "API कुंजी के साथ समस्या। वैकल्पिक ज्ञान दिखा रहे हैं।" 
+                : "Issues with API key. Showing alternative wisdom."}
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {directApiUsed && !isLoading && !usingFallback && (
+          <Alert variant="default" className="bg-green-500/10 border border-green-500/30">
+            <Info className="h-4 w-4 text-green-500" />
+            <AlertDescription>
+              {language === 'hindi' 
+                ? "AI द्वारा संचालित ज्ञान आपके लिए उपलब्ध है।" 
+                : "AI-powered wisdom is available for you."}
+            </AlertDescription>
+          </Alert>
+        )}
+        
         <div>
           <div className="relative">
             <Textarea
@@ -223,6 +321,42 @@ export function DreamInterpreter({ language, isPremium = false }: DreamInterpret
                    networkError ? "Network connection issue detected. Using offline interpretation." : 
                    "Using offline interpretation due to AI service unavailability."}
                 </p>
+              </div>
+            )}
+            
+            {(networkError || apiKeyError) && retryCount < 2 && (
+              <div className="mt-4 flex justify-end">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleRetry}
+                  className="text-sm flex items-center"
+                >
+                  <RefreshCw className="h-3 w-3 mr-2" />
+                  Retry with AI ({2 - retryCount} attempts left)
+                </Button>
+              </div>
+            )}
+            
+            {errorDetails && (
+              <div className="mt-4">
+                <Button 
+                  variant="link" 
+                  size="sm" 
+                  onClick={toggleDetails} 
+                  className="text-xs text-muted-foreground p-0"
+                >
+                  {showDetails ? "Hide technical details" : "Show technical details"}
+                </Button>
+                
+                {showDetails && (
+                  <Alert className="mt-2 bg-red-500/10 border border-red-500/30">
+                    <AlertCircle className="h-4 w-4 text-red-500" />
+                    <AlertDescription className="text-xs overflow-auto max-h-24 font-mono">
+                      {errorDetails}
+                    </AlertDescription>
+                  </Alert>
+                )}
               </div>
             )}
           </div>
